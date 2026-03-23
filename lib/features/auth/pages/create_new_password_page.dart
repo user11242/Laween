@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../core/theme/colors.dart';
 import 'package:laween/l10n/app_localizations.dart';
 import 'package:laween/core/message/app_messenger.dart';
 import 'forgot_password_page.dart'; // To reuse HeaderCurveClipper
@@ -81,7 +82,7 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
                   child: Container(
                     height: screenHeight * 0.25,
                     width: double.infinity,
-                    color: const Color(0xFF006D77),
+                    color: AppColors.teal,
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: SafeArea(
                       child: Row(
@@ -124,7 +125,7 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
                    // Decorative dots top left
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: _buildDecorativeDots(const Color(0xFF006D77)),
+                    child: _buildDecorativeDots(AppColors.teal),
                   ),
 
                   // Central Graphic
@@ -135,7 +136,7 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
                         width: 140,
                         height: 140,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF006D77).withValues(alpha: 0.05),
+                          color: AppColors.teal.withValues(alpha: 0.05),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -143,15 +144,15 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
                         width: 100,
                         height: 100,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF006D77).withValues(alpha: 0.1),
+                          color: AppColors.teal.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Icon(Icons.lock_open_outlined, size: 50, color: Color(0xFF006D77)),
+                        child: const Icon(Icons.lock_open_outlined, size: 50, color: AppColors.teal),
                       ),
                       // Dot pattern around
                       Positioned(
                         bottom: 40, right: 10,
-                        child: Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFF006D77), shape: BoxShape.circle)),
+                        child: Container(width: 6, height: 6, decoration: const BoxDecoration(color: AppColors.teal, shape: BoxShape.circle)),
                       ),
                     ],
                   ),
@@ -215,7 +216,7 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _createPassword,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF006D77),
+                        backgroundColor: AppColors.teal,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
@@ -299,7 +300,7 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
-          borderSide: const BorderSide(color: Color(0xFF006D77)),
+          borderSide: const BorderSide(color: AppColors.teal),
         ),
       ),
     );
@@ -313,7 +314,7 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
           Icon(
             isMet ? Icons.check_circle : Icons.check_circle_outline,
             size: 20,
-            color: isMet ? const Color(0xFF006D77) : Colors.grey.shade300,
+            color: isMet ? AppColors.teal : Colors.grey.shade300,
           ),
           const SizedBox(width: 12),
           Text(

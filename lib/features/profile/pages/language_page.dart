@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:laween/l10n/app_localizations.dart';
+import '../../../core/theme/colors.dart';
+import '../../../../l10n/app_localizations.dart';
 import 'package:laween/core/providers/locale_provider.dart';
 
 class LanguagePage extends StatelessWidget {
@@ -69,10 +70,10 @@ class LanguagePage extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF006D77).withValues(alpha: 0.05) : Colors.grey.shade50,
+          color: isSelected ? AppColors.teal.withValues(alpha: 0.05) : Colors.grey.shade50,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFF006D77) : Colors.grey.shade200,
+            color: isSelected ? AppColors.teal : Colors.grey.shade200,
             width: 2,
           ),
         ),
@@ -87,7 +88,7 @@ class LanguagePage extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: isSelected ? const Color(0xFF006D77) : Colors.black87,
+                      color: isSelected ? AppColors.teal : Colors.black87,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -104,7 +105,7 @@ class LanguagePage extends StatelessWidget {
             if (isSelected)
               const Icon(
                 Icons.check_circle,
-                color: Color(0xFF006D77),
+                color: AppColors.teal,
                 size: 28,
               )
             else

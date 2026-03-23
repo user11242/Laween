@@ -3,7 +3,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:google_sign_in/google_sign_in.dart' as gsi;
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import '../models/user_model.dart';
@@ -20,8 +20,7 @@ class GoogleAuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // ✅ VERSION 7.x SINGLETON
-  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  final gsi.GoogleSignIn _googleSignIn = gsi.GoogleSignIn.instance;
 
   bool _isInitialized = false;
   AuthCredential? _pendingGoogleCredential;
@@ -30,8 +29,8 @@ class GoogleAuthService {
   AuthCredential? get pendingGoogleCredential => _pendingGoogleCredential;
   String? get pendingEmail => _pendingEmail;
 
-  // ✅ PUBLIC GETTER FOR CONSISTENCY
-  GoogleSignIn get googleSignIn => _googleSignIn;
+  // PUBLIC GETTER FOR CONSISTENCY
+  gsi.GoogleSignIn get googleSignIn => _googleSignIn;
 
   void clearPendingCredential() {
     _pendingGoogleCredential = null;
@@ -42,34 +41,36 @@ class GoogleAuthService {
   /// 🔹 Initialization Method
   /// ---------------------------------------------------------------
   Future<void> initialize() async {
-    if (_isInitialized) return;
-    try {
-      // 🛑 CRITICAL for version 7.x: Must initialize the instance
+    if (!_isInitialized) {
+      // In v7.x Initialize must be called exactly once.
       await _googleSignIn.initialize();
       _isInitialized = true;
-      debugPrint("✅ GoogleAuthService Initialized. GoogleSignIn type: ${_googleSignIn.runtimeType}");
-    } catch (e) {
-      debugPrint("❌ Google Sign-In initialization error: $e");
     }
   }
 
   /// ---------------------------------------------------------------
   /// 🔹 Sign In With Google
   /// ---------------------------------------------------------------
-  Future<String?> signInWithGoogle(AuthService authService) async {
-    if (!_isInitialized) await initialize();
-
+  Future<String?> signInWithGoogle(AuthService authService, {bool silent = false}) async {
     AuthCredential? credential;
-    GoogleSignInAccount? googleUser;
+    gsi.GoogleSignInAccount? googleUser;
     
     try {
-      await _googleSignIn.signOut();
+      if (!_isInitialized) {
+        await initialize();
+      }
 
-      // ✅ VERSION 7.x API: .authenticate()
-      googleUser = await _googleSignIn.authenticate();
+      if (silent) {
+        googleUser = await _googleSignIn.attemptLightweightAuthentication();
+      } else {
+        await _googleSignIn.signOut();
+        googleUser = await _googleSignIn.authenticate();
+      }
+
+      if (googleUser == null) {
+        return silent ? "SILENT_SIGN_IN_FAILED" : null;
+      }
       
-      // The user selection screen provides its own cancel handling.
-      // If we got here, we proceed with authentication.
       final googleAuth = googleUser.authentication;
       
       credential = GoogleAuthProvider.credential(
@@ -97,10 +98,9 @@ class GoogleAuthService {
           .get();
 
       if (doc.exists) {
-        final data = doc.data() as Map<String, dynamic>;
-        return data['role'] as String? ?? "student";
+        return null; // Success
       } else {
-        return "NEEDS_ROLE";
+        return "NEEDS_PROFILE";
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'account-exists-with-different-credential') {
@@ -113,7 +113,7 @@ class GoogleAuthService {
       debugPrint("Serious error in flow: $e");
       final errorStr = e.toString().toLowerCase();
       if (errorStr.contains('canceled') || errorStr.contains('cancel')) {
-        return null;
+        return "CANCELED";
       }
       return e.toString();
     }

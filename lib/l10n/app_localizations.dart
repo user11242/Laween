@@ -19,7 +19,7 @@ class AppLocalizations {
   }
 
   String get onboardingTitle => isAr ? "مرحباً بكم في لاوين" : "Welcome to Laween";
-  String get onboardingSubtitle => isAr ? "تعلم وعلم في أي مكان وزمان" : "Learn and Teach anywhere, anytime";
+  String get onboardingSubtitle => isAr ? "خطط لقضاء وقت ممتع مع أصدقائك" : "Plan your hangouts with friends";
   String get joinWithGoogle => isAr ? "سجل باستخدام جوجل" : "Join with Google";
   String get joinWithEmail => isAr ? "سجل باستخدام البريد الإلكتروني" : "Join with Email";
   String get alreadyHaveAccount => isAr ? "هل لديك حساب بالفعل؟ " : "Already have an account? ";
@@ -54,8 +54,7 @@ class AppLocalizations {
   String get acceptTermsToFinish => isAr ? "اقبل الشروط للانتهاء" : "Accept terms to finish";
   String get finish => isAr ? "انتهاء" : "Finish";
   String get next => isAr ? "التالي" : "Next";
-  String get applicationReceived => isAr ? "الطلب مستلم" : "Application Received";
-  String get teacherUnderReview => isAr ? "طلب المعلم قيد المراجعة" : "Teacher application is under review";
+  String get accountUnderReview => isAr ? "حسابك قيد المراجعة" : "Your account is under review";
   String get iAccept => isAr ? "انا اوافق على " : "I accept ";
   String get termsAndConditions => isAr ? "الشروط والأحكام" : "Terms and Conditions";
   String get and => isAr ? " و " : " and ";
@@ -73,17 +72,12 @@ class AppLocalizations {
   String get deleteAccountConfirmMessage => isAr ? "تأكيد الحذف" : "Confirm deletion";
   String get deleteMyAccount => isAr ? "حذف حسابي" : "Delete Account";
   String get success => isAr ? "نجاح" : "Success";
-  String get teacherApplicationRejectedTitle => isAr ? "تم رفض الطلب" : "Application Rejected";
-  String get teacherApplicationRejectedMessage => isAr ? "تفاصيل الرسالة" : "Message details";
+  String get applicationRejectedTitle => isAr ? "تم رفض الطلب" : "Application Rejected";
+  String get applicationRejectedMessage => isAr ? "تفاصيل الرسالة" : "Message details";
   String get contactSupport => isAr ? "اتصل بالدعم" : "Contact Support";
   String get signOut => isAr ? "تسجيل الخروج" : "Sign Out";
   String get termsAndConditionsContent => isAr ? "محتوى الشروط" : "Terms content";
-  String get chooseRole => isAr ? "اختر الدور" : "Choose Role";
-  String get learnOrTeach => isAr ? "يتعلم أو يعلم" : "Learn or Teach";
-  String get student => isAr ? "طالب/طالبة" : "Student";
-  String get teacher => isAr ? "معلم/معلمة" : "Teacher";
-  String get studentFinishMessage => isAr ? "الطالب مسجل" : "Student registered";
-  String get teacherFinishMessage => isAr ? "المعلم مسجل" : "Teacher registered";
+  String get userFinishMessage => isAr ? "تم التسجيل بنجاح" : "User registered successfully";
   String get portfolioLink => isAr ? "رابط المحفظة" : "Portfolio Link";
   String get portfolioHint => isAr ? "أدخل الرابط" : "Enter link";
   String get needDetails => isAr ? "نحن نحتاج الى تفاصيل" : "Need details";
@@ -96,8 +90,8 @@ class AppLocalizations {
   String get stayLoggedIn => isAr ? "البقاء" : "Stay";
   String get logoutAnyway => isAr ? "خروج" : "Logout";
   String get logout => isAr ? "تسجيل خروج" : "Logout";
-  String get teacherAccountPendingApproval => isAr ? "الحساب معلق" : "Account Pending";
-  String get teacherPendingPageNote => isAr ? "حسابك قيد المراجعة" : "Your account is pending review";
+  String get accountPendingApproval => isAr ? "الحساب معلق" : "Account Pending";
+  String get accountPendingPageNote => isAr ? "حسابك قيد المراجعة" : "Your account is pending review";
   String get deleteAccountConfirmTitle => isAr ? "حذف الحساب" : "Delete Account";
 
   String resendIn(int seconds) => isAr ? "إعادة الإرسال خلال ($seconds)" : "Resend in $seconds";
@@ -201,7 +195,7 @@ class AppLocalizations {
   String get myFavorites => isAr ? "مفضلاتي" : "My Favorites";
   String get language => isAr ? "اللغة" : "Language";
   String get darkMode => isAr ? "الوضع الليلي" : "Dark Mode";
-  String get aboutCalligro => isAr ? "عن لاوين" : "About Laween";
+  String get aboutLaween => isAr ? "عن لاوين" : "About Laween";
   String get logoutConfirm => isAr ? "هل أنت متأكد أنك تريد تسجيل الخروج؟" : "Are you sure you want to logout?";
   String get settings => isAr ? "الإعدادات" : "Settings";
   String get selectLanguage => isAr ? "اختر اللغة" : "Select Language";
@@ -211,4 +205,7 @@ class AppLocalizations {
   String get phone => isAr ? "رقم الهاتف" : "Phone Number";
   String get successUpdate => isAr ? "تم تحديث البيانات بنجاح" : "Information updated successfully";
   String get notifications => isAr ? "التنبيهات" : "Notifications";
+  String get biometricVerificationTitle => isAr ? "تأكيد كلمة المرور" : "Verify Password";
+  String get biometricVerificationMessage => isAr ? "لتفعيل الدخول بالبصمة، يرجى إدخال كلمة المرور لحفظ بياناتك بشكل آمن." : "To enable biometric login, please enter your password to securely save your credentials.";
+  String get enableBiometric => isAr ? "تفعيل" : "Enable";
 }

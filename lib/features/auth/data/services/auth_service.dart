@@ -70,12 +70,11 @@ class AuthService {
     required String name,
     required String email,
     required String phone,
-    required String role,
   }) async {
     if (await isNameTaken(name)) return "Username is already taken.";
     if (await isEmailTaken(email)) return "Email is already registered.";
 
-    // Only check phone if it's provided (Teachers)
+    // Only check phone if it's provided
     if (phone.isNotEmpty) {
       if (await isPhoneTaken(phone)) return "Phone number is already in use.";
     }
@@ -111,11 +110,30 @@ class AuthService {
 
   // Note: We pass 'this' because signInWithGoogle signature expects it,
   // even if it doesn't use it heavily.
-  Future<String?> loginWithGoogle() => _googleAuth.signInWithGoogle(this);
+  Future<String?> loginWithGoogle({bool silent = false}) async {
+    final result = await _googleAuth.signInWithGoogle(this, silent: silent);
+    if (result == null) {
+      await _biometricService.setAppLocked(false);
+    }
+    return result;
+  }
 
   Future<String?> loginWithBiometrics() async {
+    // 1. ZERO-TAP BIOMETRICS: Check if we are already signed in to Firebase and just locked.
+    final isLocked = await _biometricService.isAppLocked();
+    if (FirebaseAuth.instance.currentUser != null && isLocked) {
+      // Just unlock the app, no network requests or third-party auth needed!
+      await _biometricService.setAppLocked(false);
+      return null; // Success!
+    }
+
+    // 2. Otherwise, attempt a full standard re-authentication
     final credentials = await _biometricService.getSavedCredentials();
-    if (credentials == null) return "NO_SAVED_CREDENTIALS";
+    if (credentials == null) {
+      final isSocial = await _biometricService.isSocialLogin();
+      if (isSocial) return "SOCIAL_LOGIN_REQUIRED";
+      return "NO_SAVED_CREDENTIALS";
+    }
     
     return loginWithEmail(
       credentials['email']!,
@@ -159,8 +177,17 @@ class AuthService {
   // ============ 🛠️ UTILITIES ============
 
   Future<void> signOut() async {
-    await FirebaseAuth.instance.signOut();
-    await _googleAuth.signOut();
+    final isBiometricEnabled = await _biometricService.isBiometricEnabled();
+    
+    if (isBiometricEnabled) {
+      // PRESERVE ZERO-TAP BIOMETRICS: Just lock the app.
+      await _biometricService.setAppLocked(true);
+    } else {
+      // FULL LOGOUT
+      await _biometricService.setAppLocked(false);
+      await FirebaseAuth.instance.signOut();
+      await _googleAuth.signOut();
+    }
   }
 
   /// 👻 CLEANUP GHOST ACCOUNT
@@ -247,7 +274,6 @@ class AuthService {
     }
 
     final data = userDoc.data()!;
-    final String role = data['role'] ?? 'student';
     final String? phone = data['phone'];
     final String? email = data['email'];
     final String? oldName = data['name_lower'];
@@ -267,17 +293,6 @@ class AuthService {
     };
 
     batch.update(_firestore.collection('users').doc(uid), anonymizeUpdates);
-
-    // Sync name changes to their courses if they are a teacher
-    if (role == 'teacher') {
-      final coursesQuery = await _firestore.collection('courses').where('teacherId', isEqualTo: uid).get();
-      for (var doc in coursesQuery.docs) {
-        batch.update(doc.reference, {
-          'teacherName': 'حساب محذوف',
-          'teacherProfilePic': null,
-        });
-      }
-    }
 
     // 2. Release Locks (Allow these credentials to be used by new users)
     if (email != null && email.isNotEmpty) {
@@ -312,8 +327,13 @@ class AuthService {
     await user.delete();
   }
 
-  Future<String?> loginWithEmail(String email, String password) =>
-      _emailAuth.login(email: email, password: password);
+  Future<String?> loginWithEmail(String email, String password) async {
+    final result = await _emailAuth.login(email: email, password: password);
+    if (result == null) {
+      await _biometricService.setAppLocked(false);
+    }
+    return result;
+  }
 
   Future<bool> sendEmailOtp(String email, String otpCode) =>
       _emailService.sendOtp(email, otpCode);
@@ -393,11 +413,7 @@ class AuthService {
       // 5. Cleanup
       _googleAuth.clearPendingCredential();
       
-      final userDoc = await _firestore.collection("users").doc(uid).get();
-      if (userDoc.exists) {
-        return (userDoc.data() as Map<String, dynamic>)["role"] ?? "student";
-      }
-      return "student"; // Default fallback
+      return null; // Return successfully
     } catch (e) {
       debugPrint("Error linking account: $e");
       rethrow;

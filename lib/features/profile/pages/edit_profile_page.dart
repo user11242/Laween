@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/theme/colors.dart';
 import 'package:laween/l10n/app_localizations.dart';
 
 class EditProfilePage extends StatefulWidget {
@@ -59,7 +60,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.successUpdate),
-            backgroundColor: const Color(0xFF006D77),
+            backgroundColor: AppColors.teal,
           ),
         );
         Navigator.pop(context);
@@ -102,7 +103,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         centerTitle: true,
       ),
       body: _isInitialLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF006D77)))
+          ? const Center(child: CircularProgressIndicator(color: AppColors.teal))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
               child: Form(
@@ -127,11 +128,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                 padding: const EdgeInsets.all(4),
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: const Color(0xFF006D77).withValues(alpha: 0.2), width: 2),
+                                  border: Border.all(color: AppColors.teal.withValues(alpha: 0.2), width: 2),
                                 ),
                                 child: CircleAvatar(
                                   radius: 50,
-                                  backgroundColor: const Color(0xFF006D77),
+                                  backgroundColor: AppColors.teal,
                                   backgroundImage: (photoUrl != null && photoUrl.startsWith('http')) ? NetworkImage(photoUrl) : null,
                                   child: photoUrl == null
                                       ? Text(
@@ -153,7 +154,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             child: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: const BoxDecoration(
-                                color: Color(0xFF006D77),
+                                color: AppColors.teal,
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
@@ -199,7 +200,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _saveProfile,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF006D77),
+                          backgroundColor: AppColors.teal,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           elevation: 0,
                         ),
@@ -255,7 +256,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
           decoration: InputDecoration(
             hintText: label,
-            prefixIcon: Icon(icon, color: const Color(0xFF006D77), size: 20),
+            prefixIcon: Icon(icon, color: AppColors.teal, size: 20),
             filled: true,
             fillColor: enabled ? Colors.grey.shade50 : Colors.grey.shade100,
             contentPadding: const EdgeInsets.all(16),
@@ -273,7 +274,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF006D77), width: 2),
+              borderSide: const BorderSide(color: AppColors.teal, width: 2),
             ),
           ),
         ),

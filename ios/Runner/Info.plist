@@ -63,5 +63,15 @@
 	<!-- End of the Google Sign-In section -->
 	<key>NSFaceIDUsageDescription</key>
 	<string>Laween uses Face ID to allow you to sign in quickly and securely.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Laween needs access to your contacts to let you add them to your groups.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Laween needs access to your photo library to let you pick a group profile picture.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Laween needs access to your camera to let you take a group profile picture.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Laween needs access to your location to let you share it with your group members.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Laween needs access to your location to let you share it with your group members.</string>
 </dict>
 </plist>

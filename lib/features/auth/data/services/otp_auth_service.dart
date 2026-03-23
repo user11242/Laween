@@ -86,7 +86,7 @@ class OtpAuthService {
            await currentUser.linkWithCredential(credential);
          } on FirebaseAuthException catch (e) {
            if (e.code == 'user-not-found' || e.code == 'user-disabled') {
-             // ⚠️ Vital Fix: If the current user was deleted on the server (e.g. by Admin),
+             // ⚠️ Vital Fix: If the current user was deleted on the server,
              // the local token is stale. linking will fail with 'user-not-found'.
              // We must sign out and treat this as a fresh sign-in.
              debugPrint("⚠️ Stale user detected (User deleted on server). Signing out and retrying...");

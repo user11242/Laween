@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../core/theme/colors.dart';
 import 'package:laween/l10n/app_localizations.dart';
 
 class AboutPage extends StatelessWidget {
@@ -19,7 +20,7 @@ class AboutPage extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          l10n.aboutCalligro,
+          l10n.aboutLaween,
           style: GoogleFonts.inter(
             color: Colors.black,
             fontWeight: FontWeight.bold,
@@ -32,7 +33,7 @@ class AboutPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.info_outline, size: 100, color: Color(0xFF006D77)),
+            const Icon(Icons.info_outline, size: 100, color: AppColors.teal),
             const SizedBox(height: 20),
             Text(
               "About Laween coming soon",

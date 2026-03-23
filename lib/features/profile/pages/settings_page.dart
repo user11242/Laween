@@ -2,9 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:laween/l10n/app_localizations.dart';
+import '../../../core/theme/colors.dart';
+import '../../../../l10n/app_localizations.dart';
 import 'package:laween/core/services/biometric_service.dart';
 import 'package:laween/core/message/app_messenger.dart';
+import '../widgets/biometric_auth_dialog.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -58,11 +60,8 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _toggleBiometric(bool value) async {
+    final l10n = AppLocalizations.of(context, listen: false)!;
     if (value) {
-      // If enabling, we should ideally have credentials. 
-      // For now, if they turn it on, we just set the flag. 
-      // If credentials don't exist, the login form will handle it by showing manual login.
-      // But better to authenticate first to confirm identity.
       final authenticated = await _biometricService.authenticate(
         reason: AppLocalizations.of(context)!.isAr 
             ? "قم بتأكيد هويتك لتفعيل الدخول بالبصمة" 
@@ -70,28 +69,54 @@ class _SettingsPageState extends State<SettingsPage> {
       );
       
       if (authenticated) {
-        // We can't save credentials here because we don't have the password.
-        // So we only allow "enabling" if credentials already exist.
-        final credentials = await _biometricService.getSavedCredentials();
-        if (credentials == null) {
+        final user = FirebaseAuth.instance.currentUser;
+        final isGoogleUser = user?.providerData.any((p) => p.providerId == 'google.com') ?? false;
+
+        if (isGoogleUser) {
+          await _biometricService.enableForSocialLogin();
           if (mounted) {
+            setState(() => _biometricEnabled = true);
             AppMessenger.showSnackBar(
               context,
-              title: AppLocalizations.of(context)!.error,
-              message: AppLocalizations.of(context)!.isAr 
-                  ? "يرجى تسجيل الدخول يدوياً وتفعيل البصمة عند السؤال" 
-                  : "Please log in manually and enable biometrics when prompted",
-              type: MessengerType.error,
+              title: l10n.success,
+              message: l10n.isAr ? "تم تفعيل البصمة بنجاح" : "Biometrics enabled successfully",
+              type: MessengerType.success,
             );
           }
           return;
         }
-        await _biometricService.saveCredentials(credentials['email']!, credentials['password']!); // This sets enabled to true
-        setState(() => _biometricEnabled = true);
+
+        final credentials = await _biometricService.getSavedCredentials();
+        if (credentials == null) {
+          if (!mounted) return;
+          if (mounted) {
+            final password = await showDialog<String>(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) => const BiometricAuthDialog(),
+            );
+            
+            if (password != null && mounted) {
+              if (user != null && user.email != null) {
+                await _biometricService.saveCredentials(user.email!, password);
+                setState(() => _biometricEnabled = true);
+                AppMessenger.showSnackBar(
+                  context,
+                  title: l10n.success,
+                  message: l10n.isAr ? "تم تفعيل البصمة بنجاح" : "Biometrics enabled successfully",
+                  type: MessengerType.success,
+                );
+              }
+            }
+          }
+        } else {
+          await _biometricService.saveCredentials(credentials['email']!, credentials['password']!);
+          if (mounted) setState(() => _biometricEnabled = true);
+        }
       }
     } else {
       await _biometricService.disableBiometric();
-      setState(() => _biometricEnabled = false);
+      if (mounted) setState(() => _biometricEnabled = false);
     }
   }
 
@@ -139,7 +164,7 @@ class _SettingsPageState extends State<SettingsPage> {
         centerTitle: true,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF006D77)))
+          ? const Center(child: CircularProgressIndicator(color: AppColors.teal))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
               child: Column(
@@ -183,7 +208,7 @@ class _SettingsPageState extends State<SettingsPage> {
       style: GoogleFonts.inter(
         fontSize: 14,
         fontWeight: FontWeight.bold,
-        color: const Color(0xFF006D77),
+        color: AppColors.teal,
         letterSpacing: 1.2,
       ),
     );
@@ -207,10 +232,10 @@ class _SettingsPageState extends State<SettingsPage> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFF006D77).withValues(alpha: 0.1),
+              color: AppColors.teal.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: const Color(0xFF006D77), size: 22),
+            child: Icon(icon, color: AppColors.teal, size: 22),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -226,7 +251,7 @@ class _SettingsPageState extends State<SettingsPage> {
           Switch.adaptive(
             value: value,
             onChanged: onChanged,
-            activeTrackColor: const Color(0xFF006D77),
+            activeTrackColor: AppColors.teal,
           ),
         ],
       ),

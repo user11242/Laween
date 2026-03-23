@@ -2,23 +2,21 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:laween/l10n/app_localizations.dart';
+import 'package:laween/features/auth/data/services/auth_service.dart';
+import '../../../core/theme/colors.dart';
+import '../../../../l10n/app_localizations.dart';
 import 'package:laween/features/auth/pages/onboarding_page.dart';
 import 'package:laween/features/profile/pages/language_page.dart';
 import 'package:laween/features/profile/pages/edit_profile_page.dart';
 import 'package:laween/features/profile/pages/favorites_page.dart';
 import 'package:laween/features/profile/pages/settings_page.dart';
 import 'package:laween/features/profile/pages/about_page.dart';
-import 'package:laween/core/services/biometric_service.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   Future<void> _handleLogout(BuildContext context) async {
-    // Clear biometric credentials on logout
-    await BiometricService().clearCredentials();
-    
-    await FirebaseAuth.instance.signOut();
+    await AuthService().signOut();
     if (context.mounted) {
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const OnboardingPage()),
@@ -61,7 +59,7 @@ class ProfilePage extends StatelessWidget {
                       child: Container(
                         height: screenHeight * 0.25,
                         width: double.infinity,
-                        color: const Color(0xFF006D77),
+                        color: AppColors.teal,
                         padding: const EdgeInsets.symmetric(horizontal: 24),
                         child: SafeArea(
                           child: Column(
@@ -92,7 +90,7 @@ class ProfilePage extends StatelessWidget {
                         ),
                         child: CircleAvatar(
                           radius: 50,
-                          backgroundColor: const Color(0xFF006D77),
+                          backgroundColor: AppColors.teal,
                           backgroundImage: (photoUrl != null && photoUrl.startsWith('http')) ? NetworkImage(photoUrl) : null,
                           child: photoUrl == null
                               ? Text(
@@ -168,7 +166,7 @@ class ProfilePage extends StatelessWidget {
                         },
                         trailing: Text(
                           l10n.isAr ? "العربية" : "English",
-                          style: GoogleFonts.inter(color: const Color(0xFF006D77), fontWeight: FontWeight.bold),
+                          style: GoogleFonts.inter(color: AppColors.teal, fontWeight: FontWeight.bold),
                         ),
                       ),
                       _buildMenuItem(
@@ -183,7 +181,7 @@ class ProfilePage extends StatelessWidget {
                       ),
                       _buildMenuItem(
                         icon: Icons.info_outline,
-                        title: l10n.aboutCalligro,
+                        title: l10n.aboutLaween,
                         onTap: () {
                           Navigator.push(
                             context,
@@ -228,10 +226,10 @@ class ProfilePage extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: (iconColor ?? const Color(0xFF006D77)).withValues(alpha: 0.1),
+          color: (iconColor ?? AppColors.teal).withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon, color: iconColor ?? const Color(0xFF006D77), size: 20),
+        child: Icon(icon, color: iconColor ?? AppColors.teal, size: 20),
       ),
       title: Text(
         title,

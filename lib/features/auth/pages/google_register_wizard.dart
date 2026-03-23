@@ -1,9 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:laween/core/theme/colors.dart';
 import 'package:laween/l10n/app_localizations.dart';
 import 'package:laween/features/auth/data/services/auth_service.dart';
 import '../../../core/message/app_messenger.dart';
+import '../widgets/verification/universal_otp_step.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:device_region/device_region.dart';
 import 'package:laween/features/auth/pages/terms_and_conditions_page.dart';
@@ -27,6 +29,8 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
     return error;
   }
 
+  final _otpKey = GlobalKey<UniversalOtpStepState>();
+  
   int _step = 0;
   bool isLoading = false;
   bool _acceptedTerms = false;
@@ -69,6 +73,13 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
       case 0:
         return _buildPhoneInputStep();
       case 1:
+        return UniversalOtpStep(
+          key: _otpKey,
+          destination: fullPhoneNumber,
+          onVerified: _stepForward,
+          isLight: true,
+        );
+      case 2:
         return _buildTermsStep();
       default:
         return const SizedBox.shrink();
@@ -80,17 +91,17 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.description_outlined, color: Color(0xFF006D77), size: 48),
+        const Icon(Icons.description_outlined, color: AppColors.teal, size: 48),
         const SizedBox(height: 16),
         Text(
           l10n.termsAndConditions,
-          style: const TextStyle(color: Color(0xFF006D77), fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(color: AppColors.teal, fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 24),
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF006D77).withValues(alpha: 0.05),
+            color: AppColors.teal.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
@@ -98,18 +109,18 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
               Checkbox(
                 value: _acceptedTerms,
                 onChanged: (v) => setState(() => _acceptedTerms = v!),
-                activeColor: const Color(0xFF006D77),
+                activeColor: AppColors.teal,
               ),
               Expanded(
                 child: RichText(
                   text: TextSpan(
-                    style: const TextStyle(color: Color(0xFF006D77), fontSize: 13),
+                    style: const TextStyle(color: AppColors.teal, fontSize: 13),
                     children: [
                       TextSpan(text: l10n.iAccept),
                       TextSpan(
                         text: l10n.termsAndConditions,
                         style: const TextStyle(
-                          color: Color(0xFF006D77),
+                          color: AppColors.teal,
                           fontWeight: FontWeight.bold,
                           decoration: TextDecoration.underline,
                         ),
@@ -136,18 +147,18 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
       children: [
         Text(
           l10n.verifyIdentity,
-          style: const TextStyle(color: Color(0xFF006D77), fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(color: AppColors.teal, fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 20),
         IntlPhoneField(
           controller: phoneController,
           invalidNumberMessage: l10n.invalidMobileNumber,
           initialCountryCode: _initialCountryCode,
-          style: const TextStyle(color: Color(0xFF006D77)),
+          style: const TextStyle(color: AppColors.teal),
           inputFormatters: [NumericUtils.digitFormatter],
           textAlign: TextAlign.start,
-          dropdownIcon: const Icon(Icons.arrow_drop_down, color: Color(0xFF006D77)),
-          dropdownTextStyle: const TextStyle(color: Color(0xFF006D77)),
+          dropdownIcon: const Icon(Icons.arrow_drop_down, color: AppColors.teal),
+          dropdownTextStyle: const TextStyle(color: AppColors.teal),
           onChanged: (phone) {
             setState(() {
               // Normalize digits AND clean spaces/dashes for the backend
@@ -156,20 +167,20 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
           },
           decoration: InputDecoration(
             hintText: l10n.phoneNumber,
-            hintStyle: TextStyle(color: const Color(0xFF006D77).withValues(alpha: 0.5)),
+            hintStyle: TextStyle(color: AppColors.teal.withValues(alpha: 0.5)),
             filled: true,
-            fillColor: const Color(0xFF006D77).withValues(alpha: 0.05),
+            fillColor: AppColors.teal.withValues(alpha: 0.05),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: const Color(0xFF006D77).withValues(alpha: 0.3)),
+              borderSide: BorderSide(color: AppColors.teal.withValues(alpha: 0.3)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: const Color(0xFF006D77).withValues(alpha: 0.3)),
+              borderSide: BorderSide(color: AppColors.teal.withValues(alpha: 0.3)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF006D77), width: 1.5),
+              borderSide: const BorderSide(color: AppColors.teal, width: 1.5),
             ),
           ),
         ),
@@ -227,15 +238,6 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
     }
   }
 
-  void _prevStep() {
-    if (_step > 0) {
-      setState(() {
-        _step--;
-      });
-    } else {
-      _handleCancel();
-    }
-  }
 
   Future<void> _handleCancel() async {
     setState(() => isLoading = true);
@@ -246,7 +248,7 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
     }
   }
 
-  bool _isFinalStep() => _step == 1;
+  bool _isFinalStep() => _step == 2;
 
   Future<bool> _validateCurrentStepInput() async {
     final l10n = AppLocalizations.of(context, listen: false)!;
@@ -322,7 +324,7 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.95), 
                   borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: const Color(0xFF006D77).withValues(alpha: 0.1), width: 1.5),
+                  border: Border.all(color: AppColors.teal.withValues(alpha: 0.1), width: 1.5),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.2),
@@ -337,23 +339,10 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
                   children: [
                     Stack(
                       children: [
-                        if (_step > 0)
-                          Align(
-                            alignment: AlignmentDirectional.topStart,
-                            child: Container(
-                              decoration: BoxDecoration(color: const Color(0xFF006D77).withValues(alpha: 0.1), shape: BoxShape.circle),
-                              child: IconButton(
-                                icon: const Icon(Icons.arrow_back, color: Color(0xFF006D77)),
-                                onPressed: _prevStep,
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                              ),
-                            ),
-                          ),
                         Align(
                           alignment: AlignmentDirectional.topEnd,
                           child: IconButton(
-                            icon: const Icon(Icons.close, color: Color(0xFF006D77)),
+                            icon: const Icon(Icons.close, color: AppColors.teal),
                             onPressed: _handleCancel,
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
@@ -367,7 +356,7 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
                       layoutBuilder: (child, list) => Stack(alignment: Alignment.center, children: [...list, if (child != null) child]),
                       child: Container(
                         key: ValueKey<int>(_step),
-                        child: !_isStepsInitialized ? const CircularProgressIndicator(color: Color(0xFF006D77)) : _buildStepContent(),
+                        child: !_isStepsInitialized ? const CircularProgressIndicator(color: AppColors.teal) : _buildStepContent(),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -378,7 +367,7 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
                             width: double.infinity,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF006D77),
+                                backgroundColor: AppColors.teal,
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(vertical: 16),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -402,7 +391,7 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
                               const Spacer(),
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF006D77),
+                                  backgroundColor: AppColors.teal,
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 ),

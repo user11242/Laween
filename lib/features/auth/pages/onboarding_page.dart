@@ -10,7 +10,9 @@ import 'package:laween/features/auth/pages/register_page.dart';
 import 'package:laween/features/auth/pages/google_register_wizard.dart';
 import 'package:laween/features/auth/widgets/link_account_dialog.dart';
 import 'package:laween/features/auth/data/services/auth_service.dart';
+import 'package:laween/core/theme/colors.dart';
 import 'package:laween/core/message/app_messenger.dart';
+import 'package:laween/core/services/biometric_service.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -27,7 +29,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     if (error.contains("ACCOUNT_EXISTS_DIFFERENT_CREDENTIAL")) {
        return l10n.isAr ? "هذا الحساب مسجل بالفعل بطريقة دخول أخرى. يرجى استخدام البريد الإلكتروني وكلمة المرور." : "This account is already registered with a different sign-in method. Please use email and password.";
     }
-    if (error.contains("canceled") || error.contains("cancel")) return "";
+    if (error.toLowerCase().contains("canceled") || error.toLowerCase().contains("cancel")) return "";
     return error;
   }
 
@@ -42,6 +44,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   Future<void> _checkExistingGoogleUser() async {
+    // 🛡️ Ensure we don't auto-login if the app is currently locked by Face ID.
+    final isLocked = await BiometricService().isAppLocked();
+    if (isLocked) return;
+
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       final isGoogle = user.providerData.any((p) => p.providerId == 'google.com');
@@ -82,24 +88,24 @@ class _OnboardingPageState extends State<OnboardingPage> {
       
       if (!mounted) return;
 
-      if (result == "student" || result == "teacher" || result == "admin") {
+      if (result == null) {
         Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-      } else if (result == "NEEDS_ROLE") {
+      } else if (result == "NEEDS_PROFILE") {
         _showRegisterWizard();
       } else if (result == "ACCOUNT_EXISTS_DIFFERENT_CREDENTIAL") {
         final email = _authService.googleAuth.pendingEmail;
         if (email != null) {
-          final role = await showDialog<String>(
+          final linked = await showDialog<bool>(
             context: context,
             barrierDismissible: false,
             builder: (context) => LinkAccountDialog(email: email),
           );
           
-          if (role != null && mounted) {
+          if (linked == true && mounted) {
             Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
           }
         }
-      } else if (result != null) {
+      } else if (result != "NEEDS_PROFILE") {
         final localizedError = _localizeError(result, loc);
         if (localizedError.isNotEmpty) {
           AppMessenger.showSnackBar(
@@ -138,7 +144,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
             ),
           ),
           
-          // Gradient Overlay to make text readable
+          // Gradient Overlay to make text readable (darkened as requested)
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -146,10 +152,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.transparent,
-                    Colors.black.withValues(alpha: 0.1),
-                    Colors.black.withValues(alpha: 0.4),
-                    Colors.black.withValues(alpha: 0.7),
+                    Colors.black.withValues(alpha: 0.2),
+                    Colors.black.withValues(alpha: 0.35),
+                    Colors.black.withValues(alpha: 0.65),
+                    Colors.black.withValues(alpha: 0.9),
                   ],
                   stops: const [0.0, 0.4, 0.7, 1.0],
                 ),
@@ -224,7 +230,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     onPressed: _isGoogleLoading ? null : _handleGoogleLogin,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF006D77),
+                      foregroundColor: AppColors.teal,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
@@ -274,7 +280,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF006D77), // Teal color matched from design
+                      backgroundColor: AppColors.teal, // Teal color matched from design
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(

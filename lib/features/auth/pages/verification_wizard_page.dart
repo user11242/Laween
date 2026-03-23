@@ -14,7 +14,6 @@ class VerificationWizardPage extends StatefulWidget {
   final String password;
   final String phone;
   final String name;
-  final String portfolio;
   final bool acceptedTerms;
   final String? language;
   final String? fcmToken;
@@ -25,7 +24,6 @@ class VerificationWizardPage extends StatefulWidget {
     required this.password,
     required this.phone,
     required this.name,
-    required this.portfolio,
     required this.acceptedTerms,
     this.language,
     this.fcmToken,
@@ -42,13 +40,13 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
   int _step = 0;
   bool isLoading = false;
 
-  int get currentStepIndex => 1;
-  int get totalStepsCount => 1;
+  int get currentStepIndex => _step + 1;
+  int get totalStepsCount => 2;
 
   @override
   void initState() {
     super.initState();
-    _step = 1; // Always start at Finish step
+    _step = 0; // Start at OTP step
   }
 
   void _goToNextStep() {
@@ -84,7 +82,6 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
       password: widget.password,
       confirmPassword: widget.password,
       phone: widget.phone,
-      portfolio: widget.portfolio,
       acceptedTerms: widget.acceptedTerms,
       language: widget.language,
     );

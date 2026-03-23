@@ -60,9 +60,9 @@ class UserModel {
     return {
       // Identity
       "uid": uid,
-      "email": email, // ✅ Vital for Admin
+      "email": email, // ✅ Vital for account management
       "authProvider": authProvider,
-      "phone": phone, // ✅ Vital for Admin
+      "phone": phone, // ✅ Vital for account management
       // Search Helpers
       "name": name,
       "name_lower": name.toLowerCase(), // ✅ Kept your search optimization

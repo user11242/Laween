@@ -38,7 +38,7 @@ class EmailAuthService {
         phone: phone ?? '',
         acceptedTerms: acceptedTerms,
         createdAt: DateTime.now(),
-        photoUrl: '', // Teachers upload photo later in profile
+        photoUrl: '', // Profile photo can be uploaded later
         authProvider: 'email', // ✅ Explicitly set provider
         language: language ?? 'en',
       );

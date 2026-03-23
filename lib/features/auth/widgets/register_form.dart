@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../core/theme/colors.dart';
 import '../../../features/auth/data/services/auth_service.dart';
 import '../../../core/message/app_messenger.dart';
 import '../../../core/utils/numeric_utils.dart';
@@ -8,6 +9,7 @@ import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:phone_number/phone_number.dart' as lib_phone;
 import 'dart:async';
+import '../pages/verification_wizard_page.dart';
 
 class RegisterForm extends StatefulWidget {
   const RegisterForm({super.key});
@@ -299,12 +301,12 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
   Future<void> _handleContinue() async {
     final l10n = AppLocalizations.of(context, listen: false)!;
     
-    // Check if anything is invalid and trigger shake
+    // 1. Check UX elements (terms, name, email, etc.)
     bool hasError = false;
     
     if (!_acceptedTerms) {
       AppMessenger.showSnackBar(context, title: l10n.termsRequired, message: l10n.acceptTermsToFinish, type: MessengerType.error);
-      return; // Terms are special
+      return; 
     }
 
     if (!_isNameValid) { _nameControllerAnimate.forward(from: 0); hasError = true; }
@@ -314,53 +316,48 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
     if (!_isConfirmValid) { _confirmControllerAnimate.forward(from: 0); hasError = true; }
 
     if (hasError) {
-      AppMessenger.showSnackBar(
-        context, 
-        title: l10n.error, 
-        message: l10n.pleaseTryAgain, 
-        type: MessengerType.error
-      );
+      AppMessenger.showSnackBar(context, title: l10n.error, message: l10n.pleaseTryAgain, type: MessengerType.error);
       return;
     }
-    
-    // Register directly and go to home
+
+    // 2. Perform Pre-Registration Check (uniqueness)
     setState(() => _isLoading = true);
-    
-    try {
-      final error = await _authService.registerWithEmail(
-        name: _nameController.text.trim(),
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        confirmPassword: _passwordController.text,
-        phone: _fullPhoneNumber.isNotEmpty ? _fullPhoneNumber : _phoneController.text.trim(), // ✅ Use full phone
-        portfolio: '',
-        acceptedTerms: _acceptedTerms,
-      );
+    final preCheckError = await _authService.preRegistrationCheck(
+      name: _nameController.text.trim(),
+      email: _emailController.text.trim(),
+      phone: _fullPhoneNumber,
+    );
 
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-
-      if (error == null) {
-        // Success: Go directly to Home
-        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-      } else {
-        AppMessenger.showSnackBar(
-          context, 
-          title: l10n.error, 
-          message: _localizeError(error, l10n), 
-          type: MessengerType.error
-        );
+    if (preCheckError != null) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        AppMessenger.showSnackBar(context, title: l10n.error, message: _localizeError(preCheckError, l10n), type: MessengerType.error);
       }
-    } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
-      AppMessenger.showSnackBar(
-        context, 
-        title: l10n.error, 
-        message: e.toString(), 
-        type: MessengerType.error
+      return;
+    }
+
+    // 3. Move to Verification Step (Popup Wizard)
+    if (mounted) {
+      setState(() => _isLoading = false);
+      
+      final result = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => VerificationWizardPage(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          phone: _fullPhoneNumber,
+          name: _nameController.text.trim(),
+          acceptedTerms: _acceptedTerms,
+        ),
       );
+
+      if (result == true && mounted) {
+        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+      }
     }
   }
+
 
   Widget _buildTextField({
     required TextEditingController controller,
@@ -390,18 +387,19 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
           labelText: label,
           labelStyle: GoogleFonts.inter(color: errorText != null ? Colors.red : Colors.grey, fontSize: 14),
           hintStyle: GoogleFonts.inter(color: Colors.grey.shade400, fontSize: 14),
-          prefixIcon: Icon(icon, color: errorText != null ? Colors.red : const Color(0xFF006D77), size: 20),
+          prefixIcon: Icon(icon, color: errorText != null ? Colors.red : AppColors.teal, size: 20),
           suffixIcon: isLoading 
-            ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF006D77))))
+            ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.teal)))
             : (isSuccess ? const Icon(Icons.check_circle, color: Colors.green, size: 20) : suffixIcon),
           enabledBorder: UnderlineInputBorder(
             borderSide: BorderSide(color: errorText != null ? Colors.red : Colors.grey.shade300),
           ),
           focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: errorText != null ? Colors.red : const Color(0xFF006D77), width: 2),
+            borderSide: BorderSide(color: errorText != null ? Colors.red : AppColors.teal, width: 2),
           ),
           errorText: errorText,
           errorStyle: const TextStyle(color: Colors.red, fontSize: 12),
+          errorMaxLines: 3,
         ),
       ),
     );
@@ -409,6 +407,7 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
+
     final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -461,18 +460,19 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
             decoration: InputDecoration(
               labelText: l10n.phoneNumber,
               labelStyle: GoogleFonts.inter(color: _phoneError != null ? Colors.red : Colors.grey, fontSize: 14),
-              prefixIcon: Icon(Icons.phone_outlined, color: _phoneError != null ? Colors.red : const Color(0xFF006D77), size: 20),
+              prefixIcon: Icon(Icons.phone_outlined, color: _phoneError != null ? Colors.red : AppColors.teal, size: 20),
               suffixIcon: _isPhoneChecking 
-                ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF006D77))))
+                ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.teal)))
                 : (_isPhoneValid ? const Icon(Icons.check_circle, color: Colors.green, size: 20) : null),
               enabledBorder: UnderlineInputBorder(
                 borderSide: BorderSide(color: _phoneError != null ? Colors.red : Colors.grey.shade300),
               ),
               focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: _phoneError != null ? Colors.red : const Color(0xFF006D77), width: 2),
+                borderSide: BorderSide(color: _phoneError != null ? Colors.red : AppColors.teal, width: 2),
               ),
               errorText: _phoneError,
               errorStyle: const TextStyle(color: Colors.red, fontSize: 12),
+              errorMaxLines: 3,
             ),
             style: GoogleFonts.inter(fontSize: 16, color: _phoneError != null ? Colors.red : Colors.black87),
           ),
@@ -521,7 +521,7 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
               width: 24,
               child: Checkbox(
                 value: _acceptedTerms,
-                activeColor: const Color(0xFF006D77),
+                activeColor: AppColors.teal,
                 side: BorderSide(color: Colors.grey.shade400),
                 onChanged: (val) => setState(() => _acceptedTerms = val ?? false),
               ),
@@ -536,7 +536,7 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
                     TextSpan(
                       text: l10n.termsAndConditions,
                       style: const TextStyle(
-                        color: Color(0xFF006D77),
+                        color: AppColors.teal,
                         fontWeight: FontWeight.w600,
                         decoration: TextDecoration.underline,
                       ),
@@ -557,7 +557,7 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF006D77).withValues(alpha: 0.3),
+                color: AppColors.teal.withValues(alpha: 0.3),
                 blurRadius: 10,
                 offset: const Offset(0, 5),
               ),
@@ -566,7 +566,7 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
           child: ElevatedButton(
             onPressed: (_isLoading || _isNameChecking || _isEmailChecking || _isPhoneChecking) ? null : _handleContinue,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF006D77),
+              backgroundColor: AppColors.teal,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
               elevation: 0,
             ),

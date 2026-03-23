@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../core/theme/colors.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:laween/l10n/app_localizations.dart';
 import 'package:laween/core/message/app_messenger.dart';
@@ -76,7 +77,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   child: Container(
                     height: screenHeight * 0.25,
                     width: double.infinity,
-                    color: const Color(0xFF006D77),
+                    color: AppColors.teal,
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: SafeArea(
                       child: Row(
@@ -125,18 +126,18 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         width: 140,
                         height: 140,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF006D77).withValues(alpha: 0.05),
+                          color: AppColors.teal.withValues(alpha: 0.05),
                           shape: BoxShape.circle,
                         ),
                       ),
                       // Dot pattern around the icon (simulated)
                       Positioned(
                         top: 20, right: 10,
-                        child: Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFF006D77), shape: BoxShape.circle)),
+                        child: Container(width: 6, height: 6, decoration: const BoxDecoration(color: AppColors.teal, shape: BoxShape.circle)),
                       ),
                       Positioned(
                         bottom: 30, left: 15,
-                        child: Container(width: 4, height: 4, decoration: const BoxDecoration(color: Color(0xFF006D77), shape: BoxShape.circle)),
+                        child: Container(width: 4, height: 4, decoration: const BoxDecoration(color: AppColors.teal, shape: BoxShape.circle)),
                       ),
                       // The Icon/Graphic
                       Container(
@@ -151,7 +152,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       // Floating dots near graphics
                       Positioned(
                         top: 0, left: 0,
-                        child: _buildDecorativeDots(const Color(0xFF006D77)),
+                        child: _buildDecorativeDots(AppColors.teal),
                       ),
                     ],
                   ),
@@ -208,7 +209,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
-                        borderSide: const BorderSide(color: Color(0xFF006D77)),
+                        borderSide: const BorderSide(color: AppColors.teal),
                       ),
                     ),
                   ),
@@ -222,7 +223,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _verify,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF006D77),
+                        backgroundColor: AppColors.teal,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
@@ -264,7 +265,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   // Bottom decorative dots
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: _buildDecorativeDots(const Color(0xFF006D77)),
+                    child: _buildDecorativeDots(AppColors.teal),
                   ),
                 ],
               ),

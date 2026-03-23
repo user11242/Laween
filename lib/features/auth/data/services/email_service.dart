@@ -32,29 +32,33 @@ class EmailService {
   <style>
     body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
     .container { max-width: 500px; margin: 30px auto; background: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    .header { text-align: center; padding-bottom: 20px; border-bottom: 1px solid #eeeeee; }
-    .header h1 { color: #ffca28; margin: 0; font-size: 24px; } /* Amber Color */
-    .content { padding: 20px; text-align: center; color: #333333; }
-    .otp-code { font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #000000; background: #fff8e1; padding: 15px; border-radius: 5px; display: inline-block; margin: 20px 0; border: 1px dashed #ffca28; }
-    .footer { text-align: center; font-size: 12px; color: #888888; margin-top: 20px; border-top: 1px solid #eeeeee; padding-top: 10px; }
+    .header { text-align: center; padding: 25px 0; background-color: #006D77; border-radius: 8px 8px 0 0; }
+    .header h1 { color: #ffffff; margin: 0; font-size: 28px; letter-spacing: 2px; }
+    .content { padding: 30px; text-align: center; color: #333333; line-height: 1.6; }
+    .otp-code { font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #006D77; background: #f0f7f8; padding: 20px; border-radius: 12px; display: inline-block; margin: 25px 0; border: 2px solid #006D77; }
+    .footer { text-align: center; font-size: 12px; color: #888888; margin-top: 20px; border-top: 1px solid #eeeeee; padding: 20px; }
+    .btn { display: inline-block; padding: 12px 24px; color: #ffffff; background-color: #006D77; border-radius: 30px; text-decoration: none; font-weight: bold; margin-top: 20px; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>Calligro</h1> 
+      <h1>Laween</h1> 
     </div>
     <div class="content">
-      <p style="font-size: 16px;">Hello,</p>
-      <p>Use the code below to verify your account.</p>
+      <p style="font-size: 18px; font-weight: bold;">Hello!</p>
+      <p>Your security is important to us. Use the verification code below to complete your sign-in process.</p>
       
       <div class="otp-code">$otp</div>
       
-      <p style="font-size: 14px; color: #666;">This code expires in <strong>10 minutes</strong>.</p>
-      <p>If you didn't request this, you can safely ignore this email.</p>
+      <p style="font-size: 14px; color: #666;">This secure code will expire in <strong style="color: #006D77;">10 minutes</strong>.</p>
+      <div style="margin-top: 25px;">
+        <p style="font-size: 13px;">If you didn't request this code, your account is safe – you can simply ignore this email.</p>
+      </div>
     </div>
     <div class="footer">
-      <p>&copy; 2026 Calligro Team. All rights reserved.</p>
+      <p>Sent with ❤️ from the Laween Team</p>
+      <p>&copy; 2026 Laween Inc. All rights reserved.</p>
     </div>
   </div>
 </body>
@@ -63,14 +67,14 @@ class EmailService {
 
       final body = jsonEncode({
         "sender": {
-          "name": "Calligro Team",
-          "email": "no-reply@calligro.digital", // ✅ Keep your verified email
+          "name": "Laween Team",
+          "email": "no-reply@laween.xyz", 
         },
         "to": [
           {"email": email},
         ],
-        "subject": "Your Calligro Verification Code",
-        "htmlContent": htmlTemplate, // ✅ Use the new template
+        "subject": "Your Laween Verification Code",
+        "htmlContent": htmlTemplate, 
       });
 
       final response = await http.post(

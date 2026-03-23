@@ -8,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class FcmService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // ✅ Renamed to 'saveUserFcmToken' because it works for EVERYONE (Student/Teacher/Admin)
+  // ✅ Renamed to 'saveUserFcmToken' because it works for all users
   Future<void> saveUserFcmToken(String uid) async {
     String? token;
 

@@ -29,9 +29,9 @@ class _LinkAccountDialogState extends State<LinkAccountDialog> {
     });
 
     try {
-      final role = await _authService.linkGoogleAccount(widget.email, _passwordController.text);
+      final result = await _authService.linkGoogleAccount(widget.email, _passwordController.text);
       if (mounted) {
-        Navigator.pop(context, role);
+        Navigator.pop(context, result == null);
       }
     } catch (e) {
       if (mounted) {

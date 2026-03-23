@@ -1,6 +1,8 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../../../core/theme/colors.dart';
 import '../../../features/auth/widgets/link_account_dialog.dart';
 import '../../../features/auth/data/services/auth_service.dart';
 import '../../../core/message/app_messenger.dart';
@@ -95,7 +97,7 @@ class _LoginFormState extends State<LoginForm> {
                 style: GoogleFonts.inter(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1F1F1F),
+                  color: AppColors.primary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -118,7 +120,7 @@ class _LoginFormState extends State<LoginForm> {
                     _emailFocusNode.requestFocus();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF006D77),
+                    backgroundColor: AppColors.teal,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
@@ -143,29 +145,41 @@ class _LoginFormState extends State<LoginForm> {
 
   Future<void> _handleGoogleLogin() async {
     if (_isLoading) return;
+    await _performGoogleLogin(silent: false);
+  }
+
+  Future<void> _performGoogleLogin({bool silent = false}) async {
     final l10n = AppLocalizations.of(context, listen: false)!;
     setState(() => _isLoading = true);
 
     try {
-      final result = await _authService.loginWithGoogle();
+      final result = await _authService.loginWithGoogle(silent: silent);
+      
+      if (silent && result == "SILENT_SIGN_IN_FAILED") {
+        // Fallback to manual if silent fails
+        await _performGoogleLogin(silent: false);
+        return;
+      }
+
       if (!mounted) return;
 
-      if (result == "student" || result == "teacher" || result == "admin") {
+      if (result == null) {
         Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
       } else if (result == "ACCOUNT_EXISTS_DIFFERENT_CREDENTIAL") {
         final email = _authService.googleAuth.pendingEmail;
         if (email != null) {
-          final role = await showDialog<String>(
+          final linked = await showDialog<bool>(
             context: context,
             barrierDismissible: false,
             builder: (context) => LinkAccountDialog(email: email),
           );
           
-          if (role != null && mounted) {
+          if (linked == true && mounted) {
             Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
           }
         }
-      } else if (result != null && result != "NEEDS_ROLE") {
+      } else if (result != "NEEDS_PROFILE") {
+        if (result == "CANCELED") return;
         AppMessenger.showSnackBar(
           context,
           title: l10n.error,
@@ -211,7 +225,10 @@ class _LoginFormState extends State<LoginForm> {
       if (!mounted) return;
 
       if (result == null) {
-        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+        if (mounted) Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+      } else if (result == "SOCIAL_LOGIN_REQUIRED") {
+        // Trigger Google login automatically but silently after Face ID success
+        await _performGoogleLogin(silent: true);
       } else if (result == "NO_SAVED_CREDENTIALS") {
         AppMessenger.showSnackBar(
           context,
@@ -261,11 +278,11 @@ class _LoginFormState extends State<LoginForm> {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF006D77).withValues(alpha: 0.05),
+                  color: AppColors.teal.withValues(alpha: 0.05),
                   shape: BoxShape.circle,
                 ),
                 child: const Center(
-                  child: Icon(Icons.fingerprint, color: Color(0xFF006D77), size: 40),
+                  child: Icon(Icons.fingerprint, color: AppColors.teal, size: 40),
                 ),
               ),
               const SizedBox(height: 24),
@@ -275,7 +292,7 @@ class _LoginFormState extends State<LoginForm> {
                 style: GoogleFonts.inter(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1F1F1F),
+                  color: AppColors.primary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -324,7 +341,7 @@ class _LoginFormState extends State<LoginForm> {
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF006D77),
+                          backgroundColor: AppColors.teal,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
                           ),
@@ -425,7 +442,7 @@ class _LoginFormState extends State<LoginForm> {
               borderSide: BorderSide(color: Colors.grey.shade400),
             ),
             focusedBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(color: Color(0xFF006D77)),
+              borderSide: BorderSide(color: AppColors.teal),
             ),
           ),
         ),
@@ -443,7 +460,7 @@ class _LoginFormState extends State<LoginForm> {
               borderSide: BorderSide(color: Colors.grey.shade400),
             ),
             focusedBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(color: Color(0xFF006D77)),
+              borderSide: BorderSide(color: AppColors.teal),
             ),
             suffixIcon: IconButton(
               icon: Icon(
@@ -462,7 +479,7 @@ class _LoginFormState extends State<LoginForm> {
           child: ElevatedButton(
             onPressed: _isLoading ? null : _handleContinue,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF006D77),
+              backgroundColor: AppColors.teal,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
               ),
@@ -513,7 +530,9 @@ class _LoginFormState extends State<LoginForm> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
-                l10n.loginWithFaceId,
+                Platform.isIOS 
+                  ? l10n.loginWithFaceId 
+                  : (l10n.isAr ? 'تسجيل الدخول بالبصمة' : 'Login with Fingerprint'),
                 style: GoogleFonts.inter(color: Colors.grey.shade500, fontSize: 12),
               ),
             ),
@@ -532,12 +551,18 @@ class _LoginFormState extends State<LoginForm> {
               icon: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CustomPaint(
-                    size: const Size(36, 36),
-                    painter: FaceIdPainter(
-                      color: _isBiometricAvailable ? const Color(0xFF006D77) : Colors.grey.shade400,
-                    ),
-                  ),
+                  Platform.isIOS 
+                    ? CustomPaint(
+                        size: const Size(36, 36),
+                        painter: FaceIdPainter(
+                          color: _isBiometricAvailable ? AppColors.teal : Colors.grey.shade400,
+                        ),
+                      )
+                    : Icon(
+                        Icons.fingerprint, 
+                        size: 40, 
+                        color: _isBiometricAvailable ? AppColors.teal : Colors.grey.shade400,
+                      ),
                 ],
               ),
             ),

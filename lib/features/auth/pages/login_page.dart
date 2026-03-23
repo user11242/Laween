@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 import 'package:laween/l10n/app_localizations.dart';
-import 'package:laween/core/providers/locale_provider.dart';
+import '../../../core/theme/colors.dart';
 import '../widgets/login_form.dart';
 
 class LoginCurveClipper extends CustomClipper<Path> {
@@ -29,7 +28,6 @@ class LoginPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final loc = AppLocalizations.of(context)!;
-    final localeProvider = Provider.of<LocaleProvider>(context);
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -59,8 +57,8 @@ class LoginPage extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    const Color(0xFF006D77).withValues(alpha: 0.8),
-                    const Color(0xFF006D77).withValues(alpha: 0.2),
+                    AppColors.teal.withValues(alpha: 0.8),
+                    AppColors.teal.withValues(alpha: 0.2),
                     Colors.black.withValues(alpha: 0.6),
                   ],
                 ),

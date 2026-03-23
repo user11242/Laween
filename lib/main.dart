@@ -5,28 +5,25 @@ import 'package:laween/features/auth/pages/verification_wizard_page.dart';
 import 'package:laween/features/auth/pages/verification_page.dart';
 import 'package:laween/features/home/pages/home_page.dart';
 import 'package:laween/features/auth/data/services/google_auth_service.dart';
-import 'package:laween/features/auth/widgets/auth_wrapper.dart';
+import 'package:laween/features/auth/pages/splash_page.dart';
 import 'package:laween/core/providers/locale_provider.dart';
 import 'package:laween/features/auth/pages/forgot_password_page.dart';
 import 'package:laween/features/auth/pages/create_new_password_page.dart';
 import 'package:laween/features/auth/pages/login_page.dart';
 import 'package:laween/features/auth/pages/register_page.dart';
+import 'package:laween/core/theme/colors.dart';
 import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   // Initialize Google Sign-In missing in previous step!
   await GoogleAuthService.instance.initialize();
 
   runApp(
     MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => LocaleProvider()),
-      ],
+      providers: [ChangeNotifierProvider(create: (_) => LocaleProvider())],
       child: const MyApp(),
     ),
   );
@@ -44,14 +41,14 @@ class MyApp extends StatelessWidget {
       title: 'Laween',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF006D77)),
+        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.teal),
         useMaterial3: true,
       ),
       builder: (context, child) => Directionality(
         textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
         child: child!,
       ),
-      home: const AuthWrapper(),
+      home: const SplashPage(),
       routes: {
         '/home': (context) => const HomePage(),
         '/login': (context) => const LoginPage(),
@@ -70,7 +67,6 @@ class MyApp extends StatelessWidget {
               password: args['password'],
               phone: args['phone'],
               name: args['name'],
-              portfolio: args['portfolio'] ?? '',
               acceptedTerms: args['acceptedTerms'] ?? true,
               language: args['language'],
               fcmToken: args['fcmToken'],

@@ -11,6 +11,7 @@ class BiometricService {
 
   static const String _credentialsKey = 'user_credentials';
   static const String _biometricEnabledKey = 'biometric_enabled';
+  static const String _isSocialLoginKey = 'is_social_login';
 
   /// Check if biometrics are available and configured on the device
   Future<bool> isBiometricAvailable() async {
@@ -55,6 +56,19 @@ class BiometricService {
     };
     await _storage.write(key: _credentialsKey, value: jsonEncode(credentials));
     await _storage.write(key: _biometricEnabledKey, value: 'true');
+    await _storage.write(key: _isSocialLoginKey, value: 'false');
+  }
+
+  /// Enable biometric for social login (no password)
+  Future<void> enableForSocialLogin() async {
+    await _storage.write(key: _biometricEnabledKey, value: 'true');
+    await _storage.write(key: _isSocialLoginKey, value: 'true');
+  }
+
+  /// Check if the biometric registration was for a social login
+  Future<bool> isSocialLogin() async {
+    final String? isSocial = await _storage.read(key: _isSocialLoginKey);
+    return isSocial == 'true';
   }
 
   /// Retrieve saved credentials
@@ -73,6 +87,8 @@ class BiometricService {
     }
   }
 
+  static const String _appLockedKey = 'app_locked';
+
   /// Check if biometric login is enabled by the user
   Future<bool> isBiometricEnabled() async {
     final String? enabled = await _storage.read(key: _biometricEnabledKey);
@@ -88,5 +104,19 @@ class BiometricService {
   Future<void> clearCredentials() async {
     await _storage.delete(key: _credentialsKey);
     await _storage.delete(key: _biometricEnabledKey);
+    await _storage.delete(key: _appLockedKey);
+  }
+
+  // APP LOCK MECHANISM FOR ZERO-TAP LOGIN
+  
+  /// Sets whether the app is currently locked behind biometrics
+  Future<void> setAppLocked(bool locked) async {
+    await _storage.write(key: _appLockedKey, value: locked.toString());
+  }
+
+  /// Checks if the app is currently locked and requires biometrics
+  Future<bool> isAppLocked() async {
+    final String? lockedStr = await _storage.read(key: _appLockedKey);
+    return lockedStr == 'true';
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../core/theme/colors.dart';
 import '../widgets/register_form.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -37,7 +38,7 @@ class RegisterPage extends StatelessWidget {
               child: Container(
                 height: screenHeight * 0.28,
                 width: double.infinity,
-                color: const Color(0xFF006D77),
+                color: AppColors.teal,
                 child: SafeArea(
                   bottom: false,
                   child: Padding(
@@ -94,7 +95,7 @@ class RegisterPage extends StatelessWidget {
                   child: Icon(
                     Icons.person_outline,
                     size: 40,
-                    color: const Color(0xFF006D77).withValues(alpha: 0.8),
+                    color: AppColors.teal.withValues(alpha: 0.8),
                   ),
                 ),
                 Positioned(
@@ -109,7 +110,7 @@ class RegisterPage extends StatelessWidget {
                     child: const Icon(
                       Icons.add_circle,
                       size: 20,
-                      color: Color(0xFF006D77),
+                      color: AppColors.teal,
                     ),
                   ),
                 ),
@@ -123,7 +124,7 @@ class RegisterPage extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFF006D77),
+                color: AppColors.teal,
               ),
             ),
             const SizedBox(height: 8),

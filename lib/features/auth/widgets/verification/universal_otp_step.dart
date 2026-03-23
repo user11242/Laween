@@ -11,11 +11,13 @@ import '../../../../core/utils/numeric_utils.dart';
 class UniversalOtpStep extends StatefulWidget {
   final String destination;
   final VoidCallback onVerified;
+  final bool isLight; // ✅ Added for flexibility
 
   const UniversalOtpStep({
     super.key,
     required this.destination,
     required this.onVerified,
+    this.isLight = false, // Default to dark for legacy backwards compatibility
   });
 
   @override
@@ -29,6 +31,7 @@ class UniversalOtpStepState extends State<UniversalOtpStep> {
   String? _verificationId;
   int? _resendToken;
   String? _generatedEmailOtp;
+  DateTime? _otpExpiry; 
   int _resendCooldown = 0;
   Timer? _timer;
   bool isLoading = false;
@@ -75,6 +78,7 @@ class UniversalOtpStepState extends State<UniversalOtpStep> {
     try {
       if (_isEmail) {
         _generatedEmailOtp = (Random().nextInt(900000) + 100000).toString();
+        _otpExpiry = DateTime.now().add(const Duration(minutes: 10)); // Set expiry
         await _authService.sendEmailOtp(widget.destination, _generatedEmailOtp!);
         _startCooldown();
         if (!mounted) return;
@@ -126,6 +130,19 @@ class UniversalOtpStepState extends State<UniversalOtpStep> {
       bool success = false;
       if (_isEmail) {
         debugPrint("DEBUG: Comparing email OTP: $smsCode vs $_generatedEmailOtp");
+        
+        // CHECK EXPIRY
+        if (_otpExpiry != null && DateTime.now().isAfter(_otpExpiry!)) {
+          AppMessenger.showSnackBar(
+            context, 
+            title: l10n.error, 
+            message: l10n.isAr ? "انتهت صلاحية الرمز. يرجى طلب رمز جديد." : "OTP code has expired. Please request a new one.", 
+            type: MessengerType.error
+          );
+          setState(() => isLoading = false);
+          return false;
+        }
+
         success = (smsCode == _generatedEmailOtp);
       } else {
         if (_verificationId == null) {
@@ -166,7 +183,11 @@ class UniversalOtpStepState extends State<UniversalOtpStep> {
         Text(
           l10n.enterCodeSentTo(NumericUtils.normalize(widget.destination)),
           textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.white70, fontSize: 16, height: 1.4),
+          style: TextStyle(
+            color: widget.isLight ? Colors.black87 : Colors.white70, 
+            fontSize: 16, 
+            height: 1.4
+          ),
         ),
         const SizedBox(height: 30),
         Directionality(
@@ -179,13 +200,27 @@ class UniversalOtpStepState extends State<UniversalOtpStep> {
               shape: MaterialPinShape.outlined,
               borderRadius: BorderRadius.circular(10),
               cellSize: const Size(40, 50),
-              borderColor: Colors.white.withValues(alpha: 0.3),
-              focusedBorderColor: AppColors.accentGold,
-              filledBorderColor: AppColors.accentGold,
-              fillColor: Colors.white.withValues(alpha: 0.05),
-              focusedFillColor: AppColors.accentGold.withValues(alpha: 0.2),
-              filledFillColor: AppColors.accentGold.withValues(alpha: 0.1),
-              textStyle: const TextStyle(color: Colors.white),
+              borderColor: widget.isLight 
+                ? Colors.black.withValues(alpha: 0.15) 
+                : Colors.white.withValues(alpha: 0.3),
+              focusedBorderColor: AppColors.teal,
+              filledBorderColor: AppColors.teal,
+              fillColor: widget.isLight 
+                ? Colors.grey.withValues(alpha: 0.05) 
+                : Colors.white.withValues(alpha: 0.05),
+              focusedFillColor: AppColors.teal.withValues(alpha: 0.1),
+              filledFillColor: AppColors.teal.withValues(alpha: 0.05),
+              textStyle: TextStyle(
+                color: widget.isLight ? Colors.black : Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+              boxShadows: widget.isLight ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ] : [],
             ),
             inputFormatters: [NumericUtils.digitFormatter],
             onChanged: (v) {
@@ -197,7 +232,11 @@ class UniversalOtpStepState extends State<UniversalOtpStep> {
           onPressed: (isLoading || _resendCooldown > 0) ? null : _sendOtp,
           child: Text(
             _resendCooldown > 0 ? l10n.resendIn(_resendCooldown) : l10n.resendCode,
-            style: TextStyle(color: _resendCooldown > 0 ? Colors.grey : AppColors.secondary),
+            style: TextStyle(
+              color: _resendCooldown > 0 
+                ? (widget.isLight ? Colors.grey.shade600 : Colors.grey) 
+                : AppColors.teal
+            ),
           ),
         ),
       ],

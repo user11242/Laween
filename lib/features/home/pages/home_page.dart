@@ -1,7 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../../core/theme/colors.dart';
 import 'package:laween/l10n/app_localizations.dart';
 import 'package:laween/features/groups/pages/groups_page.dart';
 import 'package:laween/features/profile/pages/profile_page.dart';
@@ -30,9 +31,7 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      body: SafeArea(
-        child: pages[_currentIndex],
-      ),
+      body: pages[_currentIndex],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -53,7 +52,7 @@ class _HomePageState extends State<HomePage> {
           },
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.white,
-          selectedItemColor: const Color(0xFF006D77),
+          selectedItemColor: AppColors.teal,
           unselectedItemColor: const Color(0xFF94A3B8),
           selectedLabelStyle: GoogleFonts.inter(
             fontSize: 12,
@@ -136,14 +135,14 @@ class _HomePageState extends State<HomePage> {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF006D77), Color(0xFF83C5BE)],
+                colors: AppColors.tealGradient,
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF006D77).withValues(alpha: 0.3),
+                  color: AppColors.teal.withValues(alpha: 0.3),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
