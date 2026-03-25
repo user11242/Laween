@@ -569,10 +569,14 @@ class _LoginFormState extends State<LoginForm> {
             const SizedBox(width: 24),
             IconButton(
               onPressed: _handleGoogleLogin,
-              icon: const FaIcon(
-                FontAwesomeIcons.google,
-                size: 28,
-                color: Color(0xFF4285F4), // Official Google Blue
+              icon: ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: Image.asset(
+                  'assets/google_logo.jpg',
+                  height: 36,
+                  width: 36,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
           ],

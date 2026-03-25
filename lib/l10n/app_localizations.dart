@@ -18,12 +18,17 @@ class AppLocalizations {
     }
   }
 
-  String get onboardingTitle => isAr ? "مرحباً بكم في لاوين" : "Welcome to Laween";
-  String get onboardingSubtitle => isAr ? "خطط لقضاء وقت ممتع مع أصدقائك" : "Plan your hangouts with friends";
-  String get joinWithGoogle => isAr ? "سجل باستخدام جوجل" : "Join with Google";
-  String get joinWithEmail => isAr ? "سجل باستخدام البريد الإلكتروني" : "Join with Email";
+  String get onboardingTitle => isAr ? "مرحباً بكم في لوين!" : "Welcome to Laween!";
+  String get onboardingSubtitle => isAr ? "نجعل اللقاءات أسهل للجميع." : "Making meetups easier for everyone.";
+  String get onboardingSmallSubtitle => isAr ? "تواصل، اختر، والتقِ." : "Connect, choose, and meet.";
+  String get joinWithGoogle => isAr ? "سجل باستخدام جوجل" : "Sign up with Google";
+  String get joinWithEmail => isAr ? "سجل باستخدام البريد الإلكتروني" : "Sign up with Email";
   String get alreadyHaveAccount => isAr ? "هل لديك حساب بالفعل؟ " : "Already have an account? ";
   String get signIn => isAr ? "تسجيل الدخول" : "Sign In";
+  String get signInWithGoogle => isAr ? "تسجيل الدخول باستخدام جوجل" : "Sign in with Google";
+  String get signInWithEmail => isAr ? "تسجيل الدخول بالبريد الإلكتروني" : "Sign in with Email";
+  String get dontHaveAccount => isAr ? "ليس لديك حساب؟ " : "Don't have an account? ";
+  String get signUpNow => isAr ? "سجل الآن" : "Sign up";
   String get loginTitle => isAr ? "دعنا نلتقي!" : "Let's Meet Up!";
   String get loginSubtitle => isAr ? "مكان الاستراحة في انتظارك." : "Your hangout is waiting.";
 

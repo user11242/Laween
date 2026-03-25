@@ -207,21 +207,49 @@ class _OnboardingPageState extends State<OnboardingPage> {
                    Text(
                     loc.onboardingTitle,
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                    style: loc.isAr
+                        ? GoogleFonts.cairo(
+                            fontSize: 38,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          )
+                        : GoogleFonts.nunito(
+                            fontSize: 34,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     loc.onboardingSubtitle,
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      color: Colors.white.withValues(alpha: 0.9),
-                      height: 1.5,
-                    ),
+                    style: loc.isAr
+                        ? GoogleFonts.cairo(
+                            fontSize: 20,
+                            color: Colors.white.withValues(alpha: 0.9),
+                            height: 1.5,
+                          )
+                        : GoogleFonts.nunito(
+                            fontSize: 17,
+                            color: Colors.white.withValues(alpha: 0.9),
+                            height: 1.5,
+                          ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    loc.onboardingSmallSubtitle,
+                    textAlign: TextAlign.center,
+                    style: loc.isAr
+                        ? GoogleFonts.cairo(
+                            fontSize: 17,
+                            color: Colors.white.withValues(alpha: 0.7),
+                            height: 1.5,
+                          )
+                        : GoogleFonts.nunito(
+                            fontSize: 15,
+                            color: Colors.white.withValues(alpha: 0.7),
+                            height: 1.5,
+                          ),
                   ),
                   const SizedBox(height: 48),
                   
@@ -246,20 +274,18 @@ class _OnboardingPageState extends State<OnboardingPage> {
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              RichText(
-                                text: TextSpan(
-                                  style: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.bold, 
-                                    fontSize: 18,
-                                  ),
-                                  children: const [
-                                    TextSpan(text: 'G', style: TextStyle(color: Color(0xFF4285F4))),
-                                  ],
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.asset(
+                                  'assets/google_logo.jpg',
+                                  height: 24,
+                                  width: 24,
+                                  fit: BoxFit.cover,
                                 ),
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                loc.joinWithGoogle,
+                                loc.signInWithGoogle,
                                 style: GoogleFonts.inter(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -276,7 +302,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const RegisterPage()),
+                        MaterialPageRoute(builder: (_) => const LoginPage()),
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -294,7 +320,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                         const Icon(Icons.email, size: 20),
                         const SizedBox(width: 12),
                         Text(
-                          loc.joinWithEmail,
+                          loc.signInWithEmail,
                           style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -311,7 +337,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        loc.alreadyHaveAccount,
+                        loc.dontHaveAccount,
                         style: GoogleFonts.inter(
                           color: Colors.white70,
                           fontSize: 14,
@@ -321,11 +347,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const LoginPage()),
+                            MaterialPageRoute(builder: (_) => const RegisterPage()),
                           );
                         },
                         child: Text(
-                          loc.signIn,
+                          loc.signUpNow,
                           style: GoogleFonts.inter(
                             color: const Color(0xFFF4A261), // Orange matched from design
                             fontSize: 14,
