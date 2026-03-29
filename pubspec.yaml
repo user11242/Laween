@@ -59,6 +59,7 @@ dependencies:
   cached_network_image: ^3.4.1
   geolocator: ^14.0.2
   url_launcher: ^6.3.2
+  google_maps_flutter: ^2.10.0
 
 
 dev_dependencies:
@@ -89,6 +90,7 @@ flutter:
     - assets/onboarding_imgs/
     - assets/google_logo.jpg
     - assets/logo/
+    - .env
 
 flutter_launcher_icons:
   android: "launcher_icon"

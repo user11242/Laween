@@ -10,6 +10,8 @@
         android:label="Laween"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
+        <meta-data android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyD12ahp2ZkpBsrUWX1fQbtxudgTx1tg49I"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"

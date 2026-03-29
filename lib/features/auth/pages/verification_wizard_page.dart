@@ -41,7 +41,7 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
   bool isLoading = false;
 
   int get currentStepIndex => _step + 1;
-  int get totalStepsCount => 2;
+  int get totalStepsCount => 3;
 
   @override
   void initState() {
@@ -52,7 +52,7 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
   void _goToNextStep() {
     setState(() {
       _otpKey = GlobalKey<UniversalOtpStepState>();
-      _step = 1; // Always jump to Finish step
+      _step++; 
     });
   }
 
@@ -134,10 +134,18 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
       case 0:
         return UniversalOtpStep(
           key: _otpKey,
-          destination: widget.phone,
+          destination: widget.email,
           onVerified: _goToNextStep,
+          isLight: true,
         );
       case 1:
+        return UniversalOtpStep(
+          key: _otpKey,
+          destination: widget.phone,
+          onVerified: _goToNextStep,
+          isLight: true,
+        );
+      case 2:
         return const FinishVerificationStep();
       default:
         return const SizedBox.shrink();
@@ -175,7 +183,17 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
                 constraints: BoxConstraints(
                   maxHeight: MediaQuery.of(context).size.height * 0.85 - bottomInset,
                 ),
-                decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(20)),
+                decoration: BoxDecoration(
+                  color: Colors.white, 
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
                 child: SizedBox(
                   width: 360,
                   child: SingleChildScrollView(
@@ -186,8 +204,8 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
                           children: [
                             Align(
                               alignment: AlignmentDirectional.topEnd,
-                              child: IconButton(
-                                icon: const Icon(Icons.close, color: Colors.white70),
+                                child: IconButton(
+                                  icon: const Icon(Icons.close, color: Colors.black54),
                                 onPressed: _handleCancel,
                               ),
                             ),
@@ -196,7 +214,7 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
                         if (currentStepIndex <= totalStepsCount)
                           Text(
                             l10n.stepOf(currentStepIndex, totalStepsCount),
-                            style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 14),
+                            style: TextStyle(color: Colors.black.withValues(alpha: 0.4), fontSize: 13, fontWeight: FontWeight.w600),
                           ),
                         const SizedBox(height: 10),
                         AnimatedSwitcher(
@@ -207,7 +225,7 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
                         Row(
                           children: [
                             const Spacer(),
-                            if (_step == 1)
+                            if (_step == 2)
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.accentGold,

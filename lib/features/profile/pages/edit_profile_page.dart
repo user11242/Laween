@@ -1,9 +1,12 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme/colors.dart';
 import 'package:laween/l10n/app_localizations.dart';
+import '../../../../core/services/storage_service.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -16,6 +19,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _picker = ImagePicker();
+  final _storageService = StorageService();
+  File? _imageFile;
   bool _isLoading = false;
   bool _isInitialLoading = true;
 
@@ -42,6 +48,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
     }
   }
 
+  Future<void> _pickImage() async {
+    final XFile? pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+    );
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+    }
+  }
+
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -50,11 +68,25 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final l10n = AppLocalizations.of(context)!;
 
     try {
-      await FirebaseFirestore.instance.collection('users').doc(user?.uid).update({
+      String? photoUrl;
+      if (_imageFile != null) {
+        photoUrl = await _storageService.uploadFile(
+          file: _imageFile!,
+          path: 'profile_pics/${user?.uid}.jpg',
+        );
+      }
+
+      final updates = {
         'name': _nameController.text.trim(),
         'fullName': _nameController.text.trim(),
         'phone': _phoneController.text.trim(),
-      });
+      };
+      if (photoUrl != null) {
+        updates['photoUrl'] = photoUrl;
+        updates['profilePic'] = photoUrl;
+      }
+
+      await FirebaseFirestore.instance.collection('users').doc(user?.uid).update(updates);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -84,10 +116,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.grey.shade50,
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
           onPressed: () => Navigator.pop(context),
@@ -105,59 +138,74 @@ class _EditProfilePageState extends State<EditProfilePage> {
       body: _isInitialLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.teal))
           : SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.all(24.0),
               child: Form(
                 key: _formKey,
                 child: Column(
                   children: [
-                    // Avatar Section
+                    // Premium Avatar Section
                     Center(
                       child: Stack(
                         children: [
-                          StreamBuilder<DocumentSnapshot>(
-                            stream: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).snapshots(),
-                            builder: (context, snapshot) {
-                              String? photoUrl;
-                              String displayName = "User";
-                              if (snapshot.hasData && snapshot.data!.exists) {
-                                final data = snapshot.data!.data() as Map<String, dynamic>;
-                                photoUrl = data['photoUrl'] ?? data['profilePic'];
-                                displayName = data['name'] ?? data['fullName'] ?? "User";
-                              }
-                              return Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: AppColors.teal.withValues(alpha: 0.2), width: 2),
-                                ),
-                                child: CircleAvatar(
-                                  radius: 50,
-                                  backgroundColor: AppColors.teal,
-                                  backgroundImage: (photoUrl != null && photoUrl.startsWith('http')) ? NetworkImage(photoUrl) : null,
-                                  child: photoUrl == null
-                                      ? Text(
-                                          displayName.isNotEmpty ? displayName[0].toUpperCase() : "U",
-                                          style: GoogleFonts.inter(
-                                            fontSize: 40,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                          ),
-                                        )
-                                      : null,
-                                ),
-                              );
-                            },
+                          GestureDetector(
+                            onTap: _pickImage,
+                            child: StreamBuilder<DocumentSnapshot>(
+                              stream: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).snapshots(),
+                              builder: (context, snapshot) {
+                                String? photoUrl;
+                                if (snapshot.hasData && snapshot.data!.exists) {
+                                  final data = snapshot.data!.data() as Map<String, dynamic>;
+                                  photoUrl = data['photoUrl'] ?? data['profilePic'];
+                                }
+                                return Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.08),
+                                        blurRadius: 15,
+                                        spreadRadius: 2,
+                                        offset: const Offset(0, 8),
+                                      ),
+                                    ],
+                                  ),
+                                  child: CircleAvatar(
+                                    radius: 55,
+                                    backgroundColor: AppColors.teal.withValues(alpha: 0.1),
+                                    backgroundImage: _imageFile != null
+                                        ? FileImage(_imageFile!)
+                                        : (photoUrl != null && photoUrl.startsWith('http'))
+                                            ? NetworkImage(photoUrl)
+                                            : null,
+                                    child: (_imageFile == null && photoUrl?.startsWith('http') != true)
+                                        ? Icon(
+                                            Icons.person,
+                                            size: 70,
+                                            color: AppColors.teal.withValues(alpha: 0.5),
+                                          )
+                                        : null,
+                                  ),
+                                );
+                              },
+                            ),
                           ),
                           Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(
-                                color: AppColors.teal,
-                                shape: BoxShape.circle,
+                            bottom: 5,
+                            right: 5,
+                            child: GestureDetector(
+                              onTap: _pickImage,
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white, width: 3),
+                                ),
+                                child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
                               ),
-                              child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
                             ),
                           ),
                         ],
@@ -166,7 +214,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     const SizedBox(height: 40),
 
                     // Name Field
-                    _buildTextField(
+                    _buildPremiumTextField(
                       controller: _nameController,
                       label: l10n.fullName,
                       icon: Icons.person_outline,
@@ -175,7 +223,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     const SizedBox(height: 20),
 
                     // Email Field (Locked)
-                    _buildTextField(
+                    _buildPremiumTextField(
                       controller: TextEditingController(text: FirebaseAuth.instance.currentUser?.email ?? ""),
                       label: l10n.email,
                       icon: Icons.email_outlined,
@@ -185,7 +233,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     const SizedBox(height: 20),
 
                     // Phone Field
-                    _buildTextField(
+                    _buildPremiumTextField(
                       controller: _phoneController,
                       label: l10n.phone,
                       icon: Icons.phone_outlined,
@@ -194,18 +242,33 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     const SizedBox(height: 40),
 
                     // Save Button
-                    SizedBox(
+                    Container(
                       width: double.infinity,
                       height: 56,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: AppColors.tealGradient),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.teal.withValues(alpha: 0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _saveProfile,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.teal,
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          elevation: 0,
                         ),
                         child: _isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                              )
                             : Text(
                                 l10n.save,
                                 style: GoogleFonts.inter(
@@ -223,7 +286,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  Widget _buildTextField({
+  Widget _buildPremiumTextField({
     required TextEditingController controller,
     required String label,
     required IconData icon,
@@ -235,46 +298,49 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey.shade700,
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade700,
+            ),
           ),
         ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          validator: validator,
-          keyboardType: keyboardType,
-          readOnly: readOnly,
-          enabled: enabled,
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            color: enabled ? Colors.black : Colors.grey.shade600,
+        Container(
+          decoration: BoxDecoration(
+            color: enabled ? Colors.white : Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              if (enabled)
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+            ],
           ),
-          decoration: InputDecoration(
-            hintText: label,
-            prefixIcon: Icon(icon, color: AppColors.teal, size: 20),
-            filled: true,
-            fillColor: enabled ? Colors.grey.shade50 : Colors.grey.shade100,
-            contentPadding: const EdgeInsets.all(16),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade200),
+          child: TextFormField(
+            controller: controller,
+            validator: validator,
+            keyboardType: keyboardType,
+            readOnly: readOnly,
+            enabled: enabled,
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              color: enabled ? Colors.black : Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
             ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade200),
-            ),
-            disabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade200),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.teal, width: 2),
+            decoration: InputDecoration(
+              hintText: label,
+              prefixIcon: Icon(icon, color: AppColors.teal, size: 22),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
             ),
           ),
         ),

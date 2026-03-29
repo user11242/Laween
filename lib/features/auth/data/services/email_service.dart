@@ -27,39 +27,16 @@ class EmailService {
           """
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8">
-  <style>
-    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
-    .container { max-width: 500px; margin: 30px auto; background: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    .header { text-align: center; padding: 25px 0; background-color: #006D77; border-radius: 8px 8px 0 0; }
-    .header h1 { color: #ffffff; margin: 0; font-size: 28px; letter-spacing: 2px; }
-    .content { padding: 30px; text-align: center; color: #333333; line-height: 1.6; }
-    .otp-code { font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #006D77; background: #f0f7f8; padding: 20px; border-radius: 12px; display: inline-block; margin: 25px 0; border: 2px solid #006D77; }
-    .footer { text-align: center; font-size: 12px; color: #888888; margin-top: 20px; border-top: 1px solid #eeeeee; padding: 20px; }
-    .btn { display: inline-block; padding: 12px 24px; color: #ffffff; background-color: #006D77; border-radius: 30px; text-decoration: none; font-weight: bold; margin-top: 20px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>Laween</h1> 
+<body style="font-family: sans-serif; padding: 20px; color: #333;">
+  <div style="max-width: 600px; margin: auto; border: 1px solid #eee; padding: 20px; border-radius: 10px;">
+    <h2 style="color: #006D77;">Verify your account</h2>
+    <p>Use the following code to complete your registration:</p>
+    <div style="font-size: 32px; font-weight: bold; background: #f4f4f4; padding: 20px; text-align: center; border-radius: 5px; color: #006D77; letter-spacing: 5px;">
+      $otp
     </div>
-    <div class="content">
-      <p style="font-size: 18px; font-weight: bold;">Hello!</p>
-      <p>Your security is important to us. Use the verification code below to complete your sign-in process.</p>
-      
-      <div class="otp-code">$otp</div>
-      
-      <p style="font-size: 14px; color: #666;">This secure code will expire in <strong style="color: #006D77;">10 minutes</strong>.</p>
-      <div style="margin-top: 25px;">
-        <p style="font-size: 13px;">If you didn't request this code, your account is safe – you can simply ignore this email.</p>
-      </div>
-    </div>
-    <div class="footer">
-      <p>Sent with ❤️ from the Laween Team</p>
-      <p>&copy; 2026 Laween Inc. All rights reserved.</p>
-    </div>
+    <p>This code will expire in 10 minutes.</p>
+    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+    <p style="font-size: 12px; color: #999;">If you didn't request this, you can ignore this email.</p>
   </div>
 </body>
 </html>
@@ -73,8 +50,9 @@ class EmailService {
         "to": [
           {"email": email},
         ],
-        "subject": "Your Laween Verification Code",
-        "htmlContent": htmlTemplate, 
+        "subject": "Verify your Laween account",
+        "htmlContent": htmlTemplate,
+        "textContent": "Your Laween Verification Code is: $otp. This code will expire in 10 minutes.", 
       });
 
       final response = await http.post(
@@ -88,7 +66,9 @@ class EmailService {
         return true;
       } else {
         debugPrint("❌ Failed to send email. Status: ${response.statusCode}");
-        debugPrint("Response: ${response.body}");
+        debugPrint("❌ Brevo Error Body: ${response.body}");
+        // If you see 'unauthorized' here, it means the API key is invalid.
+        // If you see 'sender not verified', change 'no-reply@laween.xyz' to your verified email.
         return false;
       }
     } catch (e) {

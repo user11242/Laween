@@ -15,6 +15,8 @@ import '../data/models/group_model.dart';
 import '../data/models/message_model.dart';
 import '../data/services/chat_service.dart';
 import '../widgets/group_share_sheet.dart';
+import '../widgets/outing_message_bubble.dart';
+import '../widgets/create_outing_sheet.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'group_settings_page.dart';
 
@@ -186,6 +188,15 @@ class _ChatPageState extends State<ChatPage> {
     _attachmentMenuEntry = null;
   }
 
+  void _showCreateOutingSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => CreateOutingSheet(groupId: widget.group.id),
+    );
+  }
+
   void _showAttachmentMenu() {
     if (_attachmentMenuEntry != null) {
       _closeAttachmentMenu();
@@ -280,7 +291,7 @@ class _ChatPageState extends State<ChatPage> {
                                 child: ElevatedButton.icon(
                                   onPressed: () {
                                     _closeAttachmentMenu();
-                                    // TODO: Implement Start Outing Session
+                                    _showCreateOutingSheet();
                                   },
                                   icon: const Icon(Icons.flash_on_rounded, size: 18, color: Colors.white),
                                   label: const Text("Start Outing Session", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
@@ -479,6 +490,7 @@ class _ChatPageState extends State<ChatPage> {
 
                     return _MessageBubble(
                       message: message, 
+                      groupId: widget.group.id,
                       isMe: isMe,
                       onLongPress: () => _onMessageLongPress(message),
                       memberPhotos: _memberPhotos,
@@ -747,6 +759,7 @@ class _ChatPageState extends State<ChatPage> {
 
 class _MessageBubble extends StatelessWidget {
   final MessageModel message;
+  final String groupId;
   final bool isMe;
   final VoidCallback onLongPress;
   final Map<String, String> memberPhotos;
@@ -754,6 +767,7 @@ class _MessageBubble extends StatelessWidget {
 
   const _MessageBubble({
     required this.message, 
+    required this.groupId,
     required this.isMe,
     required this.onLongPress,
     required this.memberPhotos,
@@ -850,6 +864,13 @@ class _MessageBubble extends StatelessWidget {
                               const SizedBox(height: 8),
                             ] else if (message.type == 'location') ...[
                               _buildLocationBubble(),
+                              const SizedBox(height: 8),
+                            ] else if (message.type == 'outing') ...[
+                              OutingMessageBubble(
+                                message: message,
+                                groupId: groupId,
+                                isMe: isMe,
+                              ),
                               const SizedBox(height: 8),
                             ] else ...[
                               Text(

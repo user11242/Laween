@@ -1,7 +1,6 @@
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../core/theme/colors.dart';
 import '../../../features/auth/widgets/link_account_dialog.dart';
 import '../../../features/auth/data/services/auth_service.dart';
@@ -156,7 +155,6 @@ class _LoginFormState extends State<LoginForm> {
       final result = await _authService.loginWithGoogle(silent: silent);
       
       if (silent && result == "SILENT_SIGN_IN_FAILED") {
-        // Fallback to manual if silent fails
         await _performGoogleLogin(silent: false);
         return;
       }
@@ -227,7 +225,6 @@ class _LoginFormState extends State<LoginForm> {
       if (result == null) {
         if (mounted) Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
       } else if (result == "SOCIAL_LOGIN_REQUIRED") {
-        // Trigger Google login automatically but silently after Face ID success
         await _performGoogleLogin(silent: true);
       } else if (result == "NO_SAVED_CREDENTIALS") {
         AppMessenger.showSnackBar(
@@ -423,67 +420,117 @@ class _LoginFormState extends State<LoginForm> {
     }
   }
 
+  Widget _buildGlassInput({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool obscureText = false,
+    Widget? suffixIcon,
+    TextInputType keyboardType = TextInputType.text,
+    FocusNode? focusNode,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: TextFormField(
+        controller: controller,
+        focusNode: focusNode,
+        obscureText: obscureText,
+        keyboardType: keyboardType,
+        style: GoogleFonts.outfit(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w400),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.3), fontSize: 13),
+          prefixIcon: Icon(icon, color: Colors.white.withValues(alpha: 0.4), size: 20),
+          suffixIcon: suffixIcon,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Email Input
-        TextFormField(
+        // 1. Email Input
+        _buildGlassInput(
           controller: _emailController,
           focusNode: _emailFocusNode,
+          label: l10n.email,
+          icon: Icons.email_outlined,
           keyboardType: TextInputType.emailAddress,
-          style: GoogleFonts.inter(fontSize: 16),
-          decoration: InputDecoration(
-            labelText: l10n.email,
-            labelStyle: GoogleFonts.inter(color: Colors.grey, fontSize: 14),
-            enabledBorder: UnderlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey.shade400),
-            ),
-            focusedBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(color: AppColors.teal),
-            ),
-          ),
         ),
-        const SizedBox(height: 16),
-
-        // Password Input
-        TextFormField(
-          controller: _passwordController,
-          obscureText: _obscurePassword,
-          style: GoogleFonts.inter(fontSize: 16),
-          decoration: InputDecoration(
-            labelText: l10n.password,
-            labelStyle: GoogleFonts.inter(color: Colors.grey, fontSize: 14),
-            enabledBorder: UnderlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey.shade400),
-            ),
-            focusedBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(color: AppColors.teal),
-            ),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                color: Colors.grey,
-              ),
-              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-            ),
-          ),
-        ),
-        const SizedBox(height: 32),
         
-        // Continue Button
-        SizedBox(
-          height: 52,
+        const SizedBox(height: 8),
+        
+        // 2. Password Input
+        _buildGlassInput(
+          controller: _passwordController,
+          label: l10n.password,
+          icon: Icons.lock_outline_rounded,
+          obscureText: _obscurePassword,
+          suffixIcon: IconButton(
+            icon: Icon(
+              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+              color: Colors.white.withValues(alpha: 0.2),
+              size: 20,
+            ),
+            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+          ),
+        ),
+        
+        const SizedBox(height: 8),
+        
+        // 3. Forgot Password
+        Align(
+          alignment: l10n.isAr ? Alignment.bottomLeft : Alignment.centerRight,
+          child: TextButton(
+            onPressed: () => Navigator.pushNamed(context, '/forgot_password'),
+            child: Text(
+              l10n.forgotPasswordQ,
+              style: GoogleFonts.outfit(
+                color: Colors.white.withValues(alpha: 0.4),
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+        ),
+        
+        const SizedBox(height: 16),
+        
+        // 4. Continue Button (Solid Premium)
+        Container(
+          height: 60,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(30),
+            gradient: const LinearGradient(
+              colors: [
+                Color(0xFF00BFA5),
+                Color(0xFF00897B),
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF00BFA5).withValues(alpha: 0.2),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
           child: ElevatedButton(
             onPressed: _isLoading ? null : _handleContinue,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.teal,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-              elevation: 0,
+              backgroundColor: Colors.transparent,
+              shadowColor: Colors.transparent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
             ),
             child: _isLoading 
               ? const SizedBox(
@@ -493,88 +540,60 @@ class _LoginFormState extends State<LoginForm> {
                 )
               : Text(
                   l10n.continueText, 
-                  style: GoogleFonts.inter(
-                    fontSize: 16, 
-                    fontWeight: FontWeight.w600, 
-                    color: Colors.white
+                  style: GoogleFonts.outfit(
+                    fontSize: 17, 
+                    fontWeight: FontWeight.w700, 
+                    color: Colors.white,
+                    letterSpacing: 0.5,
                   )
                 ),
           ),
         ),
         
-        const SizedBox(height: 16),
+        const SizedBox(height: 24),
         
-        // Forgot Password
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: () {
-              Navigator.pushNamed(context, '/forgot_password');
-            },
-            child: Text(
-              l10n.forgotPasswordQ,
-              style: GoogleFonts.inter(
-                color: Colors.grey.shade600,
-                fontSize: 13,
-              ),
+        Center(
+          child: Text(
+            l10n.isAr ? "أو عبر" : "OR CONTINUE WITH",
+            style: GoogleFonts.outfit(
+              color: Colors.white.withValues(alpha: 0.5), // Prominent white as requested
+              fontSize: 10, 
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.5,
             ),
           ),
         ),
+
+        const SizedBox(height: 16),
         
-        const SizedBox(height: 24),
-        
-        // Face ID / Google Divider
-        Row(
-          children: [
-            Expanded(child: Divider(color: Colors.grey.shade300)),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                Platform.isIOS 
-                  ? l10n.loginWithFaceId 
-                  : (l10n.isAr ? 'تسجيل الدخول بالبصمة' : 'Login with Fingerprint'),
-                style: GoogleFonts.inter(color: Colors.grey.shade500, fontSize: 12),
-              ),
-            ),
-            Expanded(child: Divider(color: Colors.grey.shade300)),
-          ],
-        ),
-        
-        const SizedBox(height: 24),
-        
-        // Icons
+        // 5. Social Login Pill Row
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            IconButton(
+            _buildMinimalSocialItem(
               onPressed: _handleBiometricLogin,
-              icon: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Platform.isIOS 
-                    ? CustomPaint(
-                        size: const Size(36, 36),
-                        painter: FaceIdPainter(
-                          color: _isBiometricAvailable ? AppColors.teal : Colors.grey.shade400,
-                        ),
-                      )
-                    : Icon(
-                        Icons.fingerprint, 
-                        size: 40, 
-                        color: _isBiometricAvailable ? AppColors.teal : Colors.grey.shade400,
-                      ),
-                ],
-              ),
+              child: Platform.isIOS 
+                ? CustomPaint(
+                    size: const Size(22, 22),
+                    painter: FaceIdPainter(
+                      color: _isBiometricAvailable ? Colors.white : Colors.white.withValues(alpha: 0.1),
+                    ),
+                  )
+                : Icon(
+                    Icons.fingerprint_rounded, 
+                    size: 24, 
+                    color: _isBiometricAvailable ? Colors.white : Colors.white.withValues(alpha: 0.1),
+                  ),
             ),
-            const SizedBox(width: 24),
-            IconButton(
+            const SizedBox(width: 40),
+            _buildMinimalSocialItem(
               onPressed: _handleGoogleLogin,
-              icon: ClipRRect(
-                borderRadius: BorderRadius.circular(18),
+              padding: EdgeInsets.zero, // Make logo cover the circle
+              child: ClipOval(
                 child: Image.asset(
                   'assets/google_logo.jpg',
-                  height: 36,
-                  width: 36,
+                  height: 54, // Match container size
+                  width: 54,
                   fit: BoxFit.cover,
                 ),
               ),
@@ -582,6 +601,22 @@ class _LoginFormState extends State<LoginForm> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildMinimalSocialItem({required VoidCallback onPressed, required Widget child, EdgeInsets? padding}) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(27),
+      child: Container(
+        padding: padding ?? const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.03),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        ),
+        child: child,
+      ),
     );
   }
 }
@@ -602,44 +637,35 @@ class FaceIdPainter extends CustomPainter {
     final h = size.height;
     final cornerSize = w * 0.25;
 
-    // Corner brackets
-    // Top-left
     canvas.drawPath(Path()
       ..moveTo(cornerSize, 0)
       ..lineTo(0, 0)
       ..lineTo(0, cornerSize), paint);
     
-    // Top-right
     canvas.drawPath(Path()
       ..moveTo(w - cornerSize, 0)
       ..lineTo(w, 0)
       ..lineTo(w, cornerSize), paint);
     
-    // Bottom-left
     canvas.drawPath(Path()
       ..moveTo(0, h - cornerSize)
       ..lineTo(0, h)
       ..lineTo(cornerSize, h), paint);
     
-    // Bottom-right
     canvas.drawPath(Path()
       ..moveTo(w - cornerSize, h)
       ..lineTo(w, h)
       ..lineTo(w, h - cornerSize), paint);
 
-    // Simplified Face (eyes, nose, smile)
-    // Eyes
     canvas.drawCircle(Offset(w * 0.35, h * 0.4), 1.5, paint..style = PaintingStyle.fill);
     canvas.drawCircle(Offset(w * 0.65, h * 0.4), 1.5, paint..style = PaintingStyle.fill);
     
-    // Nose
     paint.style = PaintingStyle.stroke;
     canvas.drawPath(Path()
       ..moveTo(w * 0.5, h * 0.45)
       ..lineTo(w * 0.5, h * 0.6)
       ..lineTo(w * 0.45, h * 0.65), paint);
 
-    // Smile
     final rect = Rect.fromLTWH(w * 0.3, h * 0.55, w * 0.4, h * 0.2);
     canvas.drawArc(rect, 0.2, 2.7, false, paint);
   }

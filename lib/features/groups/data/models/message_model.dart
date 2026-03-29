@@ -9,7 +9,8 @@ class MessageModel {
   final String? senderPhotoUrl;
   final String text;
   final DateTime timestamp;
-  final String type; // 'text', 'image', 'system'
+  final String type; // 'text', 'image', 'system', 'outing'
+  final String? outingSessionId;
   final Map<String, List<String>> reactions; // emoji -> list of uids
   final List<String> readBy; // list of uids
   final bool isDeleted;
@@ -24,6 +25,7 @@ class MessageModel {
     required this.text,
     required this.timestamp,
     this.type = 'text',
+    this.outingSessionId,
     this.reactions = const {},
     this.readBy = const [],
     this.isDeleted = false,
@@ -40,6 +42,7 @@ class MessageModel {
       'text': text,
       'timestamp': Timestamp.fromDate(timestamp),
       'type': type,
+      'outingSessionId': outingSessionId,
       'reactions': reactions,
       'readBy': readBy,
       'isDeleted': isDeleted,
@@ -57,6 +60,7 @@ class MessageModel {
       text: map['text'] ?? '',
       timestamp: (map['timestamp'] as Timestamp).toDate(),
       type: map['type'] ?? 'text',
+      outingSessionId: map['outingSessionId'],
       reactions: Map<String, List<String>>.from(
         (map['reactions'] as Map? ?? {}).map(
           (k, v) => MapEntry(k, List<String>.from(v)),

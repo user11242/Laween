@@ -14,7 +14,7 @@ class FinishVerificationStep extends StatelessWidget {
           Text(
             l10n.allVerified,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
+            style: const TextStyle(color: Colors.black87, fontSize: 16),
           ),
         ],
       ),

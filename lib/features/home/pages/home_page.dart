@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/colors.dart';
 import 'package:laween/l10n/app_localizations.dart';
 import 'package:laween/features/groups/pages/groups_page.dart';
@@ -87,104 +88,336 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildHomeContent(User? user) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 40),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFBFDFF),
+        image: DecorationImage(
+          image: const AssetImage("assets/onboarding_imgs/onboarding_img1.jpg"),
+          fit: BoxFit.cover,
+          opacity: 0.03,
+          colorFilter: ColorFilter.mode(
+            AppColors.teal.withValues(alpha: 0.1),
+            BlendMode.overlay,
+          ),
+        ),
+      ),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              StreamBuilder<DocumentSnapshot>(
-                stream: FirebaseFirestore.instance.collection('users').doc(user?.uid).snapshots(),
-                builder: (context, snapshot) {
-                  String name = "User";
-                  if (snapshot.hasData && snapshot.data!.exists) {
-                    final data = snapshot.data!.data() as Map<String, dynamic>;
-                    name = data['name'] ?? data['fullName'] ?? user?.displayName ?? "User";
-                  }
-                  
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Welcome back,",
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          color: Colors.grey.shade600,
-                        ),
+              const SizedBox(height: 20),
+              
+              // 1. DYNAMIC HEADER
+              _buildModernHeader(user),
+              
+              const SizedBox(height: 25),
+              
+              // 2. GLASSMORPHIC SEARCH
+              _buildPremiumSearch(),
+              
+              const SizedBox(height: 32),
+              
+              // 3. QUICK ACTIONS CAROUSEL
+              Text(
+                "Quick Actions",
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.darkSlate,
+                ),
+              ).animate().fadeIn(delay: 400.ms).slideX(begin: -0.2),
+              
+              const SizedBox(height: 16),
+              _buildActionCarousel(),
+              
+              const SizedBox(height: 32),
+              
+              // 4. LIVE ACTIVITY / FRIENDS SECTION
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Friends Activity",
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.darkSlate,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {},
+                    child: Text(
+                      "See All",
+                      style: GoogleFonts.inter(
+                        color: AppColors.teal,
+                        fontWeight: FontWeight.w600,
                       ),
-                      Text(
-                        name,
-                        style: GoogleFonts.inter(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF2D3748),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
+                    ),
+                  ),
+                ],
+              ).animate().fadeIn(delay: 600.ms),
+              
+              const SizedBox(height: 8),
+              _buildFriendsActivityList(user),
+              
+              const SizedBox(height: 100), // Space for bottom bar
             ],
           ),
-          const SizedBox(height: 40),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: AppColors.tealGradient,
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernHeader(User? user) {
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance.collection('users').doc(user?.uid).snapshots(),
+      builder: (context, snapshot) {
+        String name = "User";
+        String? photoUrl;
+        if (snapshot.hasData && snapshot.data!.exists) {
+          final data = snapshot.data!.data() as Map<String, dynamic>;
+          name = data['name'] ?? data['fullName'] ?? user?.displayName ?? "User";
+          photoUrl = data['photoUrl'] ?? data['profilePic'];
+        }
+        
+        return Row(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _getGreeting(),
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: Colors.grey.shade500,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  "$name 👋",
+                  style: GoogleFonts.inter(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.darkSlate,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ],
+            ).animate().fadeIn(duration: 800.ms).slideX(begin: -0.1),
+            const Spacer(),
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.teal.withValues(alpha: 0.1), width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.teal.withValues(alpha: 0.1),
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
+                ],
               ),
+              child: CircleAvatar(
+                radius: 26,
+                backgroundColor: Colors.white,
+                backgroundImage: (photoUrl != null && photoUrl.startsWith('http')) ? NetworkImage(photoUrl) : null,
+                child: (photoUrl == null || !photoUrl.startsWith('http'))
+                    ? Icon(Icons.person, color: AppColors.teal.withValues(alpha: 0.5), size: 30)
+                    : null,
+              ),
+            ).animate().scale(delay: 200.ms),
+          ],
+        );
+      },
+    );
+  }
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return "Good Morning";
+    if (hour < 17) return "Good Afternoon";
+    return "Good Evening";
+  }
+
+  Widget _buildPremiumSearch() {
+    return Container(
+      height: 56,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: TextField(
+        decoration: InputDecoration(
+          hintText: "Search for friends or groups...",
+          hintStyle: GoogleFonts.inter(color: Colors.grey.shade400, fontSize: 14),
+          prefixIcon: Icon(Icons.search_rounded, color: AppColors.teal.withValues(alpha: 0.6)),
+          suffixIcon: Container(
+            margin: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.teal.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.tune_rounded, color: AppColors.teal, size: 18),
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 18),
+        ),
+      ),
+    ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2);
+  }
+
+  Widget _buildActionCarousel() {
+    final List<Map<String, dynamic>> actions = [
+      {
+        "title": "Find Midpoint",
+        "icon": Icons.location_on_rounded,
+        "color": AppColors.teal,
+        "desc": "Meet halfway fairly",
+      },
+      {
+        "title": "Groups",
+        "icon": Icons.groups_rounded,
+        "color": const Color(0xFF6366F1),
+        "desc": "3 active sessions",
+      },
+      {
+        "title": "Radar",
+        "icon": Icons.radar_rounded,
+        "color": const Color(0xFFF59E0B),
+        "desc": "Friends nearby",
+      },
+    ];
+
+    return SizedBox(
+      height: 160,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        itemCount: actions.length,
+        itemBuilder: (context, index) {
+          final action = actions[index];
+          return Container(
+            width: 140,
+            margin: const EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.teal.withValues(alpha: 0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+                  color: (action['color'] as Color).withValues(alpha: 0.08),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
                 ),
               ],
+              border: Border.all(color: (action['color'] as Color).withValues(alpha: 0.05)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: (action['color'] as Color).withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(action['icon'] as IconData, color: action['color'] as Color, size: 24),
+                ),
+                const Spacer(),
                 Text(
-                  "Account Verified",
+                  action['title'] as String,
                   style: GoogleFonts.inter(
-                    color: Colors.white,
-                    fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: AppColors.darkSlate,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Text(
-                  "You have successfully joined Laween. Your journey starts here.",
+                  action['desc'] as String,
                   style: GoogleFonts.inter(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    fontSize: 14,
-                    height: 1.5,
+                    fontSize: 11,
+                    color: Colors.grey.shade500,
                   ),
                 ),
               ],
             ),
-          ),
-          const Spacer(),
-          Center(
-            child: Opacity(
-              opacity: 0.5,
-              child: Image.asset(
-                "assets/onboarding_imgs/onboarding_img1.jpg",
-                height: 200,
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
-          const SizedBox(height: 40),
-        ],
+          ).animate().fadeIn(delay: (500 + (index * 100)).ms).slideX(begin: 0.2);
+        },
       ),
+    );
+  }
+
+  Widget _buildFriendsActivityList(User? user) {
+    // Dummy stream for now to simulate real activity
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('users').limit(5).snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const SizedBox();
+        final friends = snapshot.data!.docs;
+        
+        return Column(
+          children: friends.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            if (doc.id == user?.uid) return const SizedBox();
+            
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade100),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    backgroundImage: (data['photoUrl'] != null) ? NetworkImage(data['photoUrl']) : null,
+                    radius: 20,
+                    backgroundColor: AppColors.teal.withValues(alpha: 0.1),
+                    child: data['photoUrl'] == null ? const Icon(Icons.person, size: 20) : null,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          data['name'] ?? "Friend",
+                          style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                        Text(
+                          "Active in 'Coffee Run'",
+                          style: GoogleFonts.inter(fontSize: 12, color: Colors.grey.shade500),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF10B981),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
+              ),
+            ).animate().fadeIn(delay: 800.ms).slideY(begin: 0.1);
+          }).toList(),
+        );
+      },
     );
   }
 }
