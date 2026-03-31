@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -20,10 +22,43 @@
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.833749469320-8i8i8bf9a3jnhuavi100occg9j2qf3hs</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>GIDClientID</key>
+	<string>833749469320-8i8i8bf9a3jnhuavi100occg9j2qf3hs.apps.googleusercontent.com</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Laween needs access to your camera to let you take a group profile picture.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Laween needs access to your contacts to let you add them to your groups.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Laween uses Face ID to allow you to sign in quickly and securely.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Laween needs access to your location to let you share it with your group members.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Laween needs access to your location to let you share it with your group members.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Laween needs access to your photo library to let you pick a group profile picture.</string>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -41,37 +76,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
-	
-	<!-- Google Sign-In section -->
-	<key>GIDClientID</key>
-	<string>833749469320-8i8i8bf9a3jnhuavi100occg9j2qf3hs.apps.googleusercontent.com</string>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>com.googleusercontent.apps.833749469320-8i8i8bf9a3jnhuavi100occg9j2qf3hs</string>
-			</array>
-		</dict>
-	</array>
-	<!-- End of the Google Sign-In section -->
-	<key>NSFaceIDUsageDescription</key>
-	<string>Laween uses Face ID to allow you to sign in quickly and securely.</string>
-	<key>NSContactsUsageDescription</key>
-	<string>Laween needs access to your contacts to let you add them to your groups.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Laween needs access to your photo library to let you pick a group profile picture.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>Laween needs access to your camera to let you take a group profile picture.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Laween needs access to your location to let you share it with your group members.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Laween needs access to your location to let you share it with your group members.</string>
 </dict>
 </plist>

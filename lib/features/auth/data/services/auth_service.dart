@@ -20,7 +20,7 @@ class AuthService {
 
   GoogleAuthService get googleAuth => _googleAuth;
   final OtpAuthService _otpAuth = OtpAuthService();
-  final FcmService _fcmService = FcmService();
+  final FcmService _fcmService = FcmService.instance;
   final EmailService _emailService = EmailService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 

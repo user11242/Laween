@@ -15,6 +15,9 @@ import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/theme/colors.dart';
 import '../data/models/outing_session_model.dart';
+import '../widgets/outing_voting_view.dart';
+import '../widgets/outing_winner_view.dart';
+import 'outing_tracking_screen.dart';
 import '../data/services/outing_service.dart';
 
 class OutingMapScreen extends StatefulWidget {
@@ -757,11 +760,15 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                   child: OutlinedButton.icon(
                     icon: const Icon(Icons.person_pin_circle_outlined, size: 18),
                     onPressed: () {
-                      setState(() {
-                        _isTrackingMode = true;
-                        _showWinnerDetails = false;
-                      });
-                      _fitBounds();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => OutingTrackingScreen(
+                            groupId: widget.groupId,
+                            sessionId: widget.sessionId,
+                          ),
+                        ),
+                      );
                     },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.teal,

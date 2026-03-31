@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:laween/features/auth/data/services/fcm_service.dart';
 import 'package:laween/features/auth/pages/verification_wizard_page.dart';
 import 'package:laween/features/auth/pages/verification_page.dart';
 import 'package:laween/features/home/pages/home_page.dart';
@@ -15,12 +17,22 @@ import 'package:laween/features/auth/pages/register_page.dart';
 import 'package:laween/core/theme/colors.dart';
 import 'firebase_options.dart';
 
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  debugPrint("Handling a background message: ${message.messageId}");
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Initialize Google Sign-In missing in previous step!
+  // Initialize FCM Notification Handlers
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  await FcmService.instance.initialize();
+
+  // Initialize Google Sign-In
   await GoogleAuthService.instance.initialize();
 
   runApp(

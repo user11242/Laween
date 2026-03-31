@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import '../models/user_model.dart';
 import '../../../../core/utils/numeric_utils.dart';
+import '../../../../core/templates/email_templates.dart';
 
 class EmailAuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -74,6 +75,20 @@ class EmailAuthService {
         );
       }
  
+      // ✅ ADDED: Trigger Welcome Email
+      debugPrint("DEBUG: Queueing welcome email for $email");
+      batch.set(
+        _firestore.collection('mail').doc(), // Auto-ID document
+        {
+          'to': email.trim().toLowerCase(),
+          'message': {
+            'subject': 'Welcome to Laween! 🕊️',
+            'html': EmailTemplates.welcomeEmail(name),
+          },
+          'createdAt': Timestamp.now(),
+        },
+      );
+
       await batch.commit();
       debugPrint("DEBUG: Batch commit successful for $uid");
       return null;

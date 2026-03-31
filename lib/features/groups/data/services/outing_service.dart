@@ -1,6 +1,9 @@
 // lib/features/groups/data/services/outing_service.dart
 
 import 'dart:convert';
+import 'dart:math' as math;
+import 'dart:async';
+import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -9,6 +12,7 @@ import '../models/message_model.dart';
 
 class OutingService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  StreamSubscription<Position>? _positionStream;
 
   // Create a new outing session
   Future<String> createSession({
@@ -147,6 +151,55 @@ class OutingService {
     });
   }
 
+  // Live GPS Telemetry Broadcaster
+  Future<void> startLiveTracking(String groupId, String sessionId, String uid) async {
+    stopLiveTracking(); // Prevent memory leaks/duplicate streams
+    
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return;
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return;
+    }
+    if (permission == LocationPermission.deniedForever) return;
+
+    _positionStream = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 15, // Broadcast update only if moved 15+ meters
+      ),
+    ).listen((Position position) async {
+      final sessionRef = _firestore.collection('groups').doc(groupId).collection('outings').doc(sessionId);
+
+      try {
+        await _firestore.runTransaction((transaction) async {
+          final snapshot = await transaction.get(sessionRef);
+          if (!snapshot.exists) return;
+
+          final data = snapshot.data();
+          if (data == null) return;
+          
+          final List participants = data['participants'] ?? [];
+          final int index = participants.indexWhere((p) => p['uid'] == uid);
+
+          if (index != -1) {
+            participants[index]['location'] = GeoPoint(position.latitude, position.longitude);
+            transaction.update(sessionRef, {'participants': participants});
+          }
+        });
+      } catch (e) {
+        // Silent background failsafe
+      }
+    });
+  }
+
+  void stopLiveTracking() {
+    _positionStream?.cancel();
+    _positionStream = null;
+  }
+
   // Close a session (when timer expires or manually)
   Future<void> updateStatus(String groupId, String sessionId, OutingStatus status) async {
     await _firestore
@@ -197,15 +250,34 @@ class OutingService {
       return;
     }
 
-    // 1. Calculate Average (Middle Point)
-    double totalLat = 0;
-    double totalLng = 0;
+    // 1. Calculate Geographic Midpoint (True Spherical Centroid)
+    double x = 0;
+    double y = 0;
+    double z = 0;
+
     for (var p in participants) {
-      totalLat += p.location!.latitude;
-      totalLng += p.location!.longitude;
+      // Convert to radians
+      final latRad = p.location!.latitude * math.pi / 180;
+      final lngRad = p.location!.longitude * math.pi / 180;
+
+      // Convert to Cartesian coordinates
+      x += math.cos(latRad) * math.cos(lngRad);
+      y += math.cos(latRad) * math.sin(lngRad);
+      z += math.sin(latRad);
     }
-    final midLat = totalLat / participants.length;
-    final midLng = totalLng / participants.length;
+
+    // Average the coordinates
+    x = x / participants.length;
+    y = y / participants.length;
+    z = z / participants.length;
+
+    // Convert average Cartesian back to latitude/longitude
+    final centralLng = math.atan2(y, x);
+    final centralSquareRoot = math.sqrt(x * x + y * y);
+    final centralLat = math.atan2(z, centralSquareRoot);
+
+    final midLat = centralLat * 180 / math.pi;
+    final midLng = centralLng * 180 / math.pi;
     
     // 2. Query Google Places API
     final apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'];

@@ -1,0 +1,75 @@
+Building com.company.laween for simulator (ios)...
+Running Xcode build...                                          
+Xcode build done.                                           14.3s
+Failed to build iOS app
+Error (Xcode): Cycle inside Runner; building could produce unreliable results.
+Cycle details:
+→ Target 'Runner' has copy command from '/Users/yazanqattous/Desktop/flutter_projects/laween/build/ios/Debug-iphonesimulator/LaweenWidgetExtension.appex' to '/Users/yazanqattous/Desktop/flutter_projects/laween/build/ios/Debug-iphonesimulator/Runner.app/PlugIns/LaweenWidgetExtension.appex'
+○ That command depends on command in Target 'Runner': script phase “[CP] Copy Pods Resources”
+○ That command depends on command in Target 'Runner': script phase “[CP] Embed Pods Frameworks”
+○ That command depends on command in Target 'Runner': script phase “Thin Binary”
+○ Target 'Runner' has process command with output '/Users/yazanqattous/Desktop/flutter_projects/laween/build/ios/Debug-iphonesimulator/Runner.app/Info.plist'
+○ Target 'Runner' has copy command from '/Users/yazanqattous/Desktop/flutter_projects/laween/build/ios/Debug-iphonesimulator/LaweenWidgetExtension.appex' to '/Users/yazanqattous/Desktop/flutter_projects/laween/build/ios/Debug-iphonesimulator/Runner.app/PlugIns/LaweenWidgetExtension.appex'
+
+
+Raw dependency cycle trace:
+
+target:  ->
+
+node: <all> ->
+
+command: <all> ->
+
+node: /Users/yazanqattous/Library/Developer/Xcode/DerivedData/Runner-gnpgigisbhjgfcawllblpoapusbr/Build/Intermediates.noindex/Runner.build/Debug-iphonesimulator/Runner.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata ->
+
+command: P0:target-Runner-18c1723432283e0cc55f10a6dcfd9e0288a783a885d8b0b3beb2e9f90bde3f49-:Debug:ExtractAppIntentsMetadata ->
+
+node: <target-Runner-18c1723432283e0cc55f10a6dcfd9e0288a783a885d8b0b3beb2e9f90bde3f49--fused-phase7-copy-files> ->
+
+command: P0:::Gate target-Runner-18c1723432283e0cc55f10a6dcfd9e0288a783a885d8b0b3beb2e9f90bde3f49--fused-phase7-copy-files ->
+
+node: <Copy /Users/yazanqattous/Desktop/flutter_projects/laween/build/ios/Debug-iphonesimulator/Runner.app/PlugIns/LaweenWidgetExtension.appex> ->
+
+CYCLE POINT ->
+
+command: P0:target-Runner-18c1723432283e0cc55f10a6dcfd9e0288a783a885d8b0b3beb2e9f90bde3f49-:Debug:Copy /Users/yazanqattous/Desktop/flutter_projects/laween/build/ios/Debug-iphonesimulator/Runner.app/PlugIns/LaweenWidgetExtension.appex /Users/yazanqattous/Desktop/flutter_projects/laween/build/ios/Debug-iphonesimulator/LaweenWidgetExtension.appex ->
+
+node: <target-Runner-18c1723432283e0cc55f10a6dcfd9e0288a783a885d8b0b3beb2e9f90bde3f49--fused-phase6--cp--copy-pods-resources> ->
+
+command: P0:::Gate target-Runner-18c1723432283e0cc55f10a6dcfd9e0288a783a885d8b0b3beb2e9f90bde3f49--fused-phase6--cp--copy-pods-resources ->
+
+node: /Users/yazanqattous/Desktop/flutter_projects/laween/build/ios/Debug-iphonesimulator/Runner.app/GoogleMapsResources.bundle ->
+
+command: P2:target-Runner-18c1723432283e0cc55f10a6dcfd9e0288a783a885d8b0b3beb2e9f90bde3f49-:Debug:PhaseScriptExecution [CP] Copy Pods Resources /Users/yazanqattous/Library/Developer/Xcode/DerivedData/Runner-gnpgigisbhjgfcawllblpoapusbr/Build/Intermediates.noindex/Runner.build/Debug-iphonesimulator/Runner.build/Script-3044B465CF5A9F9F1970C0C8.sh ->
+
+node: <target-Runner-18c1723432283e0cc55f10a6dcfd9e0288a783a885d8b0b3beb2e9f90bde3f49--fused-phase5--cp--embed-pods-frameworks> ->
+
+command: P0:::Gate target-Runner-18c1723432283e0cc55f10a6dcfd9e0288a783a885d8b0b3beb2e9f90bde3f49--fused-phase5--cp--embed-pods-frameworks ->
+
+node: /Users/yazanqattous/Desktop/flutter_projects/laween/build/ios/Debug-iphonesimulator/Runner.app/Frameworks/AppAuth.framework ->
+
+command: P2:target-Runner-18c1723432283e0cc55f10a6dcfd9e0288a783a885d8b0b3beb2e9f90bde3f49-:Debug:PhaseScriptExecution [CP] Embed Pods Frameworks /Users/yazanqattous/Library/Developer/Xcode/DerivedData/Runner-gnpgigisbhjgfcawllblpoapusbr/Build/Intermediates.noindex/Runner.build/Debug-iphonesimulator/Runner.build/Script-EB490AC6EE0A0DF5545E3678.sh ->
+
+node: <target-Runner-18c1723432283e0cc55f10a6dcfd9e0288a783a885d8b0b3beb2e9f90bde3f49--fused-phase4-thin-binary> ->
+
+command: P0:::Gate target-Runner-18c1723432283e0cc55f10a6dcfd9e0288a783a885d8b0b3beb2e9f90bde3f49--fused-phase4-thin-binary ->
+
+node: <execute-shell-script-18c1723432283e0cc55f10a6dcfd9e02f1eee2015e8ff5ebcd27678f788c2826-target-Runner-18c1723432283e0cc55f10a6dcfd9e0288a783a885d8b0b3beb2e9f90bde3f49-> ->
+
+command: P2:target-Runner-18c1723432283e0cc55f10a6dcfd9e0288a783a885d8b0b3beb2e9f90bde3f49-:Debug:PhaseScriptExecution Thin Binary /Users/yazanqattous/Library/Developer/Xcode/DerivedData/Runner-gnpgigisbhjgfcawllblpoapusbr/Build/Intermediates.noindex/Runner.build/Debug-iphonesimulator/Runner.build/Script-3B06AD1E1E4923F5004D2608.sh ->
+
+node: /Users/yazanqattous/Desktop/flutter_projects/laween/build/ios/Debug-iphonesimulator/Runner.app/Info.plist/ ->
+
+directoryTreeSignature: i ->
+
+directoryContents: /Users/yazanqattous/Desktop/flutter_projects/laween/build/ios/Debug-iphonesimulator/Runner.app/Info.plist ->
+
+node: /Users/yazanqattous/Desktop/flutter_projects/laween/build/ios/Debug-iphonesimulator/Runner.app/Info.plist ->
+
+command: P0:target-Runner-18c1723432283e0cc55f10a6dcfd9e0288a783a885d8b0b3beb2e9f90bde3f49-:Debug:ProcessInfoPlistFile /Users/yazanqattous/Desktop/flutter_projects/laween/build/ios/Debug-iphonesimulator/Runner.app/Info.plist /Users/yazanqattous/Desktop/flutter_projects/laween/ios/Runner/Info.plist ->
+
+node: /Users/yazanqattous/Desktop/flutter_projects/laween/build/ios/Debug-iphonesimulator/Runner.app/PlugIns/LaweenWidgetExtension.appex ->
+
+command: P0:target-Runner-18c1723432283e0cc55f10a6dcfd9e0288a783a885d8b0b3beb2e9f90bde3f49-:Debug:Copy /Users/yazanqattous/Desktop/flutter_projects/laween/build/ios/Debug-iphonesimulator/Runner.app/PlugIns/LaweenWidgetExtension.appex /Users/yazanqattous/Desktop/flutter_projects/laween/build/ios/Debug-iphonesimulator/LaweenWidgetExtension.appex
+
+Encountered error while building for simulator.

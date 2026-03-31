@@ -2,6 +2,7 @@
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -9,6 +10,8 @@ import '../../../core/theme/colors.dart';
 import '../../../core/services/location_service.dart';
 import '../data/services/outing_service.dart';
 import 'outing_waiting_room_sheet.dart';
+import '../pages/location_picker_screen.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class CreateOutingSheet extends StatefulWidget {
   final String groupId;
@@ -43,9 +46,15 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
     setState(() => _isCreating = true);
 
     try {
-      // 1. Get current location
-      final position = await _locationService.getCurrentPosition();
-      if (position == null) throw "Could not get location";
+      final LatLng? pickedLocation = await Navigator.push<LatLng>(
+        context,
+        MaterialPageRoute(builder: (_) => const LocationPickerScreen()),
+      );
+
+      if (pickedLocation == null) {
+        if (mounted) setState(() => _isCreating = false);
+        return;
+      }
 
       final sessionId = await _outingService.createSession(
         groupId: widget.groupId,
@@ -55,7 +64,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
         category: _category,
         calculationMode: _calculationMode,
         timeLimitMinutes: _timeLimit,
-        location: _locationService.positionToGeoPoint(position),
+        location: GeoPoint(pickedLocation.latitude, pickedLocation.longitude),
       );
       
       if (mounted) {

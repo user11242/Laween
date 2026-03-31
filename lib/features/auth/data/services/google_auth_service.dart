@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import '../models/user_model.dart';
 import 'auth_service.dart';
 import '../../../../core/utils/numeric_utils.dart';
+import '../../../../core/templates/email_templates.dart';
 
 class GoogleAuthService {
   // --- 1. Singleton Setup ---
@@ -188,6 +189,22 @@ class GoogleAuthService {
           'email': user.email,
           'createdAt': Timestamp.now(),
         });
+      }
+
+      // F. ✅ ADDED: Trigger Welcome Email
+      if (user.email != null) {
+        debugPrint("✅ Queueing welcome email for Google user ${user.email}");
+        batch.set(
+          _firestore.collection('mail').doc(), // Auto-ID document
+          {
+            'to': user.email!.trim().toLowerCase(),
+            'message': {
+              'subject': 'Welcome to Laween! 🕊️',
+              'html': EmailTemplates.welcomeEmail(newUser.name),
+            },
+            'createdAt': Timestamp.now(),
+          },
+        );
       }
 
       // 4. Commit everything at once
