@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laween — Final Presentation</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Aurora Glow Layer (large blurred orbs that drift slowly) -->
+    <div class="aurora-layer">
+        <div class="aurora-orb aurora-orb-1"></div>
+        <div class="aurora-orb aurora-orb-2"></div>
+        <div class="aurora-orb aurora-orb-3"></div>
+    </div>
+
+    <!-- Ambient Floating Orbs (mid-layer, small drifting dots) -->
+    <div class="ambient-orbs">
+        <div class="orb"></div><div class="orb"></div><div class="orb"></div><div class="orb"></div>
+        <div class="orb"></div><div class="orb"></div><div class="orb"></div><div class="orb"></div>
+    </div>
+
+    <!-- Floating Background Particles (always visible behind slides) -->
+    <div class="bg-particles">
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    </div>
+
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- Slide 0: Title -->
+            <section class="glass-slide" data-auto-animate>
+                <div class="logo-container">
+                    <img src="logo-v2.png" alt="Laween Logo" class="custom-logo">
+                    <h1 class="brand-title">Laween</h1>
+                </div>
+                <h3 class="subtitle">Revolutionizing Group Outings.</h3>
+                <p class="tagline">Stop arguing about where to go. Start meeting up.</p>
+                <div class="pulse-ring"></div>
+            </section>
+
+            <!-- Slide 1: Engineered, Not Just Built -->
+            <section class="glass-slide" data-auto-animate>
+                <h2 class="section-title">Engineered, Not Just Built.</h2>
+                <p class="summary-text" style="margin-bottom: 2rem;">This isn't a drag-and-drop app. Every decision was made through the lens of software engineering.</p>
+                <div class="cards-grid">
+                    <div class="info-card fragment fade-up">
+                        <i data-lucide="cpu" class="card-icon"></i>
+                        <h4>Architecture First</h4>
+                        <p>We designed the data model before writing a single line of UI. Schema drives everything.</p>
+                    </div>
+                    <div class="info-card fragment fade-up" data-fragment-index="1">
+                        <i data-lucide="git-branch" class="card-icon"></i>
+                        <h4>Trade-off Driven</h4>
+                        <p>Every choice was a deliberate engineering trade-off.</p>
+                        <p class="card-points"><span class="chosen">NoSQL</span> <span class="arrow">&gt;</span> SQL<br><span class="chosen">Denormalization</span> <span class="arrow">&gt;</span> Normalization<br><span class="chosen">Read speed</span> <span class="arrow">&gt;</span> Storage cost</p>
+                    </div>
+                    <div class="info-card fragment fade-up" data-fragment-index="2">
+                        <i data-lucide="gauge" class="card-icon"></i>
+                        <h4>Performance by Design</h4>
+                        <p class="card-points dash-bullets"><span class="dash">–</span> O(1) document fetches<br><span class="dash">–</span> Sub-100ms real-time syncing<br><span class="dash">–</span> Zero unnecessary queries</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 2: The Problem -->
+            <section class="glass-slide" data-auto-animate>
+                <h2 class="section-title">The Problem</h2>
+                <div class="cards-grid">
+                    <div class="info-card fragment fade-up">
+                        <i data-lucide="message-circle" class="card-icon"></i>
+                        <h4>Decision Fatigue</h4>
+                        <p>Hours of "where should we go?" in group chats. Plans die before they happen.</p>
+                    </div>
+                    <div class="info-card fragment fade-up" data-fragment-index="1">
+                        <i data-lucide="map-pin" class="card-icon"></i>
+                        <h4>Unfair Distances</h4>
+                        <p>One person drives 40 min. Another walks 5. Nobody's accounting for fairness.</p>
+                    </div>
+                    <div class="info-card fragment fade-up" data-fragment-index="2">
+                        <i data-lucide="clock" class="card-icon"></i>
+                        <h4>No Live Awareness</h4>
+                        <p>No ETAs, no tracking, no idea who's actually coming. You just wait and hope.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 3: BEFORE & AFTER — Cinematic Story -->
+            <section class="glass-slide story-launch-slide" data-auto-animate>
+                <div class="story-launch-inner">
+                    <div class="story-launch-label">
+                        <h2 class="section-title">The Real Story</h2>
+                        <p class="summary-text">A 30-second look at what we replaced.</p>
+                    </div>
+
+                    <!-- The cinematic story plays here -->
+                    <div class="story-iframe-wrap">
+                        <iframe
+                            id="story-iframe"
+                            src="about:blank"
+                            data-src="story.html"
+                            frameborder="0"
+                            class="story-iframe"
+                            allow="autoplay"
+                        ></iframe>
+                        <div class="iframe-play-overlay" id="playOverlay" onclick="launchStory()">
+                            <div class="play-btn">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
+                            </div>
+                            <p>Play story</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 4: Why Firebase -->
+            <section class="glass-slide" data-auto-animate>
+                <h2 class="section-title">Why Firebase?</h2>
+                <p class="summary-text" style="margin-bottom: 2rem;">Outing sessions are live and constantly changing. We needed real-time, not request-response.</p>
+                <div class="cards-grid">
+                    <div class="info-card fragment fade-up">
+                        <i data-lucide="zap" class="card-icon"></i>
+                        <h4>Real-Time Sync</h4>
+                        <p>WebSocket-based, sub-100ms data propagation. No polling, no REST overhead.</p>
+                    </div>
+                    <div class="info-card fragment fade-up" data-fragment-index="1">
+                        <i data-lucide="database" class="card-icon"></i>
+                        <h4>NoSQL by Choice</h4>
+                        <p>Intentional denormalization. We duplicate data to eliminate JOINs. One read loads everything.</p>
+                    </div>
+                    <div class="info-card fragment fade-up" data-fragment-index="2">
+                        <i data-lucide="trending-up" class="card-icon"></i>
+                        <h4>Read-Optimized</h4>
+                        <p>Sessions are written once, read 1000× more. Flat schema = O(1) document fetch, every time.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 5: Security & Privacy -->
+            <section class="glass-slide" data-auto-animate>
+                <h2 class="section-title">Security & Privacy</h2>
+                <p class="summary-text" style="margin-bottom: 2rem;">We built a location app that doesn't want your location data.</p>
+                <div class="cards-grid">
+                    <div class="info-card fragment fade-up">
+                        <i data-lucide="timer" class="card-icon"></i>
+                        <h4>12-Hour TTL</h4>
+                        <p>All session data auto-destructs. GPS tracking ceases the moment you arrive. Nothing is stored.</p>
+                    </div>
+                    <div class="info-card fragment fade-up" data-fragment-index="1">
+                        <i data-lucide="lock" class="card-icon"></i>
+                        <h4>Host-Only Control</h4>
+                        <p>Firestore security rules enforce role-based access. Only the Host can trigger midpoint calculations.</p>
+                    </div>
+                    <div class="info-card fragment fade-up" data-fragment-index="2">
+                        <i data-lucide="shield-check" class="card-icon"></i>
+                        <h4>Zero Retained GPS</h4>
+                        <p>No historical location data. No tracking profiles. Privacy isn't a feature, it's the architecture.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 6: Performance -->
+            <section class="glass-slide" data-auto-animate>
+                <h2 class="section-title">Performance</h2>
+                <p class="summary-text">The numbers that matter.</p>
+                <div class="stats-container">
+                    <div class="stat-box fragment custom-focus">
+                        <h3>&lt; 3.0s</h3>
+                        <p>80-element routing matrix</p>
+                    </div>
+                    <div class="stat-box fragment custom-focus">
+                        <h3>~25ms</h3>
+                        <p>WebSocket latency</p>
+                    </div>
+                    <div class="stat-box fragment custom-focus">
+                        <h3>O(1)</h3>
+                        <p>Document fetch time</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 7: Closing -->
+            <section class="glass-slide" data-auto-animate>
+                <img src="logo-v2.png" alt="Laween" class="custom-logo" style="width: 80px; opacity: 0.5; margin-bottom: 1rem;">
+                <h1 class="brand-title" style="font-size: 3.5rem !important;">Thank you.</h1>
+                <p class="tagline">Questions?</p>
+                <div class="pulse-ring"></div>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/notes/notes.min.js"></script>
+    <script>
+        Reveal.initialize({
+            controls: true,
+            progress: true,
+            center: true,
+            hash: true,
+            transition: 'slide',
+            backgroundTransition: 'fade',
+            transitionSpeed: 'slow',
+            plugins: [ RevealNotes ]
+        });
+        lucide.createIcons();
+
+        // Re-trigger underline animation on every slide transition
+        Reveal.on('slidechanged', event => {
+            const title = event.currentSlide.querySelector('.section-title');
+            if (title) {
+                title.style.animation = 'none';
+                title.offsetHeight; // force reflow
+                title.style.animation = '';
+                // Reset the ::after pseudo-element by toggling a class
+                title.classList.remove('animate-line');
+                void title.offsetHeight;
+                title.classList.add('animate-line');
+            }
+        });
+
+        // Trigger on initial load too
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.section-title').forEach(t => t.classList.add('animate-line'));
+        });
+
+        // Cinematic Story Launcher
+        function launchStory() {
+            const iframe = document.getElementById('story-iframe');
+            const overlay = document.getElementById('playOverlay');
+            
+            // Set source to trigger load and autoplay
+            iframe.src = iframe.getAttribute('data-src');
+            
+            // Hide overlay
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.style.pointerEvents = 'none';
+            }, 400);
+            
+            // Allow pointer events on iframe once playing
+            iframe.style.pointerEvents = 'auto';
+        }
+    </script>
+</body>
+</html>

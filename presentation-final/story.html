@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laween — The Story</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --teal: #00C2CB;
+    --teal-dark: #007B84;
+    --teal-glow: rgba(0,194,203,0.25);
+    --wa-green: #25D366;
+    --wa-dark: #0b141a;
+    --bg: #060F12;
+}
+
+body {
+    background: var(--bg);
+    font-family: 'Nunito', sans-serif;
+    width: 100vw; height: 100vh;
+    overflow: hidden;
+    color: #fff;
+    cursor: none;
+}
+
+/* ═══════════════════════════════════════
+   SCENE SYSTEM
+═══════════════════════════════════════ */
+.scene {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Each scene animates in/out using a CSS animation timeline */
+/* Scene durations (cumulative):
+   Scene 1: 0–3s  (BEFORE label)
+   Scene 2: 3–10s (WhatsApp phone)
+   Scene 3: 10–16s (app chaos)
+   Scene 4: 16–22s (Laween logo explode)
+   Scene 5: 22–32s (After phone flow)
+*/
+
+.scene-1 { animation: sceneLifecycle 3s 0s both; }
+.scene-2 { animation: sceneLifecycle 7s 3s both; }
+.scene-3 { animation: sceneLifecycle 6s 10s both; }
+.scene-4 { animation: sceneLifecycle 6s 16s both; }
+.scene-5 { animation: sceneLifecycle 10s 22s forwards; }
+
+@keyframes sceneLifecycle {
+    0% { opacity: 0; transform: scale(1.04); }
+    8% { opacity: 1; transform: scale(1); }
+    85% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0.96); }
+}
+
+/* ═══════════════════════════════════════
+   SVG SWOOSH LINES (background decoration)
+═══════════════════════════════════════ */
+.swoosh-bg {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.swoosh-line {
+    stroke: var(--teal);
+    stroke-width: 1.5;
+    fill: none;
+    stroke-dasharray: 800;
+    stroke-dashoffset: 800;
+    opacity: 0.15;
+}
+
+.swoosh-line.s1 { animation: drawLine 4s ease-out 0.5s forwards; }
+.swoosh-line.s2 { animation: drawLine 4s ease-out 1.2s forwards; }
+.swoosh-line.s3 { animation: drawLine 5s ease-out 0.8s forwards; }
+
+@keyframes drawLine {
+    to { stroke-dashoffset: 0; }
+}
+
+/* ═══════════════════════════════════════
+   SCENE 1 — "Before Laween" Title
+═══════════════════════════════════════ */
+.s1-label {
+    font-size: clamp(2rem, 5vw, 4rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    opacity: 0;
+    animation: kinText 0.8s cubic-bezier(0.22,1,0.36,1) 0.3s forwards;
+}
+
+.s1-label .highlight { color: var(--teal); }
+
+.s1-sub {
+    font-size: clamp(0.9rem, 2vw, 1.2rem);
+    color: rgba(255,255,255,0.4);
+    margin-top: 0.6rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    opacity: 0;
+    animation: kinText 0.8s ease 0.7s forwards;
+}
+
+@keyframes kinText {
+    from { opacity: 0; transform: translateY(20px) skewY(2deg); }
+    to   { opacity: 1; transform: translateY(0) skewY(0deg); }
+}
+
+/* ═══════════════════════════════════════
+   3D PHONE MOCKUP
+═══════════════════════════════════════ */
+.phone-3d-wrap {
+    perspective: 1000px;
+}
+
+.phone-3d {
+    width: 220px;
+    background: #0a0a0a;
+    border-radius: 28px;
+    border: 2px solid rgba(255,255,255,0.08);
+    overflow: hidden;
+    box-shadow:
+        0 40px 80px rgba(0,0,0,0.6),
+        0 0 0 1px rgba(255,255,255,0.04),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+    transform: rotateY(-20deg) rotateX(8deg);
+    animation: phoneFloat 6s ease-in-out infinite;
+    position: relative;
+}
+
+/* Glare effect */
+.phone-3d::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 60%; height: 100%;
+    background: linear-gradient(120deg, rgba(255,255,255,0.07) 0%, transparent 60%);
+    z-index: 10;
+    pointer-events: none;
+    border-radius: 28px;
+}
+
+@keyframes phoneFloat {
+    0%, 100% { transform: rotateY(-20deg) rotateX(8deg) translateY(0); }
+    50%       { transform: rotateY(-15deg) rotateX(5deg) translateY(-10px); }
+}
+
+/* Phone notch */
+.phone-notch {
+    width: 80px; height: 22px;
+    background: #000;
+    border-radius: 0 0 14px 14px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+}
+
+/* WhatsApp scene in phone */
+.wa-screen {
+    background: #0b141a;
+    min-height: 420px;
+}
+
+.wa-topbar {
+    background: #1f2c34;
+    padding: 0.5rem 0.7rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.wa-avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #25D366, #128C7E);
+}
+
+.wa-info { flex: 1; }
+.wa-name { font-size: 0.7rem; font-weight: 700; color: #e9edef; }
+.wa-online { font-size: 0.48rem; color: #25D366; }
+
+.wa-body {
+    padding: 0.6rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.wa-bubble {
+    max-width: 80%;
+    padding: 0.3rem 0.5rem;
+    border-radius: 7px;
+    font-size: 0.6rem;
+    line-height: 1.35;
+    color: #e9edef;
+    opacity: 0;
+}
+
+.wb-out { background: #005c4b; align-self: flex-end; border-bottom-right-radius: 2px; }
+.wb-in  { background: #1f2c34; align-self: flex-start; border-bottom-left-radius: 2px; }
+
+.wb-sender {
+    display: block;
+    font-size: 0.48rem;
+    font-weight: 700;
+    color: #53bdeb;
+    margin-bottom: 0.1rem;
+}
+
+.wb-time {
+    display: block;
+    font-size: 0.38rem;
+    color: rgba(255,255,255,0.3);
+    text-align: right;
+    margin-top: 0.1rem;
+}
+
+/* Stagger chat bubbles in scene 2 */
+.wb-1 { animation: bubbleIn 0.4s ease 3.6s forwards; }
+.wb-2 { animation: bubbleIn 0.4s ease 4.4s forwards; }
+.wb-3 { animation: bubbleIn 0.4s ease 5.1s forwards; }
+.wb-4 { animation: bubbleIn 0.4s ease 5.8s forwards; }
+.wb-5 { animation: bubbleIn 0.4s ease 6.7s forwards; }
+.wb-6 { animation: bubbleIn 0.4s ease 7.5s forwards; }
+
+@keyframes bubbleIn {
+    from { opacity: 0; transform: translateY(6px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.typing-indicator {
+    align-self: flex-start;
+    background: #1f2c34;
+    border-radius: 7px;
+    padding: 0.35rem 0.6rem;
+    display: flex; gap: 3px; align-items: center;
+    opacity: 0;
+    animation: bubbleIn 0.3s ease 7.8s forwards;
+}
+
+.td-dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.45);
+}
+.td-dot:nth-child(1) { animation: typeBounce 1.2s 8s infinite; }
+.td-dot:nth-child(2) { animation: typeBounce 1.2s 8.2s infinite; }
+.td-dot:nth-child(3) { animation: typeBounce 1.2s 8.4s infinite; }
+
+@keyframes typeBounce {
+    0%,60%,100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-4px); opacity: 1; }
+}
+
+.scene-2-caption {
+    margin-top: 1.5rem;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    opacity: 0;
+    animation: kinText 0.5s ease 3.5s forwards;
+}
+
+/* ═══════════════════════════════════════
+   SCENE 3 — App Chaos
+═══════════════════════════════════════ */
+.chaos-title {
+    font-size: clamp(1.2rem, 3vw, 2rem);
+    font-weight: 900;
+    color: rgba(255,255,255,0.85);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: kinText 0.5s ease 10.3s forwards;
+}
+
+.chaos-apps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.4rem;
+}
+
+.chaos-app {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0;
+}
+
+.chaos-app-icon {
+    width: 64px; height: 64px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+.chaos-app-icon::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+    border-radius: 16px;
+}
+
+.chaos-app-name {
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.5);
+    font-weight: 700;
+}
+
+/* Staggered pop-in */
+.ca-1 { animation: appPop 0.5s cubic-bezier(0.34,1.56,0.64,1) 10.5s forwards; }
+.ca-2 { animation: appPop 0.5s cubic-bezier(0.34,1.56,0.64,1) 10.8s forwards; }
+.ca-3 { animation: appPop 0.5s cubic-bezier(0.34,1.56,0.64,1) 11.1s forwards; }
+.ca-4 { animation: appPop 0.5s cubic-bezier(0.34,1.56,0.64,1) 11.4s forwards; }
+.ca-5 { animation: appPop 0.5s cubic-bezier(0.34,1.56,0.64,1) 11.7s forwards; }
+.ca-6 { animation: appPop 0.5s cubic-bezier(0.34,1.56,0.64,1) 12.0s forwards; }
+
+@keyframes appPop {
+    from { opacity: 0; transform: scale(0.3) rotate(-10deg); }
+    to   { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+.chaos-app-icon.wobble {
+    animation: iconWobble 2s ease-in-out infinite;
+}
+
+@keyframes iconWobble {
+    0%,100% { transform: rotate(0) scale(1); }
+    25% { transform: rotate(-4deg) scale(1.04); }
+    75% { transform: rotate(4deg) scale(0.97); }
+}
+
+.chaos-bottom {
+    margin-top: 2rem;
+    font-size: 1.1rem;
+    color: rgba(255,255,255,0.25);
+    opacity: 0;
+    animation: kinText 0.5s ease 12.5s forwards;
+}
+
+.chaos-bottom span {
+    color: #ef4444;
+    font-weight: 800;
+}
+
+/* ═══════════════════════════════════════
+   SCENE 4 — Laween Logo Reveal
+═══════════════════════════════════════ */
+.logo-reveal-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.ios-icon-bg {
+    width: 140px; height: 140px;
+    border-radius: 32px;
+    background: linear-gradient(145deg, #0C2A31, #092025);
+    border: 1px solid rgba(0,194,203,0.2);
+    box-shadow:
+        0 0 0 8px rgba(0,194,203,0.05),
+        0 0 60px rgba(0,194,203,0.2),
+        0 25px 50px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0.2);
+    animation: iconReveal 0.7s cubic-bezier(0.34,1.56,0.64,1) 16.5s forwards;
+    position: relative;
+}
+
+.ios-icon-bg::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 34px;
+    background: linear-gradient(135deg, rgba(0,194,203,0.4), transparent, rgba(0,194,203,0.1));
+    z-index: -1;
+}
+
+@keyframes iconReveal {
+    0%   { opacity: 0; transform: scale(0.2) rotate(-5deg); }
+    60%  { opacity: 1; transform: scale(1.08) rotate(1deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+.ios-icon-bg img {
+    width: 90px; height: auto;
+    filter: drop-shadow(0 0 20px rgba(0,194,203,0.6));
+}
+
+/* Ring pulses */
+.icon-rings {
+    position: absolute;
+    inset: -20px;
+}
+
+.icon-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid var(--teal);
+    opacity: 0;
+    animation: ringPulse 2s ease-out infinite;
+}
+
+.icon-ring:nth-child(2) { animation-delay: 0.6s; }
+.icon-ring:nth-child(3) { animation-delay: 1.2s; }
+
+@keyframes ringPulse {
+    0%   { transform: scale(0.8); opacity: 0.5; }
+    100% { transform: scale(2.5); opacity: 0; }
+}
+
+.logo-reveal-name {
+    font-size: 3.5rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #C8E3E4, var(--teal), #4A96A3);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    opacity: 0;
+    animation: kinText 0.6s ease 17.2s forwards;
+}
+
+.logo-reveal-sub {
+    font-size: 0.9rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    opacity: 0;
+    animation: kinText 0.5s ease 17.8s forwards;
+}
+
+/* Swoosh lines that radiate from the logo */
+.logo-swooshes {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+/* ═══════════════════════════════════════
+   SCENE 5 — After Laween (3D phone flow)
+═══════════════════════════════════════ */
+.after-scene {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.after-label {
+    font-size: clamp(1rem, 2.5vw, 1.6rem);
+    font-weight: 900;
+    opacity: 0;
+    animation: kinText 0.5s ease 22.3s forwards;
+}
+
+.after-label .at { color: var(--teal); }
+
+.after-phones-row {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+/* Each after-phone animates in */
+.aft-phone-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0;
+}
+
+.aft-phone-wrap.ap-1 { animation: slideUpIn 0.5s cubic-bezier(0.34,1.3,0.6,1) 22.8s forwards; }
+.aft-phone-wrap.ap-2 { animation: slideUpIn 0.5s cubic-bezier(0.34,1.3,0.6,1) 23.4s forwards; }
+.aft-phone-wrap.ap-3 { animation: slideUpIn 0.5s cubic-bezier(0.34,1.3,0.6,1) 24.0s forwards; }
+.aft-phone-wrap.ap-4 { animation: slideUpIn 0.5s cubic-bezier(0.34,1.3,0.6,1) 24.6s forwards; }
+
+@keyframes slideUpIn {
+    from { opacity: 0; transform: translateY(30px) scale(0.9); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.aft-phone {
+    width: 120px;
+    background: #0a0a0a;
+    border-radius: 20px;
+    border: 2px solid rgba(255,255,255,0.06);
+    overflow: hidden;
+    box-shadow:
+        0 20px 40px rgba(0,0,0,0.5),
+        0 0 0 1px rgba(255,255,255,0.03),
+        inset 0 1px 0 rgba(255,255,255,0.06);
+    transform: rotateY(-10deg) rotateX(5deg);
+    transition: transform 0.4s ease;
+}
+
+.aft-phone:hover { transform: rotateY(0) rotateX(0); }
+
+.aft-header {
+    font-size: 0.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #fff;
+    padding: 0.4rem 0.5rem;
+    text-align: center;
+}
+
+.aft-body {
+    padding: 0.7rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 110px;
+    justify-content: center;
+}
+
+.aft-icon { font-size: 1.6rem; }
+
+.aft-avatars { display: flex; gap: 0.25rem; }
+.aft-av {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    border: 1.5px solid var(--teal);
+    background: linear-gradient(135deg, rgba(0,194,203,0.3), rgba(0,194,203,0.1));
+}
+
+.aft-midpoint-circle {
+    position: relative;
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.aft-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1.5px solid var(--teal);
+    animation: aftRing 2s ease-out infinite;
+}
+
+@keyframes aftRing {
+    0% { transform: scale(0.6); opacity: 0.6; }
+    100% { transform: scale(2); opacity: 0; }
+}
+
+.aft-pin {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--teal);
+    box-shadow: 0 0 8px var(--teal);
+}
+
+.aft-btn {
+    padding: 0.28rem 0.7rem;
+    border-radius: 50px;
+    font-size: 0.5rem;
+    font-weight: 800;
+    color: #fff;
+    text-align: center;
+}
+
+.aft-venue { font-size: 0.6rem; font-weight: 700; color: #e9edef; }
+
+.aft-phone-label {
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.3);
+    font-weight: 700;
+}
+
+.aft-arrow {
+    font-size: 1.2rem;
+    color: var(--teal);
+    opacity: 0.4;
+}
+
+.after-tagline {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0;
+    animation: kinText 0.5s ease 25.5s forwards;
+}
+
+.after-tagline strong { color: var(--teal); }
+
+/* ═══════════════════════════════════════
+   PROGRESS BAR (like a video)
+═══════════════════════════════════════ */
+.progress-bar {
+    position: fixed;
+    bottom: 0; left: 0;
+    height: 3px;
+    background: linear-gradient(to right, var(--teal-dark), var(--teal));
+    width: 0;
+    animation: progressFill 32s linear forwards;
+    z-index: 100;
+}
+
+@keyframes progressFill {
+    to { width: 100%; }
+}
+
+/* ═══════════════════════════════════════
+   FLOATING PARTICLES (always on)
+═══════════════════════════════════════ */
+.particle-field {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.p {
+    position: absolute;
+    width: 3px; height: 3px;
+    border-radius: 50%;
+    background: var(--teal);
+    opacity: 0;
+    animation: pFloat linear infinite;
+}
+
+.p:nth-child(1)  { left: 5%;  animation-duration: 18s; animation-delay: 0s; }
+.p:nth-child(2)  { left: 15%; animation-duration: 22s; animation-delay: -5s; }
+.p:nth-child(3)  { left: 28%; animation-duration: 16s; animation-delay: -9s; }
+.p:nth-child(4)  { left: 42%; animation-duration: 20s; animation-delay: -2s; }
+.p:nth-child(5)  { left: 60%; animation-duration: 24s; animation-delay: -7s; }
+.p:nth-child(6)  { left: 72%; animation-duration: 19s; animation-delay: -12s; }
+.p:nth-child(7)  { left: 85%; animation-duration: 21s; animation-delay: -3s; }
+.p:nth-child(8)  { left: 93%; animation-duration: 23s; animation-delay: -15s; }
+
+@keyframes pFloat {
+    0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+    10%  { opacity: 0.18; transform: translateY(90vh) scale(1); }
+    90%  { opacity: 0.1; }
+    100% { transform: translateY(-5vh) scale(0); opacity: 0; }
+}
+
+/* Return hint */
+.back-hint {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.2);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    z-index: 100;
+    cursor: pointer;
+}
+
+.back-hint:hover { color: var(--teal); }
+</style>
+</head>
+<body>
+
+<!-- Particles -->
+<div class="particle-field">
+    <div class="p"></div><div class="p"></div><div class="p"></div><div class="p"></div>
+    <div class="p"></div><div class="p"></div><div class="p"></div><div class="p"></div>
+</div>
+
+<!-- Progress bar -->
+<div class="progress-bar"></div>
+
+<!-- ── SVG Swoosh Lines ─────────────────── -->
+<svg class="swoosh-bg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+    <path class="swoosh-line s1" d="M-100,800 C300,600 600,900 1000,400 S1600,200 2100,500"/>
+    <path class="swoosh-line s2" d="M-100,200 C200,400 500,100 900,500 S1400,800 2100,300"/>
+    <path class="swoosh-line s3" d="M0,1100 C400,700 700,1000 1100,300 S1700,600 2000,0" stroke-width="1" opacity="0.08"/>
+</svg>
+
+<!-- ══════════════════════════════════════
+     SCENE 1: "Before Laween" title card
+═══════════════════════════════════════ -->
+<div class="scene scene-1" style="z-index:10;">
+    <h1 class="s1-label">Before <span class="highlight">Laween</span></h1>
+    <p class="s1-sub">What organizing an outing actually looks like</p>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCENE 2: WhatsApp group chat chaos
+═══════════════════════════════════════ -->
+<div class="scene scene-2" style="z-index:10; flex-direction:row; gap: 4rem;">
+    <div>
+        <div class="phone-3d-wrap" style="perspective:1000px;">
+            <div class="phone-3d" style="width:220px;">
+                <div class="phone-notch"></div>
+                <div class="wa-screen">
+                    <div class="wa-topbar">
+                        <div class="wa-avatar"></div>
+                        <div class="wa-info">
+                            <div class="wa-name">The Squad</div>
+                            <div class="wa-online">4 members online</div>
+                        </div>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                    </div>
+                    <div class="wa-body">
+                        <div class="wa-bubble wb-out wb-1">
+                            <span class="wb-time">7:32 PM ✓✓</span>
+                            where are we going tonight?
+                        </div>
+                        <div class="wa-bubble wb-in wb-2">
+                            <span class="wb-sender">Sara</span>
+                            idk, you guys decide
+                            <span class="wb-time">7:33 PM</span>
+                        </div>
+                        <div class="wa-bubble wb-in wb-3">
+                            <span class="wb-sender">Ahmed</span>
+                            same place as last time?
+                            <span class="wb-time">7:35 PM</span>
+                        </div>
+                        <div class="wa-bubble wb-out wb-4">
+                            <span class="wb-time">7:36 PM ✓✓</span>
+                            thats too far for me
+                        </div>
+                        <div class="wa-bubble wb-in wb-5">
+                            <span class="wb-sender">Lina</span>
+                            nvm not coming anymore 😐
+                            <span class="wb-time">7:41 PM</span>
+                        </div>
+                        <div class="wa-bubble wb-out wb-6" style="background:rgba(220,38,38,0.3); border:1px solid rgba(220,38,38,0.3);">
+                            <span class="wb-time">7:55 PM</span>
+                            ...plan cancelled again
+                        </div>
+                        <div class="typing-indicator">
+                            <div class="td-dot"></div>
+                            <div class="td-dot"></div>
+                            <div class="td-dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p class="scene-2-caption">group chat · every time</p>
+    </div>
+    <div style="max-width:280px; opacity:0; animation: kinText 0.6s ease 5s forwards;">
+        <h2 style="font-size:1.8rem; font-weight:900; margin-bottom:1rem; line-height:1.2;">Every outing starts the same way.</h2>
+        <p style="color:rgba(255,255,255,0.4); font-size:0.9rem; line-height:1.7;">Someone asks. Nobody decides. One person drops out. The plan dies. And everyone opens a different app.</p>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCENE 3: App juggling chaos
+═══════════════════════════════════════ -->
+<div class="scene scene-3" style="z-index:10;">
+    <p class="chaos-title">Then comes the <span style="color:rgba(239,68,68,0.8)">app juggling.</span></p>
+    <div class="chaos-apps-grid">
+        <div class="chaos-app ca-1">
+            <div class="chaos-app-icon wobble" style="background:#25D366; animation-delay:0s;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            </div>
+            <span class="chaos-app-name">WhatsApp</span>
+        </div>
+        <div class="chaos-app ca-2">
+            <div class="chaos-app-icon wobble" style="background:#4285F4; animation-delay:0.4s;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            </div>
+            <span class="chaos-app-name">Maps</span>
+        </div>
+        <div class="chaos-app ca-3">
+            <div class="chaos-app-icon wobble" style="background:linear-gradient(135deg,#833AB4,#E1306C,#F77737); animation-delay:0.8s;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.2" fill="white" stroke="none"/></svg>
+            </div>
+            <span class="chaos-app-name">Instagram</span>
+        </div>
+        <div class="chaos-app ca-4">
+            <div class="chaos-app-icon wobble" style="background:#33B5FF; animation-delay:1.2s;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M5.5 3L3 8.5l9 12 9-12L18.5 3z"/><path d="M3 8.5L12 20.5 21 8.5" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/><path d="M3 8.5h18" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/><path d="M8 3L6 8.5M16 3L18 8.5" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/></svg>
+            </div>
+            <span class="chaos-app-name">Waze</span>
+        </div>
+        <div class="chaos-app ca-5">
+            <div class="chaos-app-icon wobble" style="background:#34C759; animation-delay:1.6s;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.18 11a19.79 19.79 0 01-3.07-8.67A2 2 0 013.09 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+            </div>
+            <span class="chaos-app-name">Phone</span>
+        </div>
+        <div class="chaos-app ca-6">
+            <div class="chaos-app-icon wobble" style="background:#D32323; animation-delay:2s;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.86 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z"/></svg>
+            </div>
+            <span class="chaos-app-name">Yelp</span>
+        </div>
+    </div>
+    <p class="chaos-bottom"><span>6 apps.</span> 30 messages. 0 decisions.</p>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCENE 4: Laween logo reveal
+═══════════════════════════════════════ -->
+<div class="scene scene-4" style="z-index:10;">
+    <!-- Radial swoosh SVG from center -->
+    <svg class="logo-swooshes" viewBox="0 0 1920 1080" style="position:absolute;inset:0;pointer-events:none;">
+        <path stroke="var(--teal)" stroke-width="1" fill="none" opacity="0.12" stroke-dasharray="600" stroke-dashoffset="600"
+              d="M960,540 C1100,400 1400,300 1800,200" style="animation: drawLine 1.5s ease 17s forwards;"/>
+        <path stroke="var(--teal)" stroke-width="1" fill="none" opacity="0.12" stroke-dasharray="600" stroke-dashoffset="600"
+              d="M960,540 C820,400 500,300 100,150" style="animation: drawLine 1.5s ease 17.2s forwards;"/>
+        <path stroke="var(--teal)" stroke-width="1" fill="none" opacity="0.12" stroke-dasharray="600" stroke-dashoffset="600"
+              d="M960,540 C1000,700 1200,850 1600,950" style="animation: drawLine 1.5s ease 17.4s forwards;"/>
+        <path stroke="var(--teal)" stroke-width="1" fill="none" opacity="0.12" stroke-dasharray="600" stroke-dashoffset="600"
+              d="M960,540 C900,700 700,850 300,1000" style="animation: drawLine 1.5s ease 17.6s forwards;"/>
+    </svg>
+
+    <div class="logo-reveal-wrap">
+        <div class="ios-icon-bg">
+            <div class="icon-rings">
+                <div class="icon-ring" style="animation-delay: 17.5s;"></div>
+                <div class="icon-ring" style="animation-delay: 18.1s;"></div>
+                <div class="icon-ring" style="animation-delay: 18.7s;"></div>
+            </div>
+            <img src="logo-v2.png" alt="Laween">
+        </div>
+        <h1 class="logo-reveal-name">Laween</h1>
+        <p class="logo-reveal-sub">One app. Fair for everyone.</p>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCENE 5: After Laween — the flow
+═══════════════════════════════════════ -->
+<div class="scene scene-5" style="z-index:10;">
+    <div class="after-scene">
+        <h2 class="after-label">After <span class="at">Laween</span></h2>
+
+        <div class="after-phones-row">
+            <!-- Step 1 -->
+            <div class="aft-phone-wrap ap-1">
+                <div class="aft-phone">
+                    <div class="aft-header" style="background:linear-gradient(135deg, #007B84, #00C2CB);">Create</div>
+                    <div class="aft-body">
+                        <div class="aft-icon">📋</div>
+                        <div class="aft-btn" style="background:linear-gradient(135deg,#007B84,#00C2CB);">+ New Outing</div>
+                    </div>
+                </div>
+                <span class="aft-phone-label">01 create</span>
+            </div>
+
+            <div class="aft-arrow">›</div>
+
+            <!-- Step 2 -->
+            <div class="aft-phone-wrap ap-2">
+                <div class="aft-phone">
+                    <div class="aft-header" style="background:linear-gradient(135deg,#007B84,#00C2CB);">Lobby</div>
+                    <div class="aft-body">
+                        <div class="aft-avatars">
+                            <div class="aft-av"></div><div class="aft-av"></div>
+                            <div class="aft-av"></div><div class="aft-av"></div>
+                        </div>
+                        <div class="aft-btn" style="background:linear-gradient(135deg,#007B84,#00C2CB);">All Ready</div>
+                    </div>
+                </div>
+                <span class="aft-phone-label">02 join</span>
+            </div>
+
+            <div class="aft-arrow">›</div>
+
+            <!-- Step 3 -->
+            <div class="aft-phone-wrap ap-3">
+                <div class="aft-phone">
+                    <div class="aft-header" style="background:linear-gradient(135deg,#007B84,#00C2CB);">Midpoint</div>
+                    <div class="aft-body">
+                        <div class="aft-midpoint-circle">
+                            <div class="aft-ring"></div>
+                            <div class="aft-pin"></div>
+                        </div>
+                        <div class="aft-btn" style="background:linear-gradient(135deg,#007B84,#00C2CB);">Vote Now</div>
+                    </div>
+                </div>
+                <span class="aft-phone-label">03 midpoint</span>
+            </div>
+
+            <div class="aft-arrow">›</div>
+
+            <!-- Step 4 -->
+            <div class="aft-phone-wrap ap-4">
+                <div class="aft-phone" style="border-color:rgba(14,122,92,0.3); box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 30px rgba(14,122,92,0.15);">
+                    <div class="aft-header" style="background:linear-gradient(135deg,#0e7a5c,#3aa88a);">Done ✓</div>
+                    <div class="aft-body">
+                        <div class="aft-icon">☕</div>
+                        <div class="aft-venue">brew &amp; co.</div>
+                        <div class="aft-btn" style="background:linear-gradient(135deg,#0e7a5c,#3aa88a);">Navigate</div>
+                    </div>
+                </div>
+                <span class="aft-phone-label">04 going!</span>
+            </div>
+        </div>
+
+        <p class="after-tagline">Fair. Fast. <strong>Final.</strong></p>
+    </div>
+</div>
+
+<a class="back-hint" onclick="window.history.back()">← back to deck</a>
+
+<script>
+    // Re-run animation on URL hash change or key R
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'r' || e.key === 'R') window.location.reload();
+        if (e.key === 'Escape') window.history.back();
+    });
+</script>
+</body>
+</html>

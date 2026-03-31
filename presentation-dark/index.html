@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laween — Find the Middle</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- Scene 1: Brand Reveal -->
+            <section class="dark-slide slide-brand">
+                <div class="bg-dots"><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div></div>
+                <div class="glow-ring"></div>
+                <div class="logo-wrap">
+                    <img src="logo-v2.png" alt="Laween" class="logo-img fragment fade-in">
+                    <h1 class="fragment fade-up">laween</h1>
+                    <p class="brand-line fragment fade-up">meeting up, made fair.</p>
+                </div>
+            </section>
+
+            <!-- Scene 2: The Problem -->
+            <section class="dark-slide slide-problem">
+                <div class="bg-dots"><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div></div>
+                <div class="content">
+                    <h2 class="fragment fade-up">too many people.<br><span>too many locations.</span></h2>
+                    <p class="fragment fade-up">choosing where to meet shouldn't take longer than the outing itself.</p>
+                    <div class="scattered-pins fragment fade-up">
+                        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Scene 3: The Solution -->
+            <section class="dark-slide slide-solution">
+                <div class="bg-dots"><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div></div>
+                <div class="text-side">
+                    <h2 class="fragment fade-right"><span class="teal">laween</span> finds<br>the midpoint.</h2>
+                    <p class="fragment fade-right">captures each person's location and calculates the geographic center — so nobody drives further than they should.</p>
+                </div>
+                <div class="phone-side fragment zoom-in">
+                    <div class="orbit-ring"></div>
+                    <div class="phone-frame">
+                        <div class="phone-notch"></div>
+                        <div class="phone-screen">
+                            <div class="phone-header"><div class="phone-header-dot"></div><span class="phone-header-text">outing session</span></div>
+                            <div class="phone-map-area">
+                                <div class="converge-ring"></div><div class="converge-ring"></div><div class="converge-ring"></div>
+                                <div class="center-pin"></div>
+                            </div>
+                            <div class="phone-btn">calculate midpoint</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Scene 4: Group Joins -->
+            <section class="dark-slide slide-group">
+                <div class="bg-dots"><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div></div>
+                <div class="content">
+                    <h2 class="fragment fade-up">your group, connected.</h2>
+                    <p class="fragment fade-up">everyone joins the session. their location is captured. nobody is left out.</p>
+                    <div class="avatars-row fragment fade-up">
+                        <div class="avatar-chip"><div class="av-circle av-1"></div><span>sarah</span></div>
+                        <div class="avatar-chip"><div class="av-circle av-2"></div><span>omar</span></div>
+                        <div class="avatar-chip"><div class="av-circle av-3"></div><span>noor</span></div>
+                        <div class="avatar-chip"><div class="av-circle av-4"></div><span>ali</span></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Scene 5: Midpoint Found -->
+            <section class="dark-slide slide-midpoint">
+                <div class="bg-dots"><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div></div>
+                <div class="content">
+                    <h2 class="fragment fade-up">midpoint found.</h2>
+                    <p class="sub fragment fade-up">the fairest meeting spot, calculated in under 3 seconds.</p>
+                    <div class="midpoint-visual fragment fade-up">
+                        <div class="mid-ring mid-ring-1"></div><div class="mid-ring mid-ring-2"></div><div class="mid-ring mid-ring-3"></div>
+                        <div class="mid-center"></div>
+                    </div>
+                    <span class="mid-label fragment fade-up">
+                        <i data-lucide="map-pin" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>
+                        midpoint locked
+                    </span>
+                </div>
+            </section>
+
+            <!-- Scene 6: Venue Suggestions -->
+            <section class="dark-slide slide-venues">
+                <div class="bg-dots"><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div></div>
+                <div class="text-side">
+                    <h2 class="fragment fade-right">not just the point.<br>the place.</h2>
+                    <p class="fragment fade-right">laween suggests the best nearby venues around the midpoint — cafés, restaurants, parks — so the group can pick instantly.</p>
+                </div>
+                <div class="cards-side">
+                    <div class="venue-card fragment fade-left"><div class="venue-icon cafe">☕</div><div class="venue-info"><h4>brew & co.</h4><p>café · 0.4 km from midpoint</p></div><span class="venue-tag">top pick</span></div>
+                    <div class="venue-card fragment fade-left"><div class="venue-icon park">🌿</div><div class="venue-info"><h4>central gardens</h4><p>park · 0.6 km from midpoint</p></div><span class="venue-tag">outdoor</span></div>
+                    <div class="venue-card fragment fade-left"><div class="venue-icon restaurant">🍽️</div><div class="venue-info"><h4>table nine</h4><p>restaurant · 0.8 km from midpoint</p></div><span class="venue-tag">popular</span></div>
+                </div>
+            </section>
+
+            <!-- Scene 7: Decision Made -->
+            <section class="dark-slide slide-decision">
+                <div class="bg-dots"><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div></div>
+                <div class="content">
+                    <h2 class="fragment fade-up">decided. going.</h2>
+                    <p class="fragment fade-up">no more back-and-forth.<br>the group picks, confirms, and heads out.</p>
+                    <div class="confirmed-card fragment zoom-in">
+                        <div class="check-circle">✓</div>
+                        <div class="confirm-text"><h4>brew & co.</h4><p>confirmed · all 4 members heading there</p></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Scene 8: Final CTA -->
+            <section class="dark-slide slide-cta">
+                <div class="glow-ring"></div>
+                <div class="bg-dots"><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div><div class="bg-dot"></div></div>
+                <div class="cta-wrap">
+                    <img src="logo-v2.png" alt="Laween" class="cta-logo fragment fade-in">
+                    <h1 class="fragment fade-up">find the middle.<br>meet easier.</h1>
+                    <p class="fragment fade-up">less back and forth. more going out.</p>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/notes/notes.min.js"></script>
+    <script>
+        Reveal.initialize({ controls: true, progress: true, center: false, hash: true, transition: 'fade', backgroundTransition: 'none', transitionSpeed: 'slow', plugins: [ RevealNotes ] });
+        lucide.createIcons();
+    </script>
+</body>
+</html>

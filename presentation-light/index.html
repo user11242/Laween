@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laween - The Magic of Outings</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- Slide 1: Title -->
+            <section class="glass-slide" data-auto-animate>
+                <div class="logo-container">
+                    <img src="logo-v2.png" alt="Laween Logo" class="custom-logo">
+                    <h1 class="brand-title">Laween</h1>
+                </div>
+                <h3 class="subtitle">Revolutionizing Group Outings.</h3>
+                <p class="tagline">Stop arguing about where to go. Start meeting up.</p>
+                <div class="pulse-ring"></div>
+            </section>
+
+            <!-- Slide 2: The Problem -->
+            <section class="glass-slide" data-auto-animate>
+                <h2 class="section-title">The "Where are we going?" Problem</h2>
+                <div class="cards-grid">
+                    <div class="info-card fragment fade-up">
+                        <i data-lucide="message-circle" class="card-icon"></i>
+                        <h4>Endless Group Chats</h4>
+                        <p>Hours wasted deciding on a café, resulting in decision fatigue and cancelled plans.</p>
+                    </div>
+                    <div class="info-card fragment fade-up" data-fragment-index="1">
+                        <i data-lucide="map-pin" class="card-icon"></i>
+                        <h4>Unfair Travel Times</h4>
+                        <p>One person always drives 40 minutes while another walks across the street.</p>
+                    </div>
+                    <div class="info-card fragment fade-up" data-fragment-index="2">
+                        <i data-lucide="clock" class="card-icon"></i>
+                        <h4>The "Ghosting" Effect</h4>
+                        <p>Waiting alone on the sidewalk because nobody shares accurate ETAs.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 3: The Laween Solution -->
+            <section class="glass-slide" data-auto-animate>
+                <h2 class="section-title">The Magic of <span class="highlight">Laween</span></h2>
+                <div class="split-view">
+                    <div class="text-column">
+                        <ul class="check-list">
+                            <li class="fragment fade-right"><i data-lucide="crosshair" class="li-icon"></i> <strong>Algorithmic Midpoints:</strong> Captures live GPS to mathematically find the fairest meeting location.</li>
+                            <li class="fragment fade-right"><i data-lucide="vote" class="li-icon"></i> <strong>Approval Voting:</strong> Curates the top venues and uses group consensus to lock the destination.</li>
+                            <li class="fragment fade-right"><i data-lucide="shield-check" class="li-icon"></i> <strong>Absolute Privacy:</strong> Live-tracking auto-destructs the moment you arrive at the venue.</li>
+                        </ul>
+                    </div>
+                    <div class="visual-column fragment zoom-in">
+                        <div class="mockup-frame">
+                            <div class="mockup-header">Lobby</div>
+                            <div class="mockup-content">
+                                <div class="mockup-avatar fade-in-out"></div>
+                                <div class="mockup-avatar fade-in-out" style="animation-delay: 0.5s"></div>
+                                <div class="mockup-avatar fade-in-out" style="animation-delay: 1s"></div>
+                                <div class="mockup-btn">Calculate Midpoint</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 4: Engineering & Scalability -->
+            <section class="glass-slide" data-auto-animate>
+                <h2 class="section-title">Built to Scale</h2>
+                <p class="summary-text">Hyper-optimized architecture keeping operations lean and fast.</p>
+                
+                <div class="stats-container">
+                    <div class="stat-box fragment custom-focus">
+                        <h3>&lt; 3.0s</h3>
+                        <p>Routing Matrix Speed</p>
+                    </div>
+                    <div class="stat-box fragment custom-focus">
+                        <h3>7 People</h3>
+                        <p>Optimal Group Cap</p>
+                    </div>
+                    <div class="stat-box fragment custom-focus">
+                        <h3>0 Stored GPS</h3>
+                        <p>After 12h TTL</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 5: Backend & Performance -->
+            <section class="glass-slide" data-auto-animate>
+                <div class="logo-container">
+                    <img src="logo-v2.png" alt="Laween Logo" class="custom-logo" style="width: 60px;">
+                    <h2 class="section-title" style="margin:0;">Architecture &amp; Security</h2>
+                </div>
+                
+                <div class="split-view" style="margin-top: 1rem; align-items: stretch;">
+                    <div class="text-column" style="flex: 1.4;">
+                        <ul class="check-list" style="font-size: 1.1rem; line-height: 1.5;">
+                            <li class="fragment fade-right" style="margin-bottom: 1rem;"><i data-lucide="flame" class="li-icon"></i> <strong>Firebase Realtime Engine:</strong> Outing sessions aren't static—they change live. Firebase handles this <b>sub-100ms syncing</b> instantly, letting us bypass custom socket infrastructure.</li>
+                            <li class="fragment fade-right" style="margin-bottom: 1rem;"><i data-lucide="database" class="li-icon"></i> <strong>Strategic Data Duplication:</strong> Unlike SQL, we <em>intentionally</em> duplicate NoSQL data (like user avatars). This completely eliminates slow server-side JOINs, loading entire UI views in one request.</li>
+                            <li class="fragment fade-right"><i data-lucide="zap" class="li-icon"></i> <strong>Optimize for Reads (1:1000):</strong> Sessions are written <em>once</em> but polled <em>thousands</em> of times. By flattening the schema, we guarantee <strong>O(1) fetch times</strong>. Storage is cheap; query speed is everything.</li>
+                        </ul>
+                        
+                        <aside class="notes">
+                            1. Why Firebase? We're dealing with something that's constantly changing. An outing session isn't static—people are joining, locations are updating, decisions are happening live. Firebase gave us that out of the box with very low latency.
+                            2. NoSQL Denormalization: We store user data like avatars directly inside the outing session. This removes the need for joins. The app loads everything it needs in one single request.
+                            3. Prioritizing Reads over Writes: Creating a session happens once. But after that, it's being read constantly. We guarantee O(1) document fetch times.
+                        </aside>
+                    </div>
+                    <div class="visual-column fragment zoom-in" style="flex: 1;">
+                        <div class="mockup-frame" style="width: auto; height: 100%; border-radius: 16px; background: #002B33; border: 3px solid #7CC3CE; display: flex; flex-direction: column; justify-content: center; padding: 2rem;">
+                            <p style="color: #7CC3CE; font-family: 'Courier New', monospace; font-size: 1.2rem; text-align: left; opacity: 0.8;">
+                                <b style="color: #C8E3E4;">// Database Metrics Snapshot</b><br><br>
+                                <span style="color: #4ade80;">&gt;</span> Routing TTL: &lt; 3.0s<br>
+                                <span style="color: #4ade80;">&gt;</span> Doc Fetch: ~25ms<br>
+                                <span style="color: #4ade80;">&gt;</span> Active Connections: Realtime WebSocket<br>
+                                <span style="color: #4ade80;">&gt;</span> <i>(Awaiting Firebase Image...)</i>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 6: Security & Metrics -->
+            <section class="glass-slide" data-auto-animate>
+                <div class="logo-container">
+                    <img src="logo-v2.png" alt="Laween Logo" class="custom-logo" style="width: 60px;">
+                    <h2 class="section-title" style="margin:0;">Security &amp; Performance Metrics</h2>
+                </div>
+                
+                <div class="split-view" style="margin-top: 1rem; align-items: flex-start;">
+                    <div class="text-column" style="flex: 1;">
+                        <ul class="check-list" style="font-size: 1.1rem; line-height: 1.5;">
+                            <li class="fragment fade-right" style="margin-bottom: 1rem;"><i data-lucide="shield-check" class="li-icon"></i> <strong>Absolute Privacy (12h TTL):</strong> All session data is auto-destroyed after 12 hours. Upon arrival at the venue, live-tracking ceases immediately. Zero historical GPS data is retained.</li>
+                            <li class="fragment fade-right" style="margin-bottom: 1rem;"><i data-lucide="lock" class="li-icon"></i> <strong>Role-Based Host Security:</strong> Security rules restrict Guests from modifying routing states. Only the authorized <code>Host</code> can alter the calculation matrix, preventing spoofing.</li>
+                        </ul>
+                    </div>
+                    <div class="text-column fragment fade-up" style="flex: 1;">
+                        <ul class="check-list" style="font-size: 1.1rem; line-height: 1.5;">
+                            <li class="fragment fade-left" style="margin-bottom: 1rem;"><i data-lucide="grid-3x3" class="li-icon"></i> <strong>Matrix Routing (&lt; 3.0s):</strong> The Google API evaluates 8 participants against 10 venues (80 coordinate elements) and resolves the midpoint in under 3 seconds.</li>
+                            <li class="fragment fade-left" style="margin-bottom: 1rem;"><i data-lucide="activity" class="li-icon"></i> <strong>WebSocket Polling (~25ms):</strong> Coordinate updates are broadcast across all active clients with 25ms precision, ensuring continuous real-time synchronization.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <aside class="notes">
+                    Security wasn't an afterthought for Laween. We wrote backend rules enforcing a strict 12-hour TTL. The database automatically wipes the session. The nanosecond you arrive, your GPS stream is permanently severed. We also implemented "Dictator" security rules—only the Host can trigger calculations. On performance: 80 matrix calculations resolved in under 3.0 seconds. WebSockets at 25ms.
+                </aside>
+            </section>
+
+            <!-- Slide 7: The End / Q&A -->
+            <section class="glass-slide" data-auto-animate>
+                <img src="logo-v2.png" alt="Laween" style="width: 80px; opacity: 0.6; margin-bottom: 1rem;">
+                <h1 class="brand-title highlight" style="font-size: 3.5rem !important;">Ready to go?</h1>
+                <p class="tagline" style="color: var(--text-main);">Experience the future of social coordination.</p>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/notes/notes.min.js"></script>
+    <script>
+        Reveal.initialize({
+            controls: true,
+            progress: true,
+            center: true,
+            hash: true,
+            transition: 'slide',
+            backgroundTransition: 'fade',
+            transitionSpeed: 'slow',
+            plugins: [ RevealNotes ]
+        });
+        lucide.createIcons();
+    </script>
+</body>
+</html>
