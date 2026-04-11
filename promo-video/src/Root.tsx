@@ -1,17 +1,16 @@
-import "./index.css";
-import { Composition } from "remotion";
-import { MyComposition } from "./Composition";
+import { Composition } from 'remotion';
+import { MainComposition } from './Composition';
 
 export const RemotionRoot: React.FC = () => {
   return (
     <>
       <Composition
-        id="MyComp"
-        component={MyComposition}
-        durationInFrames={60}
+        id="LaweenPromo"
+        component={MainComposition}
+        durationInFrames={1800} // 1 min at 30 fps
         fps={30}
-        width={1280}
-        height={720}
+        width={1080}
+        height={1920}
       />
     </>
   );

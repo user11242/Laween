@@ -1,15 +1,12 @@
 {
   "compilerOptions": {
-    "target": "ES2018",
-    "module": "commonjs",
     "jsx": "react-jsx",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "moduleResolution": "node",
     "strict": true,
-    "noEmit": true,
-    "lib": ["es2015"],
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "noUnusedLocals": true
+    "forceConsistentCasingInFileNames": true
   },
-  "exclude": ["remotion.config.ts"]
+  "include": ["src"]
 }

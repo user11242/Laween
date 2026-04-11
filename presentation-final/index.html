@@ -1,18 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laween — Final Presentation</title>
-    
+    <title>Laween &mdash; Final Presentation</title>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Nunito:wght@400;700;800;900&display=swap"
+        rel="stylesheet">
+
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
     <!-- Aurora Glow Layer (large blurred orbs that drift slowly) -->
@@ -24,16 +28,30 @@
 
     <!-- Ambient Floating Orbs (mid-layer, small drifting dots) -->
     <div class="ambient-orbs">
-        <div class="orb"></div><div class="orb"></div><div class="orb"></div><div class="orb"></div>
-        <div class="orb"></div><div class="orb"></div><div class="orb"></div><div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
     </div>
 
     <!-- Floating Background Particles (always visible behind slides) -->
     <div class="bg-particles">
-        <div class="particle"></div><div class="particle"></div><div class="particle"></div>
-        <div class="particle"></div><div class="particle"></div><div class="particle"></div>
-        <div class="particle"></div><div class="particle"></div><div class="particle"></div>
-        <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
     </div>
 
     <div class="reveal">
@@ -50,31 +68,7 @@
                 <div class="pulse-ring"></div>
             </section>
 
-            <!-- Slide 1: Engineered, Not Just Built -->
-            <section class="glass-slide" data-auto-animate>
-                <h2 class="section-title">Engineered, Not Just Built.</h2>
-                <p class="summary-text" style="margin-bottom: 2rem;">This isn't a drag-and-drop app. Every decision was made through the lens of software engineering.</p>
-                <div class="cards-grid">
-                    <div class="info-card fragment fade-up">
-                        <i data-lucide="cpu" class="card-icon"></i>
-                        <h4>Architecture First</h4>
-                        <p>We designed the data model before writing a single line of UI. Schema drives everything.</p>
-                    </div>
-                    <div class="info-card fragment fade-up" data-fragment-index="1">
-                        <i data-lucide="git-branch" class="card-icon"></i>
-                        <h4>Trade-off Driven</h4>
-                        <p>Every choice was a deliberate engineering trade-off.</p>
-                        <p class="card-points"><span class="chosen">NoSQL</span> <span class="arrow">&gt;</span> SQL<br><span class="chosen">Denormalization</span> <span class="arrow">&gt;</span> Normalization<br><span class="chosen">Read speed</span> <span class="arrow">&gt;</span> Storage cost</p>
-                    </div>
-                    <div class="info-card fragment fade-up" data-fragment-index="2">
-                        <i data-lucide="gauge" class="card-icon"></i>
-                        <h4>Performance by Design</h4>
-                        <p class="card-points dash-bullets"><span class="dash">–</span> O(1) document fetches<br><span class="dash">–</span> Sub-100ms real-time syncing<br><span class="dash">–</span> Zero unnecessary queries</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Slide 2: The Problem -->
+            <!-- Slide 1: The Problem -->
             <section class="glass-slide" data-auto-animate>
                 <h2 class="section-title">The Problem</h2>
                 <div class="cards-grid">
@@ -86,7 +80,7 @@
                     <div class="info-card fragment fade-up" data-fragment-index="1">
                         <i data-lucide="map-pin" class="card-icon"></i>
                         <h4>Unfair Distances</h4>
-                        <p>One person drives 40 min. Another walks 5. Nobody's accounting for fairness.</p>
+                        <p>One person drives 40 min. Another walks 15. Nobody's accounting for fairness.</p>
                     </div>
                     <div class="info-card fragment fade-up" data-fragment-index="2">
                         <i data-lucide="clock" class="card-icon"></i>
@@ -96,7 +90,7 @@
                 </div>
             </section>
 
-            <!-- Slide 3: BEFORE & AFTER — Cinematic Story -->
+            <!-- Slide 2: BEFORE & AFTER &mdash; Cinematic Story -->
             <section class="glass-slide story-launch-slide" data-auto-animate>
                 <div class="story-launch-inner">
                     <div class="story-launch-label">
@@ -106,17 +100,13 @@
 
                     <!-- The cinematic story plays here -->
                     <div class="story-iframe-wrap">
-                        <iframe
-                            id="story-iframe"
-                            src="about:blank"
-                            data-src="story.html"
-                            frameborder="0"
-                            class="story-iframe"
-                            allow="autoplay"
-                        ></iframe>
+                        <iframe id="story-iframe" src="about:blank" data-src="story.html" frameborder="0"
+                            class="story-iframe" allow="autoplay"></iframe>
                         <div class="iframe-play-overlay" id="playOverlay" onclick="launchStory()">
                             <div class="play-btn">
-                                <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+                                    <polygon points="5,3 19,12 5,21" />
+                                </svg>
                             </div>
                             <p>Play story</p>
                         </div>
@@ -124,75 +114,805 @@
                 </div>
             </section>
 
-            <!-- Slide 4: Why Firebase -->
+            <!-- ============================================== -->
+            <!-- GROUPS SECTION: INTRO -->
+            <!-- ============================================== -->
             <section class="glass-slide" data-auto-animate>
-                <h2 class="section-title">Why Firebase?</h2>
-                <p class="summary-text" style="margin-bottom: 2rem;">Outing sessions are live and constantly changing. We needed real-time, not request-response.</p>
+                <div class="layout-split">
+                    <div class="content-half">
+                        <h2 class="section-title" style="margin-bottom: 0.5rem;">Seamless</h2>
+                        <h2 class="section-title" style="margin-bottom: 2rem;">Group Organization.</h2>
+                        <p class="summary-text">Laween's core purpose is bringing people together. We eliminated the
+                            chaotic back-and-forth of planning meetups.</p>
+                    </div>
+                </div>
+                <div class="mockup-container" data-id="phone-mockup">
+                    <div class="iphone-chassis angle-left">
+                        <div class="iphone-notch"></div>
+                        <div class="iphone-screen">
+                            <div class="ui-bg-blur" style="opacity: 0.1;"></div>
+                            <div class="ui-content" style="opacity: 0.2;">
+                                <div class="ui-logo-bar"><img src="logo-v2.png" alt="logo" class="ui-logo-img"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- GROUPS SECTION: 01 Integrated Chat -->
+            <!-- ============================================== -->
+            <section class="glass-slide" data-auto-animate>
+                <div class="layout-split">
+                    <div class="content-half">
+                        <h2 class="section-title"
+                            style="font-size: 2rem !important; margin-bottom: 0.5rem; color: var(--light-teal);">01.
+                        </h2>
+                        <h2 class="section-title" style="margin-bottom: 2rem;">Integrated Chat</h2>
+                        <p class="summary-text" style="margin-bottom: 2rem;">Stop fragmenting your conversations across
+                            outside messaging apps.</p>
+
+                        <div class="cards-grid internal-grid" style="grid-template-columns: 1fr;">
+                            <div class="info-card snippet-card">
+                                <h4>Event-Focused Discussions</h4>
+                                <p>Groups have natively integrated chat rooms tied directly to the outing metrics.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-container" data-id="phone-mockup">
+                    <div class="iphone-chassis angle-center">
+                        <div class="iphone-notch"></div>
+                        <div class="iphone-screen" style="padding: 0; background: #000;">
+                            <iframe src="http://localhost:5173/chat" style="width: 100%; height: 100%; border: none; overflow: hidden; border-radius: 36px; -webkit-mask-image: -webkit-radial-gradient(white, black);"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- GROUPS SECTION: 02 Three Ways to Connect -->
+            <!-- ============================================== -->
+            <section class="glass-slide" data-auto-animate>
+                <div class="layout-split">
+                    <div class="content-half">
+                        <h2 class="section-title"
+                            style="font-size: 2rem !important; margin-bottom: 0.5rem; color: var(--light-teal);">02.
+                        </h2>
+                        <h2 class="section-title" style="margin-bottom: 2rem;">Three Ways to Connect</h2>
+                        <p class="summary-text" style="margin-bottom: 2rem;">Frictionless ingestion for any social
+                            scenario.</p>
+
+                        <div class="cards-grid internal-grid" style="grid-template-columns: 1fr;">
+                            <div class="info-card snippet-card">
+                                <i data-lucide="user-plus"
+                                    style="width: 32px; height: 32px; margin-bottom: 0.8rem; color: #7cc3ce;"></i>
+                                <h4>Add by Contacts</h4>
+                                <p>Sync contacts and send a direct invite immediately.</p>
+                                <p
+                                    style="font-size: 0.7rem; color: #7cc3ce; margin-top: 0.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px;">
+                                    When to use: Close friends & family</p>
+                            </div>
+                            <div class="info-card snippet-card">
+                                <i data-lucide="scan-qr-code"
+                                    style="width: 32px; height: 32px; margin-bottom: 0.8rem; color: #7cc3ce;"></i>
+                                <h4>QR Code</h4>
+                                <p>Just scan a friend's screen and you're in.</p>
+                                <p
+                                    style="font-size: 0.7rem; color: #7cc3ce; margin-top: 0.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px;">
+                                    When to use: Spontaneous, in-person meetups</p>
+                            </div>
+                            <div class="info-card snippet-card">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#7cc3ce"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                                    style="margin-bottom: 0.8rem;">
+                                    <path d="M5 10l0 .01"></path>
+                                    <path d="M12 10l0 .01"></path>
+                                    <path d="M19 10l0 .01"></path>
+                                    <path d="M5 15h14"></path>
+                                </svg>
+                                <h4>Registration Code</h4>
+                                <p>A short code you can paste into external group chats to easily connect.</p>
+                                <p
+                                    style="font-size: 0.7rem; color: #7cc3ce; margin-top: 0.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px;">
+                                    When to use: Remote joining via other apps</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-container" data-id="phone-mockup">
+                    <div class="iphone-chassis angle-right">
+                        <div class="iphone-notch"></div>
+                        <div class="iphone-screen" style="padding: 0; background: #000;">
+                            <iframe src="http://localhost:5173/join" style="width: 100%; height: 100%; border: none; overflow: hidden; border-radius: 36px; -webkit-mask-image: -webkit-radial-gradient(white, black);"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- GROUPS SECTION: 03 Homescreen Live Track -->
+            <!-- ============================================== -->
+            <section class="glass-slide" data-auto-animate>
+                <div class="layout-split">
+                    <div class="content-half" style="flex: 1.2;">
+                        <h2 class="section-title"
+                            style="font-size: 2rem !important; margin-bottom: 0.5rem; color: var(--light-teal);">03.
+                        </h2>
+                        <h2 class="section-title" style="margin-bottom: 2rem;">Homescreen Live Track</h2>
+                        <p class="summary-text" style="margin-bottom: 2rem; max-width: 100%;">Passive awareness that
+                            respects your time and attention.</p>
+
+                        <div class="cards-grid internal-grid" style="grid-template-columns: 1fr;">
+                            <div class="info-card snippet-card">
+                                <i data-lucide="scan"
+                                    style="width: 32px; height: 32px; margin-bottom: 0.8rem; color: #7cc3ce;"></i>
+                                <h4 style="margin-bottom: 0.4rem !important;">Dynamic Context</h4>
+                                <p>See exactly how far along each member is via the Dynamic Island or persistent
+                                    lock-screen widgets.</p>
+                            </div>
+                            <div class="info-card snippet-card">
+                                <i data-lucide="handshake"
+                                    style="width: 32px; height: 32px; margin-bottom: 0.8rem; color: #7cc3ce;"></i>
+                                <h4 style="margin-bottom: 0.4rem !important;">Frictionless Inclusion</h4>
+                                <p>Incredibly inclusive design: everyone stays informed on ETA and progress without
+                                    needing to actively open or refresh the app.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-container" data-id="phone-mockup">
+                    <div class="iphone-chassis angle-left">
+                        <div class="iphone-notch"></div>
+                        <div class="iphone-screen" style="padding: 0; background: #000;">
+                            <iframe src="http://localhost:5173/live-track" style="width: 100%; height: 100%; border: none; overflow: hidden; border-radius: 36px; -webkit-mask-image: -webkit-radial-gradient(white, black);"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- GROUPS SECTION: 04 The Outing Session -->
+            <!-- ============================================== -->
+            <section class="glass-slide" data-auto-animate>
+                <div class="layout-split">
+                    <div class="content-half" style="flex: 1.2;">
+                        <h2 class="section-title"
+                            style="font-size: 2rem !important; margin-bottom: 0.5rem; color: var(--light-teal);">04.
+                        </h2>
+                        <h2 class="section-title" style="margin-bottom: 2rem;">The Outing Session</h2>
+                        <p class="summary-text" style="margin-bottom: 2rem; max-width: 100%;">A unified live-view of
+                            your entire gathering in all its details.</p>
+
+                        <div class="cards-grid internal-grid" style="grid-template-columns: 1fr;">
+                            <div class="info-card snippet-card">
+                                <i data-lucide="map"
+                                    style="width: 32px; height: 32px; margin-bottom: 0.8rem; color: #7cc3ce;"></i>
+                                <h4 style="margin-bottom: 0.4rem !important;">Live Status & Routing</h4>
+                                <p>Live status indicators, fair midpoint routing, and precise ETAs mapped dynamically
+                                    for everyone.</p>
+                            </div>
+                            <div class="info-card snippet-card">
+                                <i data-lucide="zap"
+                                    style="width: 32px; height: 32px; margin-bottom: 0.8rem; color: #7cc3ce;"></i>
+                                <h4 style="margin-bottom: 0.4rem !important;">Interactive Excitement</h4>
+                                <p>Highly interactive destination map and dashboard that keeps the momentum alive as
+                                    everyone journeys to the spot.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-container" data-id="phone-mockup">
+                    <div class="iphone-chassis angle-right">
+                        <div class="iphone-notch" style="z-index: 50;"></div>
+                        <div class="iphone-screen" style="padding: 0; background: #000;">
+                            <iframe src="http://localhost:5173/outing-session" style="width: 100%; height: 100%; border: none; overflow: hidden; border-radius: 36px; -webkit-mask-image: -webkit-radial-gradient(white, black);"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- GROUPS SECTION: 05 Shared Media Vault -->
+            <!-- ============================================== -->
+            <section class="glass-slide" data-auto-animate>
+                <div class="layout-split">
+                    <div class="content-half" style="flex: 1.2;">
+                        <h2 class="section-title"
+                            style="font-size: 2rem !important; margin-bottom: 0.5rem; color: var(--light-teal);">05.
+                        </h2>
+                        <h2 class="section-title" style="margin-bottom: 2rem;">Shared Media Vault</h2>
+                        <p class="summary-text" style="margin-bottom: 2rem; max-width: 100%;">Solving the "can you drop
+                            those pictures?" problem.</p>
+
+                        <div class="cards-grid internal-grid" style="grid-template-columns: 1fr;">
+                            <div class="info-card snippet-card">
+                                <i data-lucide="camera"
+                                    style="width: 32px; height: 32px; margin-bottom: 0.8rem; color: #7cc3ce;"></i>
+                                <h4 style="margin-bottom: 0.4rem !important;">Post-Outing Hub</h4>
+                                <p>After each session, a designated central vault unlocks for members to deposit
+                                    high-res media taken during the meetup.</p>
+                            </div>
+                            <div class="info-card snippet-card">
+                                <i data-lucide="download-cloud"
+                                    style="width: 32px; height: 32px; margin-bottom: 0.8rem; color: #7cc3ce;"></i>
+                                <h4 style="margin-bottom: 0.4rem !important;">Lasting Memories</h4>
+                                <p>Automated nudges remind attendees to share, ensuring no memory is left abandoned on a
+                                    friend's camera roll.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-container">
+                    <div class="iphone-chassis angle-left">
+                        <div class="iphone-notch"></div>
+                        <div class="iphone-screen" style="padding: 0; background: #000;">
+                            <iframe src="http://localhost:5173/media-vault" style="width: 100%; height: 100%; border: none; overflow: hidden; border-radius: 36px; -webkit-mask-image: -webkit-radial-gradient(white, black);"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- GROUPS SECTION: 06 User Ecosystem -->
+            <!-- ============================================== -->
+            <section class="glass-slide" data-auto-animate>
+                <div class="layout-split">
+                    <div class="content-half" style="flex: 1.2;">
+                        <h2 class="section-title"
+                            style="font-size: 2rem !important; margin-bottom: 0.5rem; color: var(--light-teal);">06.
+                        </h2>
+                        <h2 class="section-title" style="margin-bottom: 2rem;">The User Ecosystem</h2>
+                        <p class="summary-text" style="margin-bottom: 2rem; max-width: 100%;">An engaging suite built to
+                            be deeply personal and accessible.</p>
+
+                        <div class="cards-grid internal-grid" style="grid-template-columns: 1fr;">
+                            <div class="info-card snippet-card">
+                                <i data-lucide="heart"
+                                    style="width: 32px; height: 32px; margin-bottom: 0.8rem; color: #7cc3ce;"></i>
+                                <h4 style="margin-bottom: 0.4rem !important;">Favorites & Profiles</h4>
+                                <p>Save preferred destinations for rapid one-tap repeating. Beautiful, highly inclusive
+                                    profiles make identity sharing a joy.</p>
+                            </div>
+                            <div class="info-card snippet-card">
+                                <i data-lucide="bell-ring"
+                                    style="width: 32px; height: 32px; margin-bottom: 0.8rem; color: #7cc3ce;"></i>
+                                <h4 style="margin-bottom: 0.4rem !important;">Interactive Notifications</h4>
+                                <p>Rich, contextual alerts keep the momentum going by allowing interactions directly
+                                    from the notification shade.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-container">
+                    <div class="iphone-chassis angle-right">
+                        <div class="iphone-notch"></div>
+                        <div class="iphone-screen" style="padding: 0; background: #000;">
+                            <iframe src="http://localhost:5173/ecosystem" style="width: 100%; height: 100%; border: none; overflow: hidden; border-radius: 36px; -webkit-mask-image: -webkit-radial-gradient(white, black);"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- HUB AND SPOKE: HUB SLIDE 1 -->
+            <!-- ============================================== -->
+            <section class="glass-slide" data-auto-animate>
+                <h2 class="section-title">Engineered, Not Just Built.</h2>
+                <p class="summary-text" style="margin-bottom: 2rem;">This isn't a drag-and-drop app. Every decision was
+                    made through the lens of software engineering.</p>
                 <div class="cards-grid">
-                    <div class="info-card fragment fade-up">
-                        <i data-lucide="zap" class="card-icon"></i>
-                        <h4>Real-Time Sync</h4>
-                        <p>WebSocket-based, sub-100ms data propagation. No polling, no REST overhead.</p>
+                    <div class="info-card" data-id="card-arch">
+                        <i data-lucide="cpu" class="card-icon" data-id="icon-arch"></i>
+                        <h4 data-id="title-arch">Architecture First</h4>
+                        <p data-id="desc-arch">We designed the data model before writing a single line of UI. Schema
+                            drives everything.</p>
                     </div>
-                    <div class="info-card fragment fade-up" data-fragment-index="1">
-                        <i data-lucide="database" class="card-icon"></i>
-                        <h4>NoSQL by Choice</h4>
-                        <p>Intentional denormalization. We duplicate data to eliminate JOINs. One read loads everything.</p>
+                    <div class="info-card" data-id="card-trade">
+                        <i data-lucide="git-branch" class="card-icon" data-id="icon-trade"></i>
+                        <h4 data-id="title-trade">Trade-off Driven</h4>
+                        <p data-id="desc-trade">Every choice was a deliberate engineering trade-off.</p>
+                        <p class="card-points"><span class="chosen">NoSQL</span> <span class="arrow">&gt;</span>
+                            SQL<br><span class="chosen">Denormalization</span> <span class="arrow">&gt;</span>
+                            Normalization<br><span class="chosen">Read speed</span> <span class="arrow">&gt;</span>
+                            Storage cost</p>
                     </div>
-                    <div class="info-card fragment fade-up" data-fragment-index="2">
-                        <i data-lucide="trending-up" class="card-icon"></i>
-                        <h4>Read-Optimized</h4>
-                        <p>Sessions are written once, read 1000× more. Flat schema = O(1) document fetch, every time.</p>
+                    <div class="info-card" data-id="card-perf">
+                        <i data-lucide="gauge" class="card-icon" data-id="icon-perf"></i>
+                        <h4 data-id="title-perf">Performance by Design</h4>
+                        <p data-id="desc-perf" class="card-points dash-bullets"><span class="dash">&ndash;</span> O(1)
+                            document fetches<br><span class="dash">&ndash;</span> Sub-100ms real-time syncing<br><span
+                                class="dash">&ndash;</span> Zero unnecessary queries</p>
                     </div>
                 </div>
             </section>
 
-            <!-- Slide 5: Security & Privacy -->
+            <!-- ZOOM FOR HUB 1: Trade-off (Firebase) -->
             <section class="glass-slide" data-auto-animate>
-                <h2 class="section-title">Security & Privacy</h2>
-                <p class="summary-text" style="margin-bottom: 2rem;">We built a location app that doesn't want your location data.</p>
+                <div class="info-card expanded-zoom" data-id="card-trade">
+                    <i data-lucide="git-branch" class="card-icon" data-id="icon-trade"
+                        style="width: 56px; height: 56px; stroke-width: 1.5; margin-bottom: 0.5rem; background: rgba(124,195,206,0.15);"></i>
+                    <h2 class="section-title" data-id="title-trade"
+                        style="margin-bottom: 0.5rem; text-shadow: 0 0 10px rgba(124,195,206,0.3);">Why Firebase?</h2>
+                    <p class="summary-text" data-id="desc-trade" style="margin-bottom: 2rem;">Outing sessions are live
+                        and constantly changing. We needed real-time, not request-response.</p>
+                    <div class="cards-grid internal-grid" style="align-items: stretch;">
+                        <div class="info-card snippet-card">
+                            <i data-lucide="zap" class="card-icon"></i>
+                            <h4>Real-Time Sync</h4>
+                            <p>WebSocket-based, sub-100ms data propagation. No polling, no REST overhead.</p>
+                        </div>
+                        <div class="info-card snippet-card">
+                            <i data-lucide="database" class="card-icon"></i>
+                            <h4>NoSQL by Choice</h4>
+                            <p>Intentional denormalization. We duplicate data to eliminate JOINs. One read loads
+                                everything.</p>
+                        </div>
+                        <div class="info-card snippet-card">
+                            <i data-lucide="trending-up" class="card-icon"></i>
+                            <h4>Read-Optimized</h4>
+                            <p>Sessions are written once, read 1000&times; more. Flat schema = O(1) document fetch,
+                                every time.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ============================================== -->
+            <!-- HUB AND SPOKE: HUB SLIDE 2 -->
+            <!-- ============================================== -->
+            <section class="glass-slide" data-auto-animate>
+                <h2 class="section-title">Engineered, Not Just Built.</h2>
+                <p class="summary-text" style="opacity: 0; margin-bottom: 2rem; height: 0; padding: 0;">This isn't a
+                    drag-and-drop app.</p>
                 <div class="cards-grid">
-                    <div class="info-card fragment fade-up">
-                        <i data-lucide="timer" class="card-icon"></i>
-                        <h4>12-Hour TTL</h4>
-                        <p>All session data auto-destructs. GPS tracking ceases the moment you arrive. Nothing is stored.</p>
+                    <div class="info-card" data-id="card-arch">
+                        <i data-lucide="cpu" class="card-icon" data-id="icon-arch"></i>
+                        <h4 data-id="title-arch">Architecture First</h4>
+                        <p data-id="desc-arch">We designed the data model before writing a single line of UI. Schema
+                            drives everything.</p>
                     </div>
-                    <div class="info-card fragment fade-up" data-fragment-index="1">
-                        <i data-lucide="lock" class="card-icon"></i>
-                        <h4>Host-Only Control</h4>
-                        <p>Firestore security rules enforce role-based access. Only the Host can trigger midpoint calculations.</p>
+                    <div class="info-card" data-id="card-trade" style="opacity: 0.5;">
+                        <i data-lucide="git-branch" class="card-icon" data-id="icon-trade"></i>
+                        <h4 data-id="title-trade">Trade-off Driven</h4>
+                        <p data-id="desc-trade">Every choice was a deliberate engineering trade-off.</p>
                     </div>
-                    <div class="info-card fragment fade-up" data-fragment-index="2">
-                        <i data-lucide="shield-check" class="card-icon"></i>
-                        <h4>Zero Retained GPS</h4>
-                        <p>No historical location data. No tracking profiles. Privacy isn't a feature, it's the architecture.</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Slide 6: Performance -->
-            <section class="glass-slide" data-auto-animate>
-                <h2 class="section-title">Performance</h2>
-                <p class="summary-text">The numbers that matter.</p>
-                <div class="stats-container">
-                    <div class="stat-box fragment custom-focus">
-                        <h3>&lt; 3.0s</h3>
-                        <p>80-element routing matrix</p>
-                    </div>
-                    <div class="stat-box fragment custom-focus">
-                        <h3>~25ms</h3>
-                        <p>WebSocket latency</p>
-                    </div>
-                    <div class="stat-box fragment custom-focus">
-                        <h3>O(1)</h3>
-                        <p>Document fetch time</p>
+                    <div class="info-card" data-id="card-perf">
+                        <i data-lucide="gauge" class="card-icon" data-id="icon-perf"></i>
+                        <h4 data-id="title-perf">Performance by Design</h4>
+                        <p data-id="desc-perf" class="card-points dash-bullets"><span class="dash">&ndash;</span> O(1)
+                            document fetches<br><span class="dash">&ndash;</span> Sub-100ms real-time syncing<br><span
+                                class="dash">&ndash;</span> Zero unnecessary queries</p>
                     </div>
                 </div>
             </section>
 
-            <!-- Slide 7: Closing -->
+            <!-- ZOOM FOR HUB 2: Architecture (Security) -->
             <section class="glass-slide" data-auto-animate>
-                <img src="logo-v2.png" alt="Laween" class="custom-logo" style="width: 80px; opacity: 0.5; margin-bottom: 1rem;">
+                <div class="info-card expanded-zoom" data-id="card-arch">
+                    <i data-lucide="cpu" class="card-icon" data-id="icon-arch"
+                        style="width: 56px; height: 56px; stroke-width: 1.5; margin-bottom: 0.5rem; background: rgba(124,195,206,0.15);"></i>
+                    <h2 class="section-title" data-id="title-arch"
+                        style="margin-bottom: 0.5rem; text-shadow: 0 0 10px rgba(124,195,206,0.3);">Security & Privacy
+                    </h2>
+                    <p class="summary-text" data-id="desc-arch" style="margin-bottom: 2rem;">We built a location app
+                        that doesn't want your location data.</p>
+                    <div class="cards-grid internal-grid" style="align-items: stretch;">
+                        <div class="info-card snippet-card">
+                            <i data-lucide="timer" class="card-icon"></i>
+                            <h4>12-Hour TTL</h4>
+                            <p>All session data auto-destructs. GPS tracking ceases the moment you arrive. Nothing is
+                                stored.</p>
+                        </div>
+                        <div class="info-card snippet-card highlight-card" data-id="card-dbsec">
+                            <i data-lucide="shield-alert" class="card-icon" data-id="icon-dbsec"></i>
+                            <h4 data-id="title-dbsec">Securing the Schema</h4>
+                            <p data-id="desc-dbsec">Firestore security rules strictly enforce role-based access.</p>
+                        </div>
+                        <div class="info-card snippet-card">
+                            <i data-lucide="shield-check" class="card-icon"></i>
+                            <h4>Zero Retained GPS</h4>
+                            <p>No historical location data. No tracking profiles. Privacy isn't a feature, it's the
+                                architecture.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- DEEP DIVE: Database Security Rules -->
+            <section class="glass-slide" data-auto-animate>
+                <div class="info-card expanded-zoom" data-id="card-dbsec">
+                    <i data-lucide="shield-alert" class="card-icon" data-id="icon-dbsec"
+                        style="width: 56px; height: 56px; stroke-width: 1.5; margin-bottom: 0.5rem; background: rgba(220,53,69,0.15); color: #dc3545;"></i>
+                    <h2 class="section-title" data-id="title-dbsec"
+                        style="margin-bottom: 0.5rem; text-shadow: 0 0 10px rgba(124,195,206,0.3);">Securing the Schema
+                    </h2>
+                    <p class="summary-text" data-id="desc-dbsec" style="margin-bottom: 2rem;">Why we locked everything
+                        down.</p>
+
+                    <div class="layout-split" style="margin-top: 1rem; align-items: stretch; gap: 2rem;">
+                        <div
+                            style="flex: 1; border: 1px dashed rgba(220,53,69,0.5); border-radius: 12px; padding: 15px; position: relative;">
+                            <h4
+                                style="color: #dc3545 !important; font-size: 0.8rem !important; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px !important;">
+                                Before: Wide Open</h4>
+                            <div
+                                style="height: 180px; background: rgba(220,53,69,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(220,53,69,0.2);">
+                                <span style="font-size: 0.7rem; color: #dc3545; font-weight: 700;">[db-before.png]
+                                    Placeholder</span>
+                            </div>
+                            <p
+                                style="font-size: 0.70rem; color: #aaa; margin-top: 15px; text-align: left; line-height: 1.5;">
+                                Default configurations leave highly sensitive user location data vulnerable to external
+                                scraping by any client.</p>
+                        </div>
+
+                        <div style="display: flex; align-items: center; justify-content: center;">
+                            <i data-lucide="shield-check" style="color: #28a745; width: 42px; height: 42px;"></i>
+                        </div>
+
+                        <div
+                            style="flex: 1; border: 1px solid rgba(40,167,69,0.5); border-radius: 12px; padding: 15px; position: relative; background: rgba(40,167,69,0.05);">
+                            <h4
+                                style="color: #28a745 !important; font-size: 0.8rem !important; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px !important;">
+                                After: Row-Level Security</h4>
+                            <div
+                                style="height: 180px; background: rgba(0,0,0,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px dashed rgba(40,167,69,0.3);">
+                                <span style="font-size: 0.7rem; color: #28a745; font-weight: 700;">[db-after.png]
+                                    Placeholder</span>
+                            </div>
+                            <p
+                                style="font-size: 0.70rem; color: #aaa; margin-top: 15px; text-align: left; line-height: 1.5;">
+                                Strict Firebase Rules enforce mathematically verified access. Users can only fetch
+                                sessions they are actively invited to.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- HUB AND SPOKE: HUB SLIDE 3 -->
+            <!-- ============================================== -->
+            <section class="glass-slide" data-auto-animate>
+                <h2 class="section-title">Engineered, Not Just Built.</h2>
+                <div class="cards-grid">
+                    <div class="info-card" data-id="card-arch" style="opacity: 0.5;">
+                        <i data-lucide="cpu" class="card-icon" data-id="icon-arch"></i>
+                        <h4 data-id="title-arch">Architecture First</h4>
+                        <p data-id="desc-arch">We designed the data model before writing a single line of UI.</p>
+                    </div>
+                    <div class="info-card" data-id="card-trade" style="opacity: 0.5;">
+                        <i data-lucide="git-branch" class="card-icon" data-id="icon-trade"></i>
+                        <h4 data-id="title-trade">Trade-off Driven</h4>
+                        <p data-id="desc-trade">Every choice was a deliberate engineering trade-off.</p>
+                    </div>
+                    <div class="info-card" data-id="card-perf">
+                        <i data-lucide="gauge" class="card-icon" data-id="icon-perf"></i>
+                        <h4 data-id="title-perf">Performance by Design</h4>
+                        <p data-id="desc-perf" class="card-points dash-bullets"><span class="dash">&ndash;</span> O(1)
+                            document fetches<br><span class="dash">&ndash;</span> Sub-100ms real-time syncing<br><span
+                                class="dash">&ndash;</span> Zero unnecessary queries</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ZOOM FOR HUB 3: Performance -->
+            <section class="glass-slide" data-auto-animate>
+                <div class="info-card expanded-zoom" data-id="card-perf">
+                    <i data-lucide="gauge" class="card-icon" data-id="icon-perf"
+                        style="width: 56px; height: 56px; stroke-width: 1.5; margin-bottom: 0.5rem; background: rgba(124,195,206,0.15);"></i>
+                    <h2 class="section-title" data-id="title-perf"
+                        style="margin-bottom: 0.5rem; text-shadow: 0 0 10px rgba(124,195,206,0.3);">Performance</h2>
+                    <p class="summary-text" data-id="desc-perf" style="margin-bottom: 2rem;">The numbers that matter.
+                    </p>
+                    <div class="stats-container" style="margin-top: 2rem;">
+                        <div class="stat-box fragment custom-focus">
+                            <h3>&lt; 3.0s</h3>
+                            <p>80-element routing matrix</p>
+                        </div>
+                        <div class="stat-box fragment custom-focus">
+                            <h3>~25ms</h3>
+                            <p>WebSocket latency</p>
+                        </div>
+                        <div class="stat-box fragment custom-focus">
+                            <h3>O(1)</h3>
+                            <p>Document fetch time</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- DESIGN SECTION: INTRO -->
+            <!-- ============================================== -->
+            <section class="glass-slide" data-auto-animate>
+                <div class="layout-split">
+                    <div class="content-half">
+                        <h2 class="section-title" style="margin-bottom: 0.5rem;">Designed,</h2>
+                        <h2 class="section-title" style="margin-bottom: 2rem;">Not Just Painted.</h2>
+                        <p class="summary-text">We applied the same engineering rigor to the visual language and user
+                            experience. The phone UI doesn't just look pretty&mdash;it fundamentally works better.</p>
+                    </div>
+                </div>
+                <div class="mockup-container" data-id="phone-mockup">
+                    <div class="iphone-chassis angle-left">
+                        <div class="iphone-notch"></div>
+                        <div class="iphone-screen">
+                            <div class="ui-bg-blur"></div>
+                            <div class="ui-content" style="opacity: 0.2;">
+                                <div class="ui-logo-bar">
+                                    <img src="logo-v2.png" alt="logo" class="ui-logo-img">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- DESIGN SECTION: 01 Visual Language -->
+            <!-- ============================================== -->
+            <section class="glass-slide" data-auto-animate>
+                <div class="layout-split">
+                    <div class="content-half">
+                        <h2 class="section-title"
+                            style="font-size: 2rem !important; margin-bottom: 0.5rem; color: var(--light-teal);">01.
+                        </h2>
+                        <h2 class="section-title" style="margin-bottom: 2rem;">Visual Language</h2>
+                        <p class="summary-text" style="margin-bottom: 2rem;">Mint grids, dark teal (`#00697b`), and
+                            bubbly shapes built to reduce outing stress.</p>
+
+                        <div class="cards-grid internal-grid" style="grid-template-columns: 1fr;">
+                            <div class="info-card snippet-card">
+                                <h4>Color Psychology</h4>
+                                <p>Organizing groups is tense. Deep teal establishes calm trust; mint highlights action.
+                                </p>
+                            </div>
+                            <div class="info-card snippet-card">
+                                <h4>Soft Geometries</h4>
+                                <p>Continuous, massive border-radii everywhere. Hard edges create tension; soft edges
+                                    are approachable.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-container" data-id="phone-mockup">
+                    <div class="iphone-chassis angle-center">
+                        <div class="iphone-notch"></div>
+                        <div class="iphone-screen" style="padding: 0; background: #000;">
+                            <iframe src="http://localhost:5173/login" style="width: 100%; height: 100%; border: none; overflow: hidden; border-radius: 36px; -webkit-mask-image: -webkit-radial-gradient(white, black);"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- DESIGN SECTION: 02 Typography -->
+            <!-- ============================================== -->
+            <section class="glass-slide" data-auto-animate>
+                <div class="layout-split">
+                    <div class="content-half">
+                        <h2 class="section-title"
+                            style="font-size: 2rem !important; margin-bottom: 0.5rem; color: var(--light-teal);">02.
+                        </h2>
+                        <h2 class="section-title" style="margin-bottom: 2rem;">Dynamic Typography</h2>
+                        <p class="summary-text" style="margin-bottom: 2rem;">One app. Two fundamentally different
+                            typographic foundations.</p>
+
+                        <div class="cards-grid internal-grid" style="grid-template-columns: 1fr;">
+                            <div class="info-card snippet-card">
+                                <h4 style="font-family: 'Nunito', sans-serif;">English: Nunito</h4>
+                                <p>A well-balanced, rounded sans-serif that perfectly mirrors the bubbly UI shapes.</p>
+                            </div>
+                            <div class="info-card snippet-card">
+                                <h4 style="font-family: 'Cairo', sans-serif;">عربي: Cairo</h4>
+                                <p>A modern Arabic typeface ensuring native legibility without compromising the brand
+                                    aesthetic.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-container" data-id="phone-mockup">
+                    <div class="iphone-chassis angle-right">
+                        <div class="iphone-notch"></div>
+                        <div class="iphone-screen" style="padding: 0; background: #000;">
+                            <iframe src="http://localhost:5173/typography" style="width: 100%; height: 100%; border: none; overflow: hidden; border-radius: 36px; -webkit-mask-image: -webkit-radial-gradient(white, black);"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- DESIGN SECTION: 03 Micro-interactions -->
+            <!-- ============================================== -->
+            <section class="glass-slide" data-auto-animate>
+                <div class="layout-split">
+                    <div class="content-half">
+                        <h2 class="section-title"
+                            style="font-size: 2rem !important; margin-bottom: 0.5rem; color: var(--light-teal);">03.
+                        </h2>
+                        <h2 class="section-title" style="margin-bottom: 2rem;">Micro-interactions</h2>
+                        <p class="summary-text" style="margin-bottom: 2rem;">We replaced jarring real-time validation
+                            errors with fluid, intelligent physical feedback.</p>
+
+                        <div class="cards-grid internal-grid" style="grid-template-columns: 1fr;">
+                            <div class="info-card snippet-card">
+                                <h4>No "Red Text" Shaming</h4>
+                                <p>Users hate seeing red warning text while actively typing. We stripped it out.</p>
+                            </div>
+                            <div class="info-card snippet-card">
+                                <h4>Kinetic Haptics</h4>
+                                <p>Invalid fields subtly "shake" to indicate an error, mimicking physical resistance. It
+                                    only triggers upon submission.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-container" data-id="phone-mockup">
+                    <div class="iphone-chassis angle-left">
+                        <div class="iphone-notch"></div>
+                        <div class="iphone-screen" style="padding: 0; background: #000;">
+                            <iframe src="http://localhost:5173/interactions" style="width: 100%; height: 100%; border: none; overflow: hidden; border-radius: 36px; -webkit-mask-image: -webkit-radial-gradient(white, black);"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- TRUST SECTION: INTRO -->
+            <!-- ============================================== -->
+            <section class="glass-slide" data-auto-animate>
+                <div class="layout-split">
+                    <div class="content-half">
+                        <h2 class="section-title" style="margin-bottom: 0.5rem;">The Trust</h2>
+                        <h2 class="section-title" style="margin-bottom: 2rem;">Layer.</h2>
+                        <p class="summary-text">Privacy and security aren't an afterthought. We built a welcoming,
+                            highly secure environment from the first touchpoint.</p>
+                    </div>
+                </div>
+                <!-- 3D Phone Mockup resets -->
+                <div class="mockup-container" data-id="phone-mockup">
+                    <div class="iphone-chassis angle-left">
+                        <div class="iphone-notch"></div>
+                        <div class="iphone-screen">
+                            <div class="ui-bg-blur" style="opacity: 0.1;"></div>
+                            <div class="ui-content" style="opacity: 0.2;">
+                                <div class="ui-logo-bar"><img src="logo-v2.png" alt="logo" class="ui-logo-img"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- TRUST SECTION: 01 Biometrics -->
+            <!-- ============================================== -->
+            <section class="glass-slide" data-auto-animate>
+                <div class="layout-split">
+                    <div class="content-half">
+                        <h2 class="section-title"
+                            style="font-size: 2rem !important; margin-bottom: 0.5rem; color: var(--light-teal);">01.
+                        </h2>
+                        <h2 class="section-title" style="margin-bottom: 2rem;">Frictionless Biometrics</h2>
+                        <p class="summary-text" style="margin-bottom: 2rem;">Security is only effective if users
+                            actually use it.</p>
+
+                        <div class="cards-grid internal-grid" style="grid-template-columns: 1fr;">
+                            <div class="info-card snippet-card">
+                                <h4>Face ID & Fingerprint</h4>
+                                <p>By integrating native biometric hardware, we eliminated password fatigue while
+                                    guaranteeing the user's identity organically.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-container" data-id="phone-mockup">
+                    <div class="iphone-chassis angle-center">
+                        <div class="iphone-notch"></div>
+                        <div class="iphone-screen" style="padding: 0; background: #000;">
+                            <iframe src="http://localhost:5173/biometrics" style="width: 100%; height: 100%; border: none; overflow: hidden; border-radius: 36px; -webkit-mask-image: -webkit-radial-gradient(white, black);"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- TRUST SECTION: 02 Double Verification -->
+            <!-- ============================================== -->
+            <section class="glass-slide" data-auto-animate>
+                <div class="layout-split">
+                    <div class="content-half">
+                        <h2 class="section-title"
+                            style="font-size: 2rem !important; margin-bottom: 0.5rem; color: var(--light-teal);">02.
+                        </h2>
+                        <h2 class="section-title" style="margin-bottom: 2rem;">Double Verification</h2>
+                        <p class="summary-text" style="margin-bottom: 2rem;">Phone numbers and emails aren't just for
+                            logging in.</p>
+
+                        <div class="cards-grid internal-grid" style="grid-template-columns: 1fr;">
+                            <div class="info-card snippet-card">
+                                <h4>Identity & Safety</h4>
+                                <p>For an app organizing physical meetups, establishing a verified environment is
+                                    critical. Dual OTP verification ensures every user is accountable.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-container" data-id="phone-mockup">
+                    <div class="iphone-chassis angle-right">
+                        <div class="iphone-screen" style="display: flex; flex-direction: column;">
+                            <!-- Top Half: SMS Placeholder -->
+                            <div style="flex: 1; background: #1c1c1e; display: flex; flex-direction: column; justify-content: center; align-items: center; border-bottom: 1px solid #333; position: relative;">
+                                <div style="position: absolute; top: 25px; font-size: 0.6rem; color: #888; letter-spacing: 2px; font-weight: 700;">SMS CONFIRMATION</div>
+                                <div style="width: 80%; padding: 15px; border-radius: 12px; border: 1px dashed #7cc3ce; background: rgba(124,195,206,0.1); text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                    <i data-lucide="image" style="width: 32px; height: 32px; color: #7cc3ce; margin-bottom: 8px;"></i>
+                                    <span style="color: #7cc3ce; font-size: 0.7rem; font-weight: 700;">SMS Screenshot Here</span>
+                                </div>
+                            </div>
+                            <!-- Bottom Half: Email Placeholder -->
+                            <div style="flex: 1; background: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative;">
+                                <div style="position: absolute; top: 15px; font-size: 0.6rem; color: #888; letter-spacing: 2px; font-weight: 700;">EMAIL CONFIRMATION</div>
+                                <div style="width: 80%; padding: 15px; border-radius: 12px; border: 1px dashed #7cc3ce; background: rgba(124,195,206,0.1); text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                    <i data-lucide="image" style="width: 32px; height: 32px; color: #7cc3ce; margin-bottom: 8px;"></i>
+                                    <span style="color: #7cc3ce; font-size: 0.7rem; font-weight: 700;">Email Screenshot Here</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- TRUST SECTION: 03 Welcoming Environment -->
+            <!-- ============================================== -->
+            <section class="glass-slide" data-auto-animate>
+                <div class="layout-split">
+                    <div class="content-half">
+                        <h2 class="section-title"
+                            style="font-size: 2rem !important; margin-bottom: 0.5rem; color: var(--light-teal);">03.
+                        </h2>
+                        <h2 class="section-title" style="margin-bottom: 2rem;">A Welcoming Environment</h2>
+                        <p class="summary-text" style="margin-bottom: 2rem;">Security doesn't have to be sterile.</p>
+
+                        <div class="cards-grid internal-grid" style="grid-template-columns: 1fr;">
+                            <div class="info-card snippet-card">
+                                <h4>The Welcome Email</h4>
+                                <p>Upon registration, users are greeted with a warm, beautifully branded automated email
+                                    so they immediately feel like part of the community.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-container" data-id="phone-mockup">
+                    <div class="iphone-chassis angle-center">
+                        <div class="iphone-notch" style="z-index: 50;"></div>
+                        <!-- Welcome Email screen -->
+                        <div class="iphone-screen" style="background: #fff; position: relative;">
+
+                            <!-- Status bar area mockup -->
+                            <div style="height: 35px; background: #f8f9fa;"></div>
+
+                            <!-- Placeholder Container -->
+                            <div
+                                style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; width: 100%; border: 2px dashed #00697b; background: rgba(0, 105, 123, 0.05); padding: 20px;">
+                                <i data-lucide="image"
+                                    style="width: 48px; height: 48px; color: #00697b; margin-bottom: 15px;"></i>
+                                <span
+                                    style="color: #00697b; font-size: 0.9rem; font-weight: 700; text-align: center;">Welcome
+                                    Email Screenshot Here</span>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide: Closing -->
+            <section class="glass-slide" data-auto-animate>
+                <img src="logo-v2.png" alt="Laween" class="custom-logo"
+                    style="width: 80px; opacity: 0.5; margin-bottom: 1rem;">
                 <h1 class="brand-title" style="font-size: 3.5rem !important;">Thank you.</h1>
                 <p class="tagline">Questions?</p>
                 <div class="pulse-ring"></div>
@@ -205,6 +925,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/notes/notes.min.js"></script>
     <script>
         Reveal.initialize({
+            width: 1280,
+            height: 800,
+            margin: 0.06,
             controls: true,
             progress: true,
             center: true,
@@ -212,7 +935,10 @@
             transition: 'slide',
             backgroundTransition: 'fade',
             transitionSpeed: 'slow',
-            plugins: [ RevealNotes ]
+            autoAnimateDuration: 1.8,
+            autoAnimateEasing: 'cubic-bezier(0.19, 1, 0.22, 1)',
+            autoAnimateUnmatched: false,
+            plugins: [RevealNotes]
         });
         lucide.createIcons();
 
@@ -239,19 +965,21 @@
         function launchStory() {
             const iframe = document.getElementById('story-iframe');
             const overlay = document.getElementById('playOverlay');
-            
+
             // Set source to trigger load and autoplay
             iframe.src = iframe.getAttribute('data-src');
-            
+            iframe.style.display = 'block';
+
             // Hide overlay
             overlay.style.opacity = '0';
             setTimeout(() => {
                 overlay.style.pointerEvents = 'none';
             }, 400);
-            
+
             // Allow pointer events on iframe once playing
             iframe.style.pointerEvents = 'auto';
         }
     </script>
 </body>
+
 </html>

@@ -1,10 +1,10 @@
 /* ============================================
-   LAWEEN — FINAL HYBRID STYLESHEET
+   LAWEEN â€” FINAL HYBRID STYLESHEET
    Light layout + Dark animated background
    ============================================ */
 
 :root {
-    /* Dark teal palette — Laween-hued */
+    /* Dark teal palette â€” Laween-hued */
     --bg-deep: #092025;
     --bg-mid: #0C2A31;
     --bg-surface: rgba(12, 45, 55, 0.6);
@@ -17,7 +17,7 @@
     --glow-strong: rgba(0, 105, 123, 0.3);
 
     /* Glass card on dark */
-    --glass-bg: rgba(255, 255, 255, 0.06);
+    --glass-bg: rgba(255, 255, 255, 0.095);
     --glass-border: rgba(255, 255, 255, 0.1);
     --glass-hover: rgba(255, 255, 255, 0.1);
 
@@ -98,13 +98,13 @@ body {
 
 @keyframes lineExpand {
     0% { width: 0; opacity: 0.3; }
+
     100% { width: 100%; opacity: 1; }
 }
 
 .summary-text {
     font-size: 1.15rem !important;
     max-width: 600px;
-    margin: 0 auto;
 }
 
 /* --- Full-Tab Glass Slide (Light layout on dark bg) --- */
@@ -112,8 +112,6 @@ body {
     padding: 3rem 3.5rem !important;
     border-radius: var(--radius-lg);
     background: var(--glass-bg);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
     border: 1px solid var(--glass-border);
     box-shadow:
         0 8px 40px rgba(0, 0, 0, 0.3),
@@ -122,12 +120,9 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 82vh !important;
-    width: 88% !important;
-    margin: 0 auto !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    position: relative;
+    width: 100% !important;
+    height: 100% !important;
+    box-sizing: border-box;
     overflow: hidden;
     /* Breathing border glow */
     animation: borderBreathe 6s ease-in-out infinite;
@@ -145,29 +140,9 @@ body {
 }
 
 /* Soft decorative radials on each card */
-.glass-slide::before {
-    content: '';
-    position: absolute;
-    top: -80px;
-    right: -80px;
-    width: 250px;
-    height: 250px;
-    background: radial-gradient(circle, rgba(124, 195, 206, 0.08) 0%, transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
-}
 
-.glass-slide::after {
-    content: '';
-    position: absolute;
-    bottom: -60px;
-    left: -60px;
-    width: 180px;
-    height: 180px;
-    background: radial-gradient(circle, rgba(0, 105, 123, 0.06) 0%, transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
-}
+
+
 
 /* --- Aurora Glow Layer (large slow-moving blurred orbs behind everything) --- */
 .aurora-layer {
@@ -536,8 +511,8 @@ body {
 .stats-container { display: flex; justify-content: space-around; gap: 1rem; width: 100%; margin-top: 4rem; }
 .stat-box { flex: 1; text-align: center; transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s ease; }
 
-.reveal .slides section .fragment.custom-focus { opacity: 0.3; visibility: visible; transform: scale(0.85); }
-.reveal .slides section .fragment.custom-focus.current-fragment { opacity: 1; transform: scale(1.2); }
+.reveal .slides section .fragment.custom-focus { opacity: 0.3; visibility: visible; transform: scale(0.85); filter: blur(4px); transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.reveal .slides section .fragment.custom-focus.current-fragment { opacity: 1; transform: scale(1.25); filter: blur(0px) drop-shadow(0 0 20px rgba(124, 195, 206, 0.8)); text-shadow: 0 0 15px rgba(124, 195, 206, 0.4); }
 
 .stat-box h3 { font-size: 2.8rem !important; color: var(--light-teal) !important; margin-bottom: 0.4rem !important; white-space: nowrap; font-weight: 900 !important; }
 .stat-box p { font-size: 0.85rem !important; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; color: var(--mid-teal) !important; }
@@ -555,7 +530,7 @@ code {
 .reveal .slides section .fragment { transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
 
 /* ============================================
-   STORY SLIDES — Before & After Laween
+   STORY SLIDES â€” Before & After Laween
    ============================================ */
 
 .story-slide { overflow: visible !important; }
@@ -825,7 +800,7 @@ code {
 
 
 /* ============================================
-   THE SHIFT — Before → After Comparison
+   THE SHIFT â€” Before â†’ After Comparison
    ============================================ */
 
 .shift-container {
@@ -919,7 +894,7 @@ code {
 }
 
 /* ============================================
-   AFTER LAWEEN — The Flow
+   AFTER LAWEEN â€” The Flow
    ============================================ */
 
 .flow-container {
@@ -1095,7 +1070,7 @@ code {
 .iframe-play-overlay {
     position: absolute;
     inset: 0;
-    backdrop-filter: blur(8px);
+    
     background: rgba(0, 0, 0, 0.3);
     display: flex;
     flex-direction: column;
@@ -1130,3 +1105,171 @@ code {
     margin: 0;
     letter-spacing: 1px;
 }
+
+/* ============================================== */
+/* HYBRID POLISH - BUGFIXES & SCALED STRUCTURES  */
+/* ============================================== */
+
+/* 1. Global Viewport Bug Fix */
+html, body, .reveal-viewport, .reveal {
+    background: #050d12 !important;
+}
+.reveal .slides > section { background: transparent !important; }
+
+/* 2. Story Launcher Glitch */
+.story-iframe { display: none; }
+
+/* 3. Cards Grid centering */
+.cards-grid {
+    max-width: 1000px;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* ============================================== */
+/* NEW ARCHITECTURE COMPONENTS (SCALED)          */
+/* ============================================== */
+
+/* Layout Splits */
+.layout-split {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%; height: 100%;
+}
+.content-half {
+    width: 55%;
+    text-align: left;
+    padding-right: 2rem;
+    padding-left: 2rem;
+}
+.content-half .section-title { text-align: left; font-size: 2.2rem !important; }
+.content-half .summary-text { text-align: left; font-size: 1rem !important; }
+
+/* Phone Mockup Container */
+.mockup-container {
+    position: absolute;
+    right: 5%;
+    top: 50%;
+    transform: translateY(-50%) perspective(1200px);
+    width: 250px; /* Scaled down to stop bleeding off the bottom edge */
+    height: 500px; /* Scaled proportionally */
+    z-index: 10;
+}
+
+.iphone-chassis {
+    width: 100%;
+    height: 100%;
+    background: #2a2a2c;
+    border-radius: 36px;
+    padding: 10px;
+    box-shadow: 
+        inset 0 0 0 2px #444,
+        inset 0 0 10px rgba(0,0,0,0.5),
+        25px 35px 50px rgba(0,0,0,0.6);
+    position: relative;
+    transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+    transform-style: preserve-3d;
+}
+
+.iphone-notch {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90px;
+    height: 22px;
+    background: #000;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    z-index: 100;
+}
+
+.iphone-screen {
+    width: 100%;
+    height: 100%;
+    border-radius: 26px;
+    background: #000;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+}
+
+.angle-left { transform: rotateY(-20deg) rotateX(10deg); }
+.angle-right { transform: rotateY(20deg) rotateX(10deg); }
+.angle-center { transform: rotateY(0deg) rotateX(0deg); }
+
+.ui-bg-blur {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at top right, var(--light-teal), transparent 70%);
+}
+.ui-content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    box-sizing: border-box;
+}
+
+.ui-logo-img { width: 35px; }
+.ui-logo-bar { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+.ui-lang { font-size: 0.6rem; color: #fff; font-weight: bold; }
+.ui-hero h1 { font-family: 'Nunito', sans-serif; font-size: 1.6rem; color: #fff; margin-top: 80px; text-align: center; line-height: 1.2; }
+.ui-hero p { text-align: center; color: #aaa; font-size: 0.9rem; margin-top: 5px; }
+.ui-btn { background: var(--primary-teal); color: #fff; padding: 12px; border-radius: 50px; text-align: center; font-weight: bold; font-family: 'Nunito', sans-serif; font-size: 0.9rem; }
+
+.ui-modal {
+    background: rgba(255,255,255,0.95);
+    border-radius: 16px;
+    padding: 15px;
+    position: absolute;
+    bottom: 25px;
+    left: 12px;
+    right: 12px;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+}
+.ui-modal h3 { color: #000; font-size: 1rem; text-align: center; font-weight: 800; margin-bottom: 5px; }
+.ui-modal p { color: #555; text-align: center; font-size: 0.75rem; margin-bottom: 15px; }
+.ui-modal-icon { display: flex; justify-content: center; margin-bottom: 10px; }
+
+.ui-faceid { display: flex; align-items: center; justify-content: center; margin-top: 15px; color: #888; font-size: 0.75rem; font-weight: 600; }
+
+/* Internal Grids and Expanded Zoom Adjustments */
+.internal-grid {
+    grid-template-columns: 1fr; /* Stack vertically */
+    gap: 0.6rem; /* Less gap to prevent vertical overflow */
+    margin-top: 1rem !important;
+}
+
+.snippet-card {
+    padding: 0.8rem 1rem !important; /* Smaller padding */
+}
+.snippet-card h4 { margin-top: 0; font-size: 1rem !important; margin-bottom: 3px !important; }
+.snippet-card p { font-size: 0.8rem !important; opacity: 0.8; margin-bottom: 0 !important; }
+
+/* Hub specific styling */
+.expanded-zoom {
+    background: rgba(124, 195, 206, 0.08);
+    border: 1px solid rgba(124, 195, 206, 0.2);
+    margin: 0 auto;
+    width: 100%;
+    max-width: 950px;
+    padding: 1.5rem !important; /* Prevents blowing past slide boundaries */
+}
+.expanded-zoom .card-icon { transform: scale(1.1); margin-bottom: 0.5rem; }
+.expanded-zoom .section-title { font-size: 2rem !important; }
+.expanded-zoom .summary-text { font-size: 0.95rem !important; margin-bottom: 1rem !important; }
+
+.wa-messages p.wa-text { margin: 0; font-size: 0.75rem; color: #fff; line-height: 1.3; }
+.wa-messages .wa-sender { font-size: 0.6rem; color: #7CC3CE; font-weight: bold; margin-bottom: 2px; display: block; }
+.wa-messages .wa-time { font-size: 0.5rem; color: rgba(255,255,255,0.5); text-align: right; display: block; margin-top: 2px; }
+.wa-msg { padding: 8px 10px; border-radius: 12px; position: relative; width: 85%; }
+.wa-in { background: #202c33; border-top-left-radius: 0; align-self: flex-start; }
+.wa-out { background: #005c4b; border-top-right-radius: 0; align-self: flex-end; }
+
+
+
+
+
