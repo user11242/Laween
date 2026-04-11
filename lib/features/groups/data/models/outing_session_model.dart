@@ -14,7 +14,8 @@ class OutingParticipant {
   final String uid;
   final String name;
   final String? photoUrl;
-  final GeoPoint? location; // Last known location when joining
+  final GeoPoint? location; // Last known location
+  final GeoPoint? startLocation; // Baseline for journey progress
   final DateTime joinedAt;
 
   OutingParticipant({
@@ -22,6 +23,7 @@ class OutingParticipant {
     required this.name,
     this.photoUrl,
     this.location,
+    this.startLocation,
     required this.joinedAt,
   });
 
@@ -31,6 +33,7 @@ class OutingParticipant {
       'name': name,
       'photoUrl': photoUrl,
       'location': location,
+      'startLocation': startLocation,
       'joinedAt': Timestamp.fromDate(joinedAt),
     };
   }
@@ -41,6 +44,7 @@ class OutingParticipant {
       name: map['name'] ?? '',
       photoUrl: map['photoUrl'],
       location: map['location'],
+      startLocation: map['startLocation'],
       joinedAt: (map['joinedAt'] as Timestamp).toDate(),
     );
   }

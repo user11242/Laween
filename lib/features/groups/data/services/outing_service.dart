@@ -49,6 +49,7 @@ class OutingService {
           photoUrl: creatorPhotoUrl,
           joinedAt: now,
           location: creatorLocation,
+          startLocation: creatorLocation,
         ),
       ],
       winner: venue, // Set the selected venue as winner
@@ -123,6 +124,7 @@ class OutingService {
           photoUrl: creatorPhotoUrl,
           joinedAt: now,
           location: location,
+          startLocation: location,
         ),
       ],
       createdAt: now,
@@ -181,6 +183,7 @@ class OutingService {
       name: name,
       photoUrl: photoUrl,
       location: location,
+      startLocation: location,
       joinedAt: DateTime.now(),
     );
 
@@ -540,7 +543,7 @@ class OutingService {
             'participants': participants,
           });
         }
-      }, maxAttempts: 1); // Reduced attempts for telemetry as it's non-critical
+      }); // Restored default resilience (5 attempts)
     } catch (e) {
       // Background location updates should not crash the app
       print("Telemetry update skipped: $e");

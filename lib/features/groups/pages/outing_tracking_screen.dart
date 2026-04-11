@@ -475,14 +475,24 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
       final pEtaInt = int.tryParse(_estimateTime(pDist)) ?? 0;
       if (pEtaInt > maxEta) maxEta = pEtaInt;
 
-      // Relative progress: 0.0 at start, 1.0 at destination
-      _startDistances.putIfAbsent(p.uid, () => pDist);
-      final startDist = _startDistances[p.uid]!;
+      // --- RELATIVE JOURNEY PROGRESS ---
       double progress = 0.0;
-      if (startDist > 0.05) { // 50 meters min journey for slider movement
-        progress = (1.0 - (pDist / startDist)).clamp(0.0, 1.0);
+      if (p.startLocation != null) {
+        final totalDist = double.tryParse(_calculateDistance(
+          p.startLocation!.latitude,
+          p.startLocation!.longitude,
+          (winner['location']['latitude'] as num).toDouble(),
+          (winner['location']['longitude'] as num).toDouble(),
+        )) ?? 0.0;
+
+        if (totalDist > 0.05) { // 50m minimum for slider
+          progress = (1.0 - (pDist / totalDist)).clamp(0.0, 1.0);
+        } else {
+          progress = 1.0;
+        }
       } else {
-        progress = 1.0;
+        // Fallback for old sessions or missing data
+        progress = (1.0 - (pDist / 10.0)).clamp(0.0, 1.0);
       }
 
       return {
