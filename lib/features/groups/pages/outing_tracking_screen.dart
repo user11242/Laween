@@ -41,6 +41,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
   final _liveActivitiesPlugin = LiveActivities();
   String? _activityId;
   String? _lastParticipantsJson;
+  final Map<String, double> _startDistances = {};
 
   @override
   void initState() {
@@ -474,9 +475,15 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
       final pEtaInt = int.tryParse(_estimateTime(pDist)) ?? 0;
       if (pEtaInt > maxEta) maxEta = pEtaInt;
 
-      // Adjust progress for slider: 0.0 (start) to 1.0 (destination)
-      // Visual scale: 10km total for better lockout visual
-      final progress = (1.0 - (pDist / 10.0)).clamp(0.0, 1.0);
+      // Relative progress: 0.0 at start, 1.0 at destination
+      _startDistances.putIfAbsent(p.uid, () => pDist);
+      final startDist = _startDistances[p.uid]!;
+      double progress = 0.0;
+      if (startDist > 0.05) { // 50 meters min journey for slider movement
+        progress = (1.0 - (pDist / startDist)).clamp(0.0, 1.0);
+      } else {
+        progress = 1.0;
+      }
 
       return {
         'name': isMe ? "You" : p.name,
