@@ -13,6 +13,7 @@ class MessageModel {
   final String? outingSessionId;
   final Map<String, List<String>> reactions; // emoji -> list of uids
   final List<String> readBy; // list of uids
+  final List<String> deletedFor; // list of uids who deleted for them
   final bool isDeleted;
   final bool isEdited;
   final DateTime? updatedAt;
@@ -28,6 +29,7 @@ class MessageModel {
     this.outingSessionId,
     this.reactions = const {},
     this.readBy = const [],
+    this.deletedFor = const [],
     this.isDeleted = false,
     this.isEdited = false,
     this.updatedAt,
@@ -45,6 +47,7 @@ class MessageModel {
       'outingSessionId': outingSessionId,
       'reactions': reactions,
       'readBy': readBy,
+      'deletedFor': deletedFor,
       'isDeleted': isDeleted,
       'isEdited': isEdited,
       'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
@@ -67,6 +70,7 @@ class MessageModel {
         ),
       ),
       readBy: List<String>.from(map['readBy'] ?? []),
+      deletedFor: List<String>.from(map['deletedFor'] ?? []),
       isDeleted: map['isDeleted'] ?? false,
       isEdited: map['isEdited'] ?? false,
       updatedAt: map['updatedAt'] != null ? (map['updatedAt'] as Timestamp).toDate() : null,

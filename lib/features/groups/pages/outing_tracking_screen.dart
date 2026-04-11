@@ -35,6 +35,8 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
   Set<Marker> _markers = {};
   bool _isDisposed = false;
   final Map<String, BitmapDescriptor> _customMarkers = {};
+  bool _hasInitialFit = false;
+  bool _shouldFollow = true; // User can toggle this behavior
 
   final _liveActivitiesPlugin = LiveActivities();
   String? _activityId;
@@ -176,7 +178,11 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
     // Trigger update if hardware coordinates changed for anyone
     if (newMarkers.length != _markers.length || !_markers.containsAll(newMarkers)) {
       setState(() => _markers = newMarkers);
-      _fitBounds();
+      // Only auto-fit once or if 'follow' is enabled
+      if (!_hasInitialFit || _shouldFollow) {
+        _fitBounds();
+        _hasInitialFit = true;
+      }
     }
   }
 
@@ -272,9 +278,16 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              "LIVE TRACKING",
-                              style: GoogleFonts.inter(fontSize: 10, color: AppColors.teal, fontWeight: FontWeight.bold, letterSpacing: 1.5),
+                            Row(
+                              children: [
+                                Text(
+                                  "LIVE TRACKING",
+                                  style: GoogleFonts.inter(fontSize: 10, color: AppColors.teal, fontWeight: FontWeight.bold, letterSpacing: 1.5),
+                                ),
+                                const Spacer(),
+                                if (_shouldFollow)
+                                  const Icon(Icons.auto_fix_high_rounded, color: AppColors.teal, size: 12),
+                              ],
                             ),
                             Text(
                               winner?['name'] ?? "Destination",
@@ -285,6 +298,32 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                           ],
                         ),
                       ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // --- MAP CONTROLS ---
+              Positioned(
+                bottom: 340, // Above ETA sheet
+                right: 20,
+                child: Column(
+                  children: [
+                    _buildMapControl(
+                      icon: _shouldFollow ? Icons.gps_fixed_rounded : Icons.gps_not_fixed_rounded,
+                      color: _shouldFollow ? AppColors.teal : AppColors.darkSlate,
+                      onTap: () {
+                        setState(() => _shouldFollow = !_shouldFollow);
+                        if (_shouldFollow) _fitBounds();
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    _buildMapControl(
+                      icon: Icons.layers_rounded,
+                      onTap: () {
+                        // Toggle map style or just zoom out
+                        _fitBounds();
+                      },
                     ),
                   ],
                 ),
@@ -436,8 +475,8 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
       if (pEtaInt > maxEta) maxEta = pEtaInt;
 
       // Adjust progress for slider: 0.0 (start) to 1.0 (destination)
-      // Visual scale: 5km total.
-      final progress = (1.0 - (pDist / 5.0)).clamp(0.0, 1.0);
+      // Visual scale: 10km total for better lockout visual
+      final progress = (1.0 - (pDist / 10.0)).clamp(0.0, 1.0);
 
       return {
         'name': isMe ? "You" : p.name,
@@ -484,6 +523,24 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
       } catch (e) {
         debugPrint("Live Activity Update Error: $e");
       }
-      }
+    }
+  }
+
+  Widget _buildMapControl({required IconData icon, Color color = AppColors.darkSlate, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 10, offset: const Offset(0, 5)),
+          ],
+        ),
+        child: Icon(icon, color: color, size: 24),
+      ),
+    );
   }
 }

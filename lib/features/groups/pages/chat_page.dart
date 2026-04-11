@@ -40,11 +40,13 @@ class _ChatPageState extends State<ChatPage> {
   OverlayEntry? _attachmentMenuEntry;
   final LayerLink _attachmentMenuLink = LayerLink();
   bool _isUploading = false;
+  final currentUser = FirebaseAuth.instance.currentUser;
 
   @override
   void initState() {
     super.initState();
     _messagesStream = _chatService.getMessagesStream(widget.group.id);
+    _chatService.resetUnreadCount(widget.group.id, currentUser?.uid ?? '');
     _fetchMemberDetails();
   }
 
@@ -83,7 +85,6 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   MessageModel? _editingMessage;
-  final currentUser = FirebaseAuth.instance.currentUser;
 
   void _sendMessage() {
     if (_messageController.text.trim().isEmpty) return;
@@ -150,7 +151,7 @@ class _ChatPageState extends State<ChatPage> {
         onDelete: (forEveryone) async {
           Navigator.pop(context);
           try {
-            await _chatService.deleteMessage(widget.group.id, message.id, forEveryone: forEveryone);
+            await _chatService.deleteMessage(widget.group.id, message.id, forEveryone: forEveryone, uid: currentUser?.uid);
           } catch (e) {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -191,9 +192,123 @@ class _ChatPageState extends State<ChatPage> {
   void _showCreateOutingSheet() {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "Start Outing",
+              style: GoogleFonts.outfit(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: AppColors.darkSlate,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "How would you like to plan today?",
+              style: GoogleFonts.inter(color: Colors.grey, fontSize: 14),
+            ),
+            const SizedBox(height: 32),
+            _buildSelectionOption(
+              title: "Find Midpoint",
+              subtitle: "The fairest spot for everyone",
+              icon: Icons.auto_awesome_rounded,
+              color: AppColors.teal,
+              onTap: () {
+                Navigator.pop(context);
+                _openCreationSheet(isDirect: false);
+              },
+            ),
+            const SizedBox(height: 16),
+            _buildSelectionOption(
+              title: "Specific Place",
+              subtitle: "I know where we're going",
+              icon: Icons.location_on_rounded,
+              color: Colors.orange,
+              onTap: () {
+                Navigator.pop(context);
+                _openCreationSheet(isDirect: true);
+              },
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSelectionOption({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.outfit(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.darkSlate,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios_rounded, size: 16, color: color),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openCreationSheet({required bool isDirect}) {
+    showModalBottomSheet(
+      context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => CreateOutingSheet(groupId: widget.group.id),
+      builder: (context) => CreateOutingSheet(
+        groupId: widget.group.id,
+        initialDirectMode: isDirect,
+      ),
     );
   }
 
@@ -468,7 +583,9 @@ class _ChatPageState extends State<ChatPage> {
                   return Center(child: Text("Error: ${snapshot.error}", style: const TextStyle(color: Colors.red)));
                 }
 
-                final messages = snapshot.data ?? [];
+                final messages = (snapshot.data ?? [])
+                    .where((m) => !m.deletedFor.contains(currentUser?.uid))
+                    .toList();
 
                 if (messages.isEmpty) {
                   return _buildEmptyChat();
@@ -495,6 +612,7 @@ class _ChatPageState extends State<ChatPage> {
                       onLongPress: () => _onMessageLongPress(message),
                       memberPhotos: _memberPhotos,
                       memberNames: _memberNames,
+                      totalMembers: widget.group.memberIds.length,
                     );
                   },
                 );
@@ -573,13 +691,18 @@ class _ChatPageState extends State<ChatPage> {
               color: AppColors.teal.withValues(alpha: 0.08),
               shape: BoxShape.circle,
               border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
-              image: widget.group.photoUrl != null
-                  ? DecorationImage(image: NetworkImage(widget.group.photoUrl!), fit: BoxFit.cover)
-                  : null,
             ),
-            child: widget.group.photoUrl == null
-                ? const Icon(Icons.groups_rounded, color: AppColors.teal, size: 26)
-                : null,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(23),
+              child: widget.group.photoUrl != null
+                  ? CachedNetworkImage(
+                      imageUrl: widget.group.photoUrl!,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => const CircularProgressIndicator(strokeWidth: 2, color: AppColors.teal),
+                      errorWidget: (context, url, error) => const Icon(Icons.groups_rounded, color: AppColors.teal, size: 26),
+                    )
+                  : const Icon(Icons.groups_rounded, color: AppColors.teal, size: 26),
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -762,8 +885,9 @@ class _MessageBubble extends StatelessWidget {
   final String groupId;
   final bool isMe;
   final VoidCallback onLongPress;
-  final Map<String, String> memberPhotos;
+   final Map<String, String> memberPhotos;
   final Map<String, String> memberNames;
+  final int totalMembers;
 
   const _MessageBubble({
     required this.message, 
@@ -772,6 +896,7 @@ class _MessageBubble extends StatelessWidget {
     required this.onLongPress,
     required this.memberPhotos,
     required this.memberNames,
+    required this.totalMembers,
   });
 
   @override
@@ -807,7 +932,7 @@ class _MessageBubble extends StatelessWidget {
                     // Message Bubble
                     Container(
                       constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
-                      decoration: BoxDecoration(
+                      decoration: message.type == 'outing' ? null : BoxDecoration(
                         color: isMe ? null : Colors.white,
                         gradient: isMe ? const LinearGradient(
                           colors: AppColors.tealGradient,
@@ -828,7 +953,9 @@ class _MessageBubble extends StatelessWidget {
                           ),
                         ],
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      padding: message.type == 'outing' 
+                        ? EdgeInsets.zero 
+                        : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       child: Directionality(
                         // Restore the original directionality for the text content
                         textDirection: ambientDirection,
@@ -893,7 +1020,7 @@ class _MessageBubble extends StatelessWidget {
                                       style: GoogleFonts.inter(
                                         fontSize: 9,
                                         fontStyle: FontStyle.italic,
-                                        color: isMe ? Colors.white70 : Colors.grey.shade400,
+                                        color: (isMe && message.type != 'outing') ? Colors.white70 : Colors.grey.shade400,
                                       ),
                                     ),
                                   ),
@@ -901,16 +1028,12 @@ class _MessageBubble extends StatelessWidget {
                                   intl.DateFormat('hh:mm a').format(message.timestamp),
                                   style: GoogleFonts.inter(
                                     fontSize: 10,
-                                    color: isMe ? Colors.white70 : Colors.grey.shade400,
+                                    color: (isMe && message.type != 'outing') ? Colors.white70 : Colors.grey.shade400,
                                   ),
                                 ),
-                                if (isMe) ...[
+                                 if (isMe) ...[
                                   const SizedBox(width: 4),
-                                  Icon(
-                                    message.readBy.length > 1 ? Icons.done_all_rounded : Icons.done_rounded, 
-                                    size: 14, 
-                                    color: message.readBy.length > 1 ? Colors.white : Colors.white70,
-                                  ),
+                                  _buildTicks(message),
                                 ],
                               ],
                             ),
@@ -967,6 +1090,20 @@ class _MessageBubble extends StatelessWidget {
     );
   }
 
+  Widget _buildTicks(MessageModel message) {
+    final isReadByAll = message.readBy.length >= (totalMembers - 1) && totalMembers > 1;
+    final isAnyRead = message.readBy.isNotEmpty;
+    final bool onTeal = isMe && message.type != 'outing';
+    
+    if (isReadByAll) {
+      return const Icon(Icons.done_all_rounded, size: 14, color: Colors.blue);
+    } else if (isAnyRead) {
+      return Icon(Icons.done_all_rounded, size: 14, color: onTeal ? Colors.white70 : Colors.grey.shade400);
+    } else {
+      return Icon(Icons.done_rounded, size: 14, color: onTeal ? Colors.white70 : Colors.grey.shade400);
+    }
+  }
+
   Widget _buildAvatar() {
     // Try to get the latest photo from our local cache, fallback to the one stored in message
     final photoUrl = memberPhotos[message.senderId] ?? message.senderPhotoUrl;
@@ -1002,8 +1139,8 @@ class _MessageBubble extends StatelessWidget {
   Widget _buildInitialsAvatar({bool isLoading = false}) {
     // Try to get latest name from cache
     final displayName = memberNames[message.senderId] ?? message.senderName;
-    final initials = displayName.isNotEmpty 
-        ? displayName.trim().split(' ').map((e) => e[0]).take(2).join().toUpperCase()
+    final initials = displayName.trim().isNotEmpty 
+        ? displayName.trim().split(' ').where((e) => e.isNotEmpty).map((e) => e[0]).take(2).join().toUpperCase()
         : '?';
     
     return Container(
@@ -1028,8 +1165,8 @@ class _MessageBubble extends StatelessWidget {
 
   Widget _buildLocationBubble() {
     final geo = message.text.replaceFirst('geo:', '').split(',');
-    final lat = geo[0];
-    final long = geo[1];
+    final lat = geo.isNotEmpty ? geo[0] : '0.0';
+    final long = geo.length > 1 ? geo[1] : '0.0';
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -1225,11 +1362,12 @@ class _MessageOptionsSheet extends StatelessWidget {
                         title: "Edit Message",
                         onTap: onEdit,
                       ),
-                    _buildActionItem(
-                      icon: Icons.info_rounded,
-                      title: "Message Info",
-                      onTap: onInfo,
-                    ),
+                     if (isMe)
+                      _buildActionItem(
+                        icon: Icons.info_rounded,
+                        title: "Message Info",
+                        onTap: onInfo,
+                      ),
                     if (isMe)
                       _buildActionItem(
                         icon: Icons.delete_sweep_rounded,

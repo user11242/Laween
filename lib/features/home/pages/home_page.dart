@@ -90,19 +90,35 @@ class _HomePageState extends State<HomePage> {
   Widget _buildHomeContent(User? user) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFFBFDFF),
-        image: DecorationImage(
-          image: const AssetImage("assets/onboarding_imgs/onboarding_img1.jpg"),
-          fit: BoxFit.cover,
-          opacity: 0.03,
-          colorFilter: ColorFilter.mode(
-            AppColors.teal.withValues(alpha: 0.1),
-            BlendMode.overlay,
-          ),
+        color: Colors.white,
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            const Color(0xFFF1F5F9), // Slate 50
+            const Color(0xFFF8FAFC), // Slate 100
+            Colors.white,
+          ],
         ),
       ),
-      child: SafeArea(
-        child: SingleChildScrollView(
+      child: Stack(
+        children: [
+          // Subtle accent bloobs/patterns
+          Positioned(
+            top: -100,
+            right: -50,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.teal.withValues(alpha: 0.05),
+              ),
+            ),
+          ).animate().fadeIn(duration: 2.seconds),
+          
+          SafeArea(
+            child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
@@ -128,7 +144,7 @@ class _HomePageState extends State<HomePage> {
                   fontWeight: FontWeight.bold,
                   color: AppColors.darkSlate,
                 ),
-              ).animate().fadeIn(delay: 400.ms).slideX(begin: -0.2),
+              ).animate().fadeIn(delay: 450.ms, duration: 600.ms).slideX(begin: -0.1, curve: Curves.easeOutCubic),
               
               const SizedBox(height: 16),
               _buildActionCarousel(),
@@ -158,16 +174,18 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ],
-              ).animate().fadeIn(delay: 600.ms),
+              ).animate().fadeIn(delay: 700.ms, duration: 600.ms).slideX(begin: -0.05, curve: Curves.easeOutCubic),
               
               const SizedBox(height: 8),
               _buildFriendsActivityList(user),
               
-              const SizedBox(height: 100), // Space for bottom bar
+              const SizedBox(height: 120), // Space for bottom bar
             ],
           ),
         ),
       ),
+    ],
+    ),
     );
   }
 
@@ -246,15 +264,21 @@ class _HomePageState extends State<HomePage> {
     return Container(
       height: 56,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+          BoxShadow(
+            color: AppColors.teal.withValues(alpha: 0.05),
+            blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
+        border: Border.all(color: Colors.white, width: 1.5),
       ),
       child: TextField(
         decoration: InputDecoration(
@@ -274,7 +298,7 @@ class _HomePageState extends State<HomePage> {
           contentPadding: const EdgeInsets.symmetric(vertical: 18),
         ),
       ),
-    ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2);
+    ).animate().fadeIn(delay: 300.ms, duration: 600.ms).slideY(begin: 0.2, curve: Curves.easeOutCubic);
   }
 
   Widget _buildActionCarousel() {
@@ -313,15 +337,20 @@ class _HomePageState extends State<HomePage> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(28),
               boxShadow: [
                 BoxShadow(
-                  color: (action['color'] as Color).withValues(alpha: 0.08),
-                  blurRadius: 15,
-                  offset: const Offset(0, 8),
+                  color: (action['color'] as Color).withValues(alpha: 0.12),
+                  blurRadius: 24,
+                  offset: const Offset(0, 12),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.02),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
                 ),
               ],
-              border: Border.all(color: (action['color'] as Color).withValues(alpha: 0.05)),
+              border: Border.all(color: Colors.white, width: 2),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -404,18 +433,72 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                   ),
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF10B981),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
+                  const _PulsingStatusDot(),
                 ],
               ),
-            ).animate().fadeIn(delay: 800.ms).slideY(begin: 0.1);
+            ).animate().fadeIn(delay: (800 + (friends.indexOf(doc) * 100)).ms).slideY(begin: 0.1);
           }).toList(),
+        );
+      },
+    );
+  }
+}
+
+class _PulsingStatusDot extends StatefulWidget {
+  const _PulsingStatusDot();
+
+  @override
+  State<_PulsingStatusDot> createState() => _PulsingStatusDotState();
+}
+
+class _PulsingStatusDotState extends State<_PulsingStatusDot> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Container(
+          width: 20,
+          height: 20,
+          alignment: Alignment.center,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: 8 + (12 * _controller.value),
+                height: 8 + (12 * _controller.value),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withValues(alpha: 1 - _controller.value),
+                  shape: BoxShape.circle,
+                ),
+              ),
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF10B981),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
+          ),
         );
       },
     );

@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../widgets/create_join_dialog.dart';
@@ -155,11 +157,20 @@ class _GroupsPageState extends State<GroupsPage> {
                     )
                   else
                     SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
                       sliver: SliverList(
                         delegate: SliverChildBuilderDelegate(
-                          (context, index) => _GroupCard(group: groups[index]),
-                          childCount: groups.length,
+                          (context, index) {
+                            if (index.isOdd) {
+                              return Padding(
+                                padding: const EdgeInsets.only(left: 88, right: 24),
+                                child: Divider(height: 1, color: Colors.grey.shade100),
+                              );
+                            }
+                            final groupIndex = index ~/ 2;
+                            return _GroupCard(group: groups[groupIndex]);
+                          },
+                          childCount: groups.length * 2 - 1,
                         ),
                       ),
                     ),
@@ -289,118 +300,145 @@ class _GroupCard extends StatelessWidget {
 
   const _GroupCard({required this.group});
 
+  String _formatTime(DateTime? time) {
+    if (time == null) return "";
+    final now = DateTime.now();
+    final diff = now.difference(time);
+    if (diff.inDays == 0) return DateFormat('hh:mm a').format(time);
+    if (diff.inDays == 1) return "Yesterday";
+    return DateFormat('dd/MM/yy').format(time);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isAr = l10n.isAr;
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final unreadCount = group.unreadCounts[currentUser?.uid] ?? 0;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.teal.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ChatPage(group: group)),
-            );
-          },
-          borderRadius: BorderRadius.circular(24),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                // Premium Avatar
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: AppColors.teal.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      if (group.photoUrl != null)
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: group.photoUrl != null
-                        ? Image.network(
-                            group.photoUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => 
-                              const Icon(Icons.groups, color: AppColors.teal, size: 32),
-                          )
-                        : const Icon(Icons.groups, color: AppColors.teal, size: 32),
-                  ),
+    return Material(
+      color: Colors.white,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ChatPage(group: group)),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          child: Row(
+            children: [
+              // Premium Avatar
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: AppColors.teal.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(width: 16),
-                
-                // Group Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        group.name,
-                        style: GoogleFonts.outfit(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.darkSlate,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.teal.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.people_alt_outlined, size: 14, color: AppColors.teal),
-                            const SizedBox(width: 6),
-                            Text(
-                              "${group.memberIds.length} ${isAr ? 'أعضاء' : 'members'}",
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.teal,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(28),
+                  child: group.photoUrl != null
+                      ? CachedNetworkImage(
+                          imageUrl: group.photoUrl!,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            color: Colors.grey.shade100,
+                            child: const Center(
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.teal),
                               ),
                             ),
-                          ],
+                          ),
+                          errorWidget: (context, url, error) => 
+                            const Icon(Icons.groups, color: AppColors.teal, size: 28),
+                        )
+                      : const Icon(Icons.groups, color: AppColors.teal, size: 28),
+                ),
+              ),
+              const SizedBox(width: 16),
+              
+              // Group Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            group.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.darkSlate,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                        if (group.lastMessageTime != null)
+                          Text(
+                            _formatTime(group.lastMessageTime),
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: unreadCount > 0 ? AppColors.teal : Colors.grey.shade500,
+                              fontWeight: unreadCount > 0 ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: RichText(
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            text: TextSpan(
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                color: Colors.grey.shade600,
+                              ),
+                              children: [
+                                if (group.lastMessageSender != null)
+                                  TextSpan(
+                                    text: "${group.lastMessageSender == currentUser?.displayName || group.lastMessageSender == currentUser?.uid ? (isAr ? "أنت" : "You") : group.lastMessageSender}: ",
+                                    style: const TextStyle(fontWeight: FontWeight.w500),
+                                  ),
+                                TextSpan(
+                                  text: group.lastMessage ?? (isAr ? "انضم للمحادثة..." : "Start chatting..."),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        if (unreadCount > 0)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                            decoration: const BoxDecoration(
+                              color: AppColors.teal,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(
+                              "$unreadCount",
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
                 ),
-                
-                // Adaptive Chevron
-                Icon(
-                  isAr ? Icons.arrow_back_ios_new : Icons.arrow_forward_ios,
-                  size: 16,
-                  color: Colors.grey.shade300,
-                ),
-                const SizedBox(width: 4),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

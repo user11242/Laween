@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
+import 'package:geolocator_apple/geolocator_apple.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -14,7 +15,80 @@ class OutingService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   StreamSubscription<Position>? _positionStream;
 
-  // Create a new outing session
+  // Create a direct outing session to a specific place
+  Future<String> createDirectSession({
+    required String groupId,
+    required String creatorId,
+    required String creatorName,
+    String? creatorPhotoUrl,
+    required Map<String, dynamic> venue,
+    required int timeLimitMinutes,
+    GeoPoint? creatorLocation,
+  }) async {
+    final sessionRef = _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('outings')
+        .doc();
+
+    final now = DateTime.now();
+    final expiresAt = now.add(Duration(minutes: timeLimitMinutes));
+
+    final session = OutingSessionModel(
+      id: sessionRef.id,
+      groupId: groupId,
+      creatorId: creatorId,
+      status: OutingStatus.waiting, // Let people join first
+      category: venue['category'] ?? 'Custom',
+      calculationMode: 'Fixed',
+      timeLimitMinutes: timeLimitMinutes,
+      participants: [
+        OutingParticipant(
+          uid: creatorId,
+          name: creatorName,
+          photoUrl: creatorPhotoUrl,
+          joinedAt: now,
+          location: creatorLocation,
+        ),
+      ],
+      winner: venue, // Set the selected venue as winner
+      createdAt: now,
+      expiresAt: expiresAt,
+    );
+
+    // 1. Create the session document
+    await sessionRef.set(session.toMap());
+
+    // 2. Send the 'outing' message to the chat
+    final messageRef = _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('messages')
+        .doc();
+
+    final message = MessageModel(
+      id: messageRef.id,
+      senderId: creatorId,
+      senderName: creatorName,
+      senderPhotoUrl: creatorPhotoUrl,
+      text: "⚡ Locked Destination: ${venue['name']}",
+      timestamp: now,
+      type: 'outing',
+      outingSessionId: sessionRef.id,
+    );
+
+    await messageRef.set(message.toMap());
+
+    // 3. Update group's last message
+    await _firestore.collection('groups').doc(groupId).update({
+      'lastMessage': "📍 Session: ${venue['name']}",
+      'lastMessageTime': FieldValue.serverTimestamp(),
+    });
+
+    return sessionRef.id;
+  }
+
+  // Create a new outing session (Discovery Mode)
   Future<String> createSession({
     required String groupId,
     required String creatorId,
@@ -151,9 +225,11 @@ class OutingService {
     });
   }
 
-  // Live GPS Telemetry Broadcaster
+  // Live GPS Telemetry Broadcaster (Legacy/Background)
+  // Note: Most tracking is now handled via updateParticipantLocation from Screens
+  // to avoid redundant streams and document contention.
   Future<void> startLiveTracking(String groupId, String sessionId, String uid) async {
-    stopLiveTracking(); // Prevent memory leaks/duplicate streams
+    stopLiveTracking();
     
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) return;
@@ -166,32 +242,19 @@ class OutingService {
     if (permission == LocationPermission.deniedForever) return;
 
     _positionStream = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 15, // Broadcast update only if moved 15+ meters
+      locationSettings: AppleSettings(
+        accuracy: LocationAccuracy.medium,
+        distanceFilter: 30,
+        pauseLocationUpdatesAutomatically: false,
+        showBackgroundLocationIndicator: true,
       ),
-    ).listen((Position position) async {
-      final sessionRef = _firestore.collection('groups').doc(groupId).collection('outings').doc(sessionId);
-
-      try {
-        await _firestore.runTransaction((transaction) async {
-          final snapshot = await transaction.get(sessionRef);
-          if (!snapshot.exists) return;
-
-          final data = snapshot.data();
-          if (data == null) return;
-          
-          final List participants = data['participants'] ?? [];
-          final int index = participants.indexWhere((p) => p['uid'] == uid);
-
-          if (index != -1) {
-            participants[index]['location'] = GeoPoint(position.latitude, position.longitude);
-            transaction.update(sessionRef, {'participants': participants});
-          }
-        });
-      } catch (e) {
-        // Silent background failsafe
-      }
+    ).listen((Position position) {
+      updateParticipantLocation(
+        groupId: groupId,
+        sessionId: sessionId,
+        uid: uid,
+        location: GeoPoint(position.latitude, position.longitude),
+      ).catchError((_) { /* Silent fail */ });
     });
   }
 
@@ -243,6 +306,13 @@ class OutingService {
     if (!snapshot.exists) return;
 
     final session = OutingSessionModel.fromMap(snapshot.data()!);
+    
+    // IF FIXED DESTINATION: Jump directly to completed!
+    if (session.calculationMode == 'Fixed') {
+      await updateStatus(groupId, sessionId, OutingStatus.completed);
+      return;
+    }
+
     final participants = session.participants.where((p) => p.location != null).toList();
 
     if (participants.isEmpty) {
@@ -376,20 +446,27 @@ class OutingService {
         // For simplicity, let's just update the status to trigger the winner picker logic if we had one,
         // or just perform the winner pick here.
         
-        topVenues.sort((a, b) {
-          final votesA = (a['votes'] as List?)?.length ?? 0;
-          final votesB = (b['votes'] as List?)?.length ?? 0;
-          if (votesA != votesB) return votesB.compareTo(votesA);
-          final ratingA = (a['rating'] as num?)?.toDouble() ?? 0;
-          final ratingB = (b['rating'] as num?)?.toDouble() ?? 0;
-          return ratingB.compareTo(ratingA);
-        });
+        if (topVenues.isNotEmpty) {
+          topVenues.sort((a, b) {
+            final votesA = (a['votes'] as List?)?.length ?? 0;
+            final votesB = (b['votes'] as List?)?.length ?? 0;
+            if (votesA != votesB) return votesB.compareTo(votesA);
+            final ratingA = (a['rating'] as num?)?.toDouble() ?? 0;
+            final ratingB = (b['rating'] as num?)?.toDouble() ?? 0;
+            return ratingB.compareTo(ratingA);
+          });
 
-        final winner = topVenues.first;
-        transaction.update(sessionRef, {
-          'status': OutingStatus.completed.name,
-          'winner': winner,
-        });
+          final winner = topVenues.first;
+          transaction.update(sessionRef, {
+            'status': OutingStatus.completed.name,
+            'winner': winner,
+          });
+        } else {
+          // If no venues, just complete without a winner or cancel
+          transaction.update(sessionRef, {
+            'status': OutingStatus.completed.name,
+          });
+        }
       }
     });
   }
@@ -403,6 +480,13 @@ class OutingService {
     final data = snapshot.data()!;
     final List topVenues = List.from(data['finalLocation']['topVenues']);
     
+    if (topVenues.isEmpty) {
+      await sessionRef.update({
+        'status': OutingStatus.completed.name,
+      });
+      return;
+    }
+
     // Sort by votes length descending, then by rating
     topVenues.sort((a, b) {
       final votesA = (a['votes'] as List?)?.length ?? 0;
@@ -434,27 +518,32 @@ class OutingService {
         .collection('outings')
         .doc(sessionId);
 
-    await _firestore.runTransaction((transaction) async {
-      final snapshot = await transaction.get(sessionRef);
-      if (!snapshot.exists) return;
+    try {
+      await _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(sessionRef);
+        if (!snapshot.exists) return;
 
-      final data = snapshot.data()!;
-      final List participants = List.from(data['participants'] ?? []);
-      
-      bool updated = false;
-      for (var i = 0; i < participants.length; i++) {
-        if (participants[i]['uid'] == uid) {
-          participants[i]['location'] = location;
-          updated = true;
-          break;
+        final data = snapshot.data()!;
+        final List participants = List.from(data['participants'] ?? []);
+        
+        bool updated = false;
+        for (var i = 0; i < participants.length; i++) {
+          if (participants[i]['uid'] == uid) {
+            participants[i]['location'] = location;
+            updated = true;
+            break;
+          }
         }
-      }
 
-      if (updated) {
-        transaction.update(sessionRef, {
-          'participants': participants,
-        });
-      }
-    });
+        if (updated) {
+          transaction.update(sessionRef, {
+            'participants': participants,
+          });
+        }
+      }, maxAttempts: 1); // Reduced attempts for telemetry as it's non-critical
+    } catch (e) {
+      // Background location updates should not crash the app
+      print("Telemetry update skipped: $e");
+    }
   }
 }

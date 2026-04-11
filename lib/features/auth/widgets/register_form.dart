@@ -158,7 +158,11 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
     }
     final isTaken = await _authService.isNameTaken(value);
     if (mounted) {
-      setState(() { _isNameChecking = false; if (isTaken) _nameError = l10n.nameTaken; else _isNameValid = true; });
+      setState(() { _isNameChecking = false; if (isTaken) {
+        _nameError = l10n.nameTaken;
+      } else {
+        _isNameValid = true;
+      } });
     }
   }
 
@@ -180,7 +184,11 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
     }
     final isTaken = await _authService.isEmailTaken(value);
     if (mounted) {
-      setState(() { _isEmailChecking = false; if (isTaken) _emailError = l10n.emailTaken; else _isEmailValid = true; });
+      setState(() { _isEmailChecking = false; if (isTaken) {
+        _emailError = l10n.emailTaken;
+      } else {
+        _isEmailValid = true;
+      } });
     }
   }
 
@@ -208,7 +216,11 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
       }
       final isTaken = await _authService.isPhoneTaken(_fullPhoneNumber);
       if (mounted) {
-        setState(() { _isPhoneChecking = false; if (isTaken) _phoneError = l10n.phoneTaken; else _isPhoneValid = true; });
+        setState(() { _isPhoneChecking = false; if (isTaken) {
+          _phoneError = l10n.phoneTaken;
+        } else {
+          _isPhoneValid = true;
+        } });
       }
     } catch (e) {
       if (mounted) setState(() { _isPhoneChecking = false; _phoneError = null; });

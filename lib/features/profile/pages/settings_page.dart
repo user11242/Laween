@@ -99,6 +99,7 @@ class _SettingsPageState extends State<SettingsPage> {
             if (password != null && mounted) {
               if (user != null && user.email != null) {
                 await _biometricService.saveCredentials(user.email!, password);
+                if (!mounted) return;
                 setState(() => _biometricEnabled = true);
                 AppMessenger.showSnackBar(
                   context,

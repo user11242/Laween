@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -181,7 +182,7 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                           image: newImage != null
                               ? DecorationImage(image: FileImage(newImage!), fit: BoxFit.cover)
                               : _currentPhotoUrl != null
-                                  ? DecorationImage(image: NetworkImage(_currentPhotoUrl!), fit: BoxFit.cover)
+                                  ? DecorationImage(image: CachedNetworkImageProvider(_currentPhotoUrl!), fit: BoxFit.cover)
                                   : null,
                         ),
                         child: (newImage == null && _currentPhotoUrl == null)
@@ -300,23 +301,17 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                 children: [
                   // --- Header ---
                   Center(
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: AppColors.teal.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                        image: _currentPhotoUrl != null
-                            ? DecorationImage(
-                                image: NetworkImage(_currentPhotoUrl!),
-                                fit: BoxFit.cover,
-                              )
-                            : null,
-                      ),
-                      child: _currentPhotoUrl == null
-                          ? const Icon(Icons.groups, color: AppColors.teal, size: 40)
-                          : null,
-                    ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(50),
+                          child: _currentPhotoUrl != null
+                              ? CachedNetworkImage(
+                                  imageUrl: _currentPhotoUrl!,
+                                  fit: BoxFit.cover,
+                                  placeholder: (context, url) => const CircularProgressIndicator(strokeWidth: 2, color: AppColors.teal),
+                                  errorWidget: (context, url, error) => const Icon(Icons.groups, color: AppColors.teal, size: 40),
+                                )
+                              : const Icon(Icons.groups, color: AppColors.teal, size: 40),
+                        ),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -469,12 +464,24 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                             final isCreatorMember = doc.id == widget.group.creatorId;
 
                             return ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: AppColors.teal.withValues(alpha: 0.1),
-                                backgroundImage: photo != null ? NetworkImage(photo) : null,
-                                child: photo == null
-                                    ? const Icon(Icons.person, color: AppColors.teal)
-                                    : null,
+                              leading: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: AppColors.teal.withValues(alpha: 0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: photo != null
+                                      ? CachedNetworkImage(
+                                          imageUrl: photo,
+                                          fit: BoxFit.cover,
+                                          placeholder: (context, url) => const CircularProgressIndicator(strokeWidth: 2, color: AppColors.teal),
+                                          errorWidget: (context, url, error) => const Icon(Icons.person, color: AppColors.teal),
+                                        )
+                                      : const Icon(Icons.person, color: AppColors.teal),
+                                ),
                               ),
                               title: Text(
                                 name,

@@ -37,12 +37,36 @@ class ChatService {
     String lastMessageText = text;
     if (type == 'image') {
       lastMessageText = '📷 Photo';
-    } else if (type == 'location') lastMessageText = '📍 Location';
+    } else if (type == 'location') {
+      lastMessageText = '📍 Location';
+    }
 
-    // Update the group's "latestMessage"
+    // Update the group's "latestMessage" and increment unread counts
+    final groupRef = _firestore.collection('groups').doc(groupId);
+    final groupDoc = await groupRef.get();
+    if (groupDoc.exists) {
+      final List<String> memberIds = List<String>.from(groupDoc.data()!['memberIds'] ?? []);
+      final Map<String, dynamic> updates = {
+        'lastMessage': lastMessageText,
+        'lastMessageSender': senderName,
+        'lastMessageTime': FieldValue.serverTimestamp(),
+      };
+      
+      // Increment unread count for everyone EXCEPT the sender
+      for (final memberId in memberIds) {
+        if (memberId != senderId) {
+          updates['unreadCounts.$memberId'] = FieldValue.increment(1);
+        }
+      }
+      
+      await groupRef.update(updates);
+    }
+  }
+
+  // Reset unread count for a specific user in a group
+  Future<void> resetUnreadCount(String groupId, String userId) async {
     await _firestore.collection('groups').doc(groupId).update({
-      'lastMessage': lastMessageText,
-      'lastMessageTime': FieldValue.serverTimestamp(),
+      'unreadCounts.$userId': 0,
     });
   }
 
@@ -114,7 +138,7 @@ class ChatService {
   }
 
   // Delete Message
-  Future<void> deleteMessage(String groupId, String messageId, {required bool forEveryone}) async {
+  Future<void> deleteMessage(String groupId, String messageId, {required bool forEveryone, String? uid}) async {
     final docRef = _firestore.collection('groups').doc(groupId).collection('messages').doc(messageId);
     
     if (forEveryone) {
@@ -134,11 +158,11 @@ class ChatService {
         'isDeleted': true,
         'updatedAt': FieldValue.serverTimestamp(),
       });
-    } else {
-      // "Delete for me" - In a real app, this would involve a local database or a 'deletedFor' list in Firestore.
-      // For simplicity here, we'll just remove it from the collection if it's the sender, 
-      // or we'd need a more complex structure for shared vs private view.
-      // Since the user asked for "professional", we'll just not implement "for me" fully without a local DB.
+    } else if (uid != null) {
+      // "Delete for me" - Add user ID to deletedFor list
+      await docRef.update({
+        'deletedFor': FieldValue.arrayUnion([uid]),
+      });
     }
   }
 

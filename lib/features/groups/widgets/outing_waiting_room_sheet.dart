@@ -194,6 +194,64 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                 
                 const SizedBox(height: 32),
                 
+                if (session.calculationMode == 'Fixed')
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: AppColors.teal.withValues(alpha: 0.3)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.teal.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.location_on_rounded, color: AppColors.teal, size: 24),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "TARGET DESTINATION",
+                                style: GoogleFonts.inter(
+                                  fontSize: 10, 
+                                  color: Colors.grey.shade400, 
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                session.winner?['name'] ?? "Selected Venue",
+                                style: GoogleFonts.outfit(
+                                  fontSize: 18, 
+                                  fontWeight: FontWeight.bold, 
+                                  color: AppColors.darkSlate,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -269,7 +327,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                                     radius: 24,
                                     backgroundColor: AppColors.teal.withValues(alpha: 0.1),
                                     child: Text(
-                                      p.name[0].toUpperCase(),
+                                      p.name.isNotEmpty ? p.name[0].toUpperCase() : '?',
                                       style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.teal),
                                     ),
                                   ),
@@ -288,7 +346,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              isMe ? "You" : p.name.split(' ')[0],
+                              isMe ? "You" : (p.name.isNotEmpty ? p.name.split(' ')[0] : 'User'),
                               style: GoogleFonts.inter(
                                 fontSize: 12,
                                 fontWeight: isMe ? FontWeight.bold : FontWeight.w500,

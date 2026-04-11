@@ -12,11 +12,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:geolocator_apple/geolocator_apple.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/theme/colors.dart';
 import '../data/models/outing_session_model.dart';
-import '../widgets/outing_voting_view.dart';
-import '../widgets/outing_winner_view.dart';
 import 'outing_tracking_screen.dart';
 import '../data/services/outing_service.dart';
 
@@ -42,7 +41,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
   Set<Marker> _markers = {};
   int _currentVenueIndex = 0;
   bool _isDisposed = false;
-  bool _isTrackingMode = false;
+  final bool _isTrackingMode = false;
   bool _showWinnerDetails = true;
   StreamSubscription<Position>? _positionSubscription;
   DateTime? _lastLocationUpdate;
@@ -163,9 +162,11 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
 
     // 2. Listen to Location Stream
     _positionSubscription = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
+      locationSettings: AppleSettings(
         accuracy: LocationAccuracy.high,
-        distanceFilter: 10, // Update every 10 meters
+        distanceFilter: 20,
+        pauseLocationUpdatesAutomatically: false,
+        showBackgroundLocationIndicator: true,
       ),
     ).listen((Position position) {
       if (_isDisposed) return;
@@ -226,7 +227,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     // Text
     final textPainter = TextPainter(
       text: TextSpan(
-        text: name[0].toUpperCase(),
+        text: name.isNotEmpty ? name[0].toUpperCase() : '?',
         style: GoogleFonts.outfit(
           fontSize: 45,
           fontWeight: FontWeight.w900,
@@ -445,7 +446,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                     _buildHeader(session),
 
                     // 3. VENUE MAILBOX (Carousel)
-                    if (venues.isNotEmpty)
+                    if (venues.isNotEmpty && session.calculationMode != 'Fixed')
                       _buildVenueCarousel(venues, session),
 
                     // 4. WINNER OVERLAY
@@ -826,6 +827,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
   }
 
   Widget _buildHeader(OutingSessionModel session) {
+    final isFixed = session.calculationMode == 'Fixed';
     return Positioned(
       top: 60,
       right: 20,
@@ -838,10 +840,10 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.radar_rounded, color: AppColors.teal, size: 18),
+            Icon(isFixed ? Icons.lock_rounded : Icons.radar_rounded, color: AppColors.teal, size: 18),
             const SizedBox(width: 8),
             Text(
-              "Discovery Room",
+              isFixed ? "Locked Journey" : "Discovery Room",
               style: GoogleFonts.outfit(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -1005,7 +1007,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                   child: Row(
                                     children: [
                                       Text(
-                                        p.name.split(' ')[0],
+                                        p.name.isNotEmpty ? p.name.split(' ')[0] : 'User',
                                         style: GoogleFonts.inter(
                                             fontSize: 11,
                                             color: AppColors.darkSlate,
