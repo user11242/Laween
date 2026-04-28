@@ -34,6 +34,7 @@ class OutingMessageBubble extends StatefulWidget {
 class _OutingMessageBubbleState extends State<OutingMessageBubble>
     with TickerProviderStateMixin {
   final OutingService _outingService = OutingService();
+  String? _cachedUserName;
 
   late AnimationController _pulseController;
   late AnimationController _rotateController;
@@ -62,6 +63,25 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() {});
     });
+    _fetchUserInfo();
+  }
+
+  void _fetchUserInfo() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    try {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        if (mounted) {
+          setState(() {
+            _cachedUserName = data['name'] ?? data['fullName'] ?? user.displayName;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching user info in bubble: $e");
+    }
   }
 
   @override
@@ -92,7 +112,7 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
           groupId: widget.groupId,
           sessionId: session.id,
           uid: user.uid,
-          name: user.displayName ?? "User",
+          name: _cachedUserName ?? user.displayName ?? "Me",
           photoUrl: user.photoURL,
           location: GeoPoint(pickedLocation.latitude, pickedLocation.longitude),
         );
@@ -157,144 +177,191 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
 
   Widget _buildCompactBubble(OutingSessionModel session, bool isWaiting, bool isCompleted, bool hasJoined) {
     final bool canAccess = !isCompleted || hasJoined;
+    final bool isCelebration = session.firstArrivedUid != null;
     
-    return GestureDetector(
-      onTap: () {
-        if (!canAccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Session closed. Only participants can view details.")),
-          );
-          return;
-        }
-        _joinAndShowRoom(context, session, hasJoined);
-      },
-      child: Container(
-        width: 260,
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFFE6E6),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.location_on_rounded,
-                    size: 24,
-                    color: Colors.red,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    "Outing Session",
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.black,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                if (isWaiting && !_remaining.isNegative) ...[
-                  Text(
-                    "Live",
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF4CAF50),
-                    ),
-                  ),
-                  Text(
-                    "  •  ",
-                    style: TextStyle(color: Colors.grey.shade400, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    "${_remaining.inMinutes}:${(_remaining.inSeconds % 60).toString().padLeft(2, '0')} min remaining",
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: Colors.grey.shade600,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ] else if (isCompleted) ...[
-                   Text(
-                    "Destination Locked",
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.teal,
-                    ),
-                  ),
-                ] else ...[
-                   Text(
-                    "Expired",
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey,
-                    ),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // Pulsing Golden Glow for Celebration
+        if (isCelebration)
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(32),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFFD700).withValues(alpha: 0.3),
+                    blurRadius: 30,
+                    spreadRadius: 5,
                   ),
                 ],
+              ),
+            ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+             .scale(begin: const Offset(1, 1), end: const Offset(1.05, 1.05), duration: 1500.ms)
+             .fadeIn(duration: 1500.ms),
+          ),
+
+        GestureDetector(
+          onTap: () {
+            if (!canAccess) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Session closed. Only participants can view details.")),
+              );
+              return;
+            }
+            _joinAndShowRoom(context, session, hasJoined);
+          },
+          child: Container(
+            width: 260,
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(28),
+              border: isCelebration ? Border.all(color: const Color(0xFFFFD700), width: 2) : null,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
               ],
             ),
-            const SizedBox(height: 12),
-            Divider(height: 1, color: Colors.grey.shade200),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: () {
-                  if (!canAccess) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Only participants can view details.")),
-                    );
-                    return;
-                  }
-                  _joinAndShowRoom(context, session, hasJoined);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.teal,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFFE6E6),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.location_on_rounded,
+                        size: 24,
+                        color: Colors.red,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        "Outing Session",
+                        style: GoogleFonts.inter(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.black,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                child: Text(
-                  isCompleted ? "Winner" : "Join",
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    if (isWaiting && !_remaining.isNegative) ...[
+                      Text(
+                        "Live",
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF4CAF50),
+                        ),
+                      ),
+                      Text(
+                        "  •  ",
+                        style: TextStyle(color: Colors.grey.shade400, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        "${_remaining.inMinutes}:${(_remaining.inSeconds % 60).toString().padLeft(2, '0')} min remaining",
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ] else if (isCompleted) ...[
+                       Text(
+                        "Destination Locked",
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.teal,
+                        ),
+                      ).animate(onPlay: (c) => c.repeat())
+                       .shimmer(duration: 2000.ms, color: Colors.white.withValues(alpha: 0.5)),
+                    ] else ...[
+                       Text(
+                        "Expired",
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-              ),
+                const SizedBox(height: 12),
+                Divider(height: 1, color: Colors.grey.shade200),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (!canAccess) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Only participants can view details.")),
+                        );
+                        return;
+                      }
+                      _joinAndShowRoom(context, session, hasJoined);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.teal,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                    ),
+                    child: Text(
+                      isCelebration ? "Celebrate!" : (isCompleted ? "Winner" : "Join"),
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ).animate(onPlay: (c) => isCelebration ? c.repeat() : c.stop())
+                   .shimmer(duration: isCelebration ? 1500.ms : 0.ms, color: Colors.white.withValues(alpha: 0.3)),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.9, 0.9));
+          ),
+        ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.9, 0.9)),
+
+        // Winner Crown Badge
+        if (isCelebration)
+          Positioned(
+            top: -5,
+            right: -5,
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFD700),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 8),
+                ],
+              ),
+              child: const Text("👑", style: TextStyle(fontSize: 18)),
+            ).animate(onPlay: (c) => c.repeat(reverse: true))
+             .scale(begin: const Offset(0.9, 0.9), end: const Offset(1.2, 1.2), duration: 800.ms),
+          ),
+      ],
+    );
   }
 }

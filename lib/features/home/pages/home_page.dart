@@ -3,10 +3,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/colors.dart';
 import 'package:laween/l10n/app_localizations.dart';
 import 'package:laween/features/groups/pages/groups_page.dart';
 import 'package:laween/features/profile/pages/profile_page.dart';
+import 'package:laween/features/groups/data/models/group_model.dart';
+import '../widgets/live_tracking_widget.dart';
+import '../widgets/recent_group_card.dart';
+import '../../groups/pages/create_group_page.dart';
+import '../../groups/pages/join_group_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -23,6 +29,24 @@ class _HomePageState extends State<HomePage> {
     final user = FirebaseAuth.instance.currentUser;
     final l10n = AppLocalizations.of(context)!;
 
+    Stream<int> unreadCountStream() {
+      if (user == null) return Stream.value(0);
+      return FirebaseFirestore.instance
+          .collection('groups')
+          .where('memberIds', arrayContains: user.uid)
+          .snapshots()
+          .map((snapshot) {
+            int total = 0;
+            for (var doc in snapshot.docs) {
+              final unreadCounts = doc.data()['unreadCounts'] as Map<String, dynamic>?;
+              if (unreadCounts != null) {
+                total += (unreadCounts[user.uid] as num? ?? 0).toInt();
+              }
+            }
+            return total;
+          });
+    }
+
     final List<Widget> pages = [
       _buildHomeContent(user),
       const GroupsPage(),
@@ -32,7 +56,10 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      body: pages[_currentIndex],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: pages,
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -70,7 +97,18 @@ class _HomePageState extends State<HomePage> {
               label: l10n.home,
             ),
             BottomNavigationBarItem(
-              icon: Icon(_currentIndex == 1 ? Icons.people : Icons.people_outline),
+              icon: StreamBuilder<int>(
+                stream: unreadCountStream(),
+                builder: (context, snapshot) {
+                  final count = snapshot.data ?? 0;
+                  return Badge(
+                    label: Text(count.toString()),
+                    isLabelVisible: count > 0,
+                    backgroundColor: Colors.redAccent,
+                    child: Icon(_currentIndex == 1 ? Icons.people : Icons.people_outline),
+                  );
+                }
+              ),
               label: l10n.groups,
             ),
             BottomNavigationBarItem(
@@ -89,103 +127,105 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildHomeContent(User? user) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            const Color(0xFFF1F5F9), // Slate 50
-            const Color(0xFFF8FAFC), // Slate 100
-            Colors.white,
-          ],
-        ),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF8F9FA), // Clean Light Background
       ),
       child: Stack(
         children: [
-          // Subtle accent bloobs/patterns
+          // 1. BLURRY ACCENT BLOBS (Premium "WOW")
           Positioned(
-            top: -100,
+            top: -50,
             right: -50,
             child: Container(
               width: 300,
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
+                color: const Color(0xFF6366F1).withValues(alpha: 0.08),
+              ),
+            ),
+          ).animate().fadeIn(duration: 2.seconds).scale(begin: const Offset(0.8, 0.8), curve: Curves.easeOutBack),
+          
+          Positioned(
+            top: 150,
+            left: -80,
+            child: Container(
+              width: 250,
+              height: 250,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
                 color: AppColors.teal.withValues(alpha: 0.05),
               ),
             ),
-          ).animate().fadeIn(duration: 2.seconds),
-          
+          ).animate().fadeIn(delay: 500.ms, duration: 2.seconds),
+
           SafeArea(
             child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-              
-              // 1. DYNAMIC HEADER
-              _buildModernHeader(user),
-              
-              const SizedBox(height: 25),
-              
-              // 2. GLASSMORPHIC SEARCH
-              _buildPremiumSearch(),
-              
-              const SizedBox(height: 32),
-              
-              // 3. QUICK ACTIONS CAROUSEL
-              Text(
-                "Quick Actions",
-                style: GoogleFonts.inter(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.darkSlate,
-                ),
-              ).animate().fadeIn(delay: 450.ms, duration: 600.ms).slideX(begin: -0.1, curve: Curves.easeOutCubic),
-              
-              const SizedBox(height: 16),
-              _buildActionCarousel(),
-              
-              const SizedBox(height: 32),
-              
-              // 4. LIVE ACTIVITY / FRIENDS SECTION
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const SizedBox(height: 20),
+                  
+                  // 2. MODERN HEADER (White text for dark mode)
+                  _buildModernHeader(user),
+                  
+                  const SizedBox(height: 32),
+                  
+                  // 3. LIVE TRACKING DISCOVERY (Careem Style)
+                  const LiveTrackingDashboardWidget(),
+                  
+                  // 4. QUICK ACTIONS GRID (2x2)
                   Text(
-                    "Friends Activity",
+                    "Quick Actions",
                     style: GoogleFonts.inter(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.darkSlate,
+                      color: AppColors.primary,
                     ),
-                  ),
-                  TextButton(
-                    onPressed: () {},
-                    child: Text(
-                      "See All",
-                      style: GoogleFonts.inter(
-                        color: AppColors.teal,
-                        fontWeight: FontWeight.w600,
+                  ).animate().fadeIn(delay: 200.ms).slideX(begin: -0.1),
+                  
+                  const SizedBox(height: 16),
+                  _buildQuickActionsGrid(),
+                  
+                  const SizedBox(height: 32),
+                  
+                  // 5. RECENTLY ACTIVE GROUPS
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Recently Active",
+                        style: GoogleFonts.inter(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
                       ),
-                    ),
-                  ),
+                      TextButton(
+                        onPressed: () => setState(() => _currentIndex = 1),
+                        child: Text(
+                          "See All",
+                          style: GoogleFonts.inter(
+                            color: AppColors.teal.withValues(alpha: 0.8),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ).animate().fadeIn(delay: 400.ms).slideX(begin: -0.05),
+                  
+                  const SizedBox(height: 8),
+                  _buildRecentlyActive(user),
+                  
+                  const SizedBox(height: 120),
                 ],
-              ).animate().fadeIn(delay: 700.ms, duration: 600.ms).slideX(begin: -0.05, curve: Curves.easeOutCubic),
-              
-              const SizedBox(height: 8),
-              _buildFriendsActivityList(user),
-              
-              const SizedBox(height: 120), // Space for bottom bar
-            ],
+              ),
+            ),
           ),
-        ),
+        ],
       ),
-    ],
-    ),
     );
   }
 
@@ -197,7 +237,7 @@ class _HomePageState extends State<HomePage> {
         String? photoUrl;
         if (snapshot.hasData && snapshot.data!.exists) {
           final data = snapshot.data!.data() as Map<String, dynamic>;
-          name = data['name'] ?? data['fullName'] ?? user?.displayName ?? "User";
+          name = data['name'] ?? data['fullName'] ?? user?.displayName ?? "Me";
           photoUrl = data['photoUrl'] ?? data['profilePic'];
         }
         
@@ -210,7 +250,7 @@ class _HomePageState extends State<HomePage> {
                   _getGreeting(),
                   style: GoogleFonts.inter(
                     fontSize: 14,
-                    color: Colors.grey.shade500,
+                    color: AppColors.slate,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -219,7 +259,7 @@ class _HomePageState extends State<HomePage> {
                   style: GoogleFonts.inter(
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.darkSlate,
+                    color: AppColors.primary,
                     letterSpacing: -0.5,
                   ),
                 ),
@@ -229,22 +269,25 @@ class _HomePageState extends State<HomePage> {
             Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.teal.withValues(alpha: 0.1), width: 2),
+                border: Border.all(color: AppColors.slate.withValues(alpha: 0.1), width: 2),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.teal.withValues(alpha: 0.1),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
-                    spreadRadius: 2,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              child: CircleAvatar(
-                radius: 26,
-                backgroundColor: Colors.white,
-                backgroundImage: (photoUrl != null && photoUrl.startsWith('http')) ? NetworkImage(photoUrl) : null,
-                child: (photoUrl == null || !photoUrl.startsWith('http'))
-                    ? Icon(Icons.person, color: AppColors.teal.withValues(alpha: 0.5), size: 30)
-                    : null,
+              child: GestureDetector(
+                onTap: () => setState(() => _currentIndex = 3),
+                child: CircleAvatar(
+                  radius: 26,
+                  backgroundColor: AppColors.lightSlate,
+                  backgroundImage: (photoUrl != null && photoUrl.startsWith('http')) ? CachedNetworkImageProvider(photoUrl) : null,
+                  child: (photoUrl == null || !photoUrl.startsWith('http'))
+                      ? const Icon(Icons.person, color: AppColors.slate, size: 30)
+                      : null,
+                ),
               ),
             ).animate().scale(delay: 200.ms),
           ],
@@ -260,246 +303,129 @@ class _HomePageState extends State<HomePage> {
     return "Good Evening";
   }
 
-  Widget _buildPremiumSearch() {
-    return Container(
-      height: 56,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-          BoxShadow(
-            color: AppColors.teal.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(color: Colors.white, width: 1.5),
-      ),
-      child: TextField(
-        decoration: InputDecoration(
-          hintText: "Search for friends or groups...",
-          hintStyle: GoogleFonts.inter(color: Colors.grey.shade400, fontSize: 14),
-          prefixIcon: Icon(Icons.search_rounded, color: AppColors.teal.withValues(alpha: 0.6)),
-          suffixIcon: Container(
-            margin: const EdgeInsets.all(8),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.teal.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(Icons.tune_rounded, color: AppColors.teal, size: 18),
-          ),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 18),
-        ),
-      ),
-    ).animate().fadeIn(delay: 300.ms, duration: 600.ms).slideY(begin: 0.2, curve: Curves.easeOutCubic);
-  }
-
-  Widget _buildActionCarousel() {
+  Widget _buildQuickActionsGrid() {
     final List<Map<String, dynamic>> actions = [
       {
-        "title": "Find Midpoint",
-        "icon": Icons.location_on_rounded,
+        "title": "Create Group",
+        "icon": Icons.add_circle_outline_rounded,
+        "color": const Color(0xFF6366F1), // Indigo
+        "onTap": () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const CreateGroupPage()));
+        },
+      },
+      {
+        "title": "Join Group",
+        "icon": Icons.qr_code_scanner_rounded,
         "color": AppColors.teal,
-        "desc": "Meet halfway fairly",
+        "onTap": () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const JoinGroupPage()));
+        },
       },
       {
-        "title": "Groups",
-        "icon": Icons.groups_rounded,
-        "color": const Color(0xFF6366F1),
-        "desc": "3 active sessions",
-      },
-      {
-        "title": "Radar",
+        "title": "Nearby Radar",
         "icon": Icons.radar_rounded,
         "color": const Color(0xFFF59E0B),
-        "desc": "Friends nearby",
+        "onTap": () {},
+      },
+      {
+        "title": "Global Search",
+        "icon": Icons.search_rounded,
+        "color": const Color(0xFFEC4899),
+        "onTap": () {},
       },
     ];
 
-    return SizedBox(
-      height: 160,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: actions.length,
-        itemBuilder: (context, index) {
-          final action = actions[index];
-          return Container(
-            width: 140,
-            margin: const EdgeInsets.only(right: 16),
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        childAspectRatio: 1.4,
+      ),
+      itemCount: actions.length,
+      itemBuilder: (context, index) {
+        final action = actions[index];
+        return GestureDetector(
+          onTap: action['onTap'],
+          child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(28),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: AppColors.slate.withValues(alpha: 0.1), width: 1),
               boxShadow: [
                 BoxShadow(
-                  color: (action['color'] as Color).withValues(alpha: 0.12),
-                  blurRadius: 24,
-                  offset: const Offset(0, 12),
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.02),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
                 ),
               ],
-              border: Border.all(color: Colors.white, width: 2),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: (action['color'] as Color).withValues(alpha: 0.1),
+                    color: (action['color'] as Color).withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(action['icon'] as IconData, color: action['color'] as Color, size: 24),
+                  child: Icon(action['icon'] as IconData, color: action['color'] as Color, size: 22),
                 ),
-                const Spacer(),
                 Text(
                   action['title'] as String,
                   style: GoogleFonts.inter(
                     fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: AppColors.darkSlate,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  action['desc'] as String,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: Colors.grey.shade500,
+                    fontSize: 14,
+                    color: AppColors.primary,
                   ),
                 ),
               ],
             ),
-          ).animate().fadeIn(delay: (500 + (index * 100)).ms).slideX(begin: 0.2);
-        },
-      ),
-    );
-  }
-
-  Widget _buildFriendsActivityList(User? user) {
-    // Dummy stream for now to simulate real activity
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('users').limit(5).snapshots(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) return const SizedBox();
-        final friends = snapshot.data!.docs;
-        
-        return Column(
-          children: friends.map((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            if (doc.id == user?.uid) return const SizedBox();
-            
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.shade100),
-              ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    backgroundImage: (data['photoUrl'] != null) ? NetworkImage(data['photoUrl']) : null,
-                    radius: 20,
-                    backgroundColor: AppColors.teal.withValues(alpha: 0.1),
-                    child: data['photoUrl'] == null ? const Icon(Icons.person, size: 20) : null,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          data['name'] ?? "Friend",
-                          style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 14),
-                        ),
-                        Text(
-                          "Active in 'Coffee Run'",
-                          style: GoogleFonts.inter(fontSize: 12, color: Colors.grey.shade500),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const _PulsingStatusDot(),
-                ],
-              ),
-            ).animate().fadeIn(delay: (800 + (friends.indexOf(doc) * 100)).ms).slideY(begin: 0.1);
-          }).toList(),
-        );
+          ),
+        ).animate().fadeIn(delay: (300 + (index * 50)).ms).slideY(begin: 0.1);
       },
     );
   }
-}
 
-class _PulsingStatusDot extends StatefulWidget {
-  const _PulsingStatusDot();
+  Widget _buildRecentlyActive(User? user) {
+    if (user == null) return const SizedBox.shrink();
 
-  @override
-  State<_PulsingStatusDot> createState() => _PulsingStatusDotState();
-}
-
-class _PulsingStatusDotState extends State<_PulsingStatusDot> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Container(
-          width: 20,
-          height: 20,
-          alignment: Alignment.center,
-          child: Stack(
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('groups')
+          .where('memberIds', arrayContains: user.uid)
+          .orderBy('lastMessageTime', descending: true)
+          .limit(3)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return Container(
+            padding: const EdgeInsets.symmetric(vertical: 40),
             alignment: Alignment.center,
-            children: [
-              Container(
-                width: 8 + (12 * _controller.value),
-                height: 8 + (12 * _controller.value),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 1 - _controller.value),
-                  shape: BoxShape.circle,
+            child: Column(
+              children: [
+                Icon(Icons.chat_bubble_outline_rounded, size: 48, color: AppColors.slate.withValues(alpha: 0.3)),
+                const SizedBox(height: 12),
+                Text(
+                  "No recent activity",
+                  style: GoogleFonts.inter(color: AppColors.slate),
                 ),
-              ),
-              Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF10B981),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ],
-          ),
-        );
+              ],
+            ),
+          );
+        }
+
+        final groups = snapshot.data!.docs;
+        return Column(
+          children: groups.map((doc) {
+            final group = GroupModel.fromMap(doc.data() as Map<String, dynamic>);
+            return RecentGroupCard(group: group);
+          }).toList(),
+        ).animate().fadeIn(delay: 500.ms);
       },
     );
   }

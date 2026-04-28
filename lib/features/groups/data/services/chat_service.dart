@@ -14,6 +14,11 @@ class ChatService {
     String? senderPhotoUrl,
     required String text,
     String type = 'text',
+    List<String> mediaUrls = const [],
+    String? replyToId,
+    String? replyToText,
+    String? replyToSenderId,
+    String? replyToSenderName,
   }) async {
     final messageRef = _firestore
         .collection('groups')
@@ -28,7 +33,12 @@ class ChatService {
       senderPhotoUrl: senderPhotoUrl,
       text: text,
       timestamp: DateTime.now(),
+      mediaUrls: mediaUrls,
       type: type,
+      replyToId: replyToId,
+      replyToText: replyToText,
+      replyToSenderId: replyToSenderId,
+      replyToSenderName: replyToSenderName,
     );
 
     await messageRef.set(message.toMap());
@@ -78,6 +88,21 @@ class ChatService {
         .child('groups')
         .child(groupId)
         .child('messages')
+        .child(fileName);
+
+    final uploadTask = storageRef.putFile(file);
+    final snapshot = await uploadTask.whenComplete(() => null);
+    return await snapshot.ref.getDownloadURL();
+  }
+
+  // Upload audio to Firebase Storage
+  Future<String> uploadAudio(File file, String groupId) async {
+    final fileName = '${DateTime.now().millisecondsSinceEpoch}.m4a';
+    final storageRef = FirebaseStorage.instance
+        .ref()
+        .child('groups')
+        .child(groupId)
+        .child('voice_notes')
         .child(fileName);
 
     final uploadTask = storageRef.putFile(file);
@@ -171,6 +196,21 @@ class ChatService {
     final docRef = _firestore.collection('groups').doc(groupId).collection('messages').doc(messageId);
     await docRef.update({
       'readBy': FieldValue.arrayUnion([uid]),
+    });
+  }
+
+  // setTypingStatus
+  Future<void> setTypingStatus(String groupId, String userId, bool isTyping, {String? userName}) async {
+    await _firestore.collection('groups').doc(groupId).update({
+      'typingUsers.$userId': isTyping ? {
+        'isTyping': true,
+        'userName': userName ?? 'Someone',
+        'timestamp': FieldValue.serverTimestamp(),
+      } : {
+        'isTyping': false,
+        'userName': userName ?? 'Someone',
+        'timestamp': FieldValue.serverTimestamp(),
+      },
     });
   }
 

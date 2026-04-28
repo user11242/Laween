@@ -11,13 +11,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:geolocator_apple/geolocator_apple.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/theme/colors.dart';
 import '../data/models/outing_session_model.dart';
 import 'outing_tracking_screen.dart';
 import '../data/services/outing_service.dart';
+import '../../../core/services/location_service.dart';
 
 class OutingMapScreen extends StatefulWidget {
   final String groupId;
@@ -43,7 +41,6 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
   bool _isDisposed = false;
   final bool _isTrackingMode = false;
   bool _showWinnerDetails = true;
-  StreamSubscription<Position>? _positionSubscription;
   DateTime? _lastLocationUpdate;
 
   // Premium Map Style (Electric Midnight / High Contrast)
@@ -144,50 +141,16 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
   @override
   void dispose() {
     _isDisposed = true;
-    _stopLiveTracking();
     _pageController.dispose();
     super.dispose();
   }
 
-  void _startLiveTracking() async {
-    if (_positionSubscription != null) return;
-
-    // 1. Check Permissions
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return;
+  void _startLiveTracking() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      LocationService().setActiveSession(widget.groupId, widget.sessionId);
+      LocationService().startTracking(uid);
     }
-    if (permission == LocationPermission.deniedForever) return;
-
-    // 2. Listen to Location Stream
-    _positionSubscription = Geolocator.getPositionStream(
-      locationSettings: AppleSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 20,
-        pauseLocationUpdatesAutomatically: false,
-        showBackgroundLocationIndicator: true,
-      ),
-    ).listen((Position position) {
-      if (_isDisposed) return;
-
-      // Throttle updates to every 5 seconds to save battery/Firestore writes
-      final now = DateTime.now();
-      if (_lastLocationUpdate == null || now.difference(_lastLocationUpdate!).inSeconds >= 5) {
-        _lastLocationUpdate = now;
-        _outingService.updateParticipantLocation(
-          groupId: widget.groupId,
-          sessionId: widget.sessionId,
-          uid: FirebaseAuth.instance.currentUser?.uid ?? "",
-          location: GeoPoint(position.latitude, position.longitude),
-        );
-      }
-    });
-  }
-
-  void _stopLiveTracking() {
-    _positionSubscription?.cancel();
-    _positionSubscription = null;
   }
 
   Future<BitmapDescriptor> _getAvatarIcon(String name, int index) async {
@@ -209,7 +172,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
 
     // Outer glow
     final glowPaint = Paint()
-      ..color = AppColors.teal.withOpacity(0.5)
+      ..color = AppColors.teal.withValues(alpha: 0.5)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
     canvas.drawCircle(const Offset(radius, radius), radius - 10, glowPaint);
 
@@ -479,7 +442,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.15),
+                color: Colors.black.withValues(alpha: 0.15),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               )
@@ -490,7 +453,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.teal.withOpacity(0.1),
+                  color: AppColors.teal.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.celebration_rounded, color: AppColors.teal, size: 20),
@@ -546,7 +509,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.teal.withOpacity(0.2),
+                    color: AppColors.teal.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.emoji_events_rounded, color: Colors.amber, size: 24),
@@ -598,7 +561,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                 end: Alignment.bottomCenter,
                                 colors: [
                                   Colors.transparent,
-                                  Colors.black.withOpacity(0.7),
+                                  Colors.black.withValues(alpha: 0.7),
                                 ],
                               ),
                             ),
@@ -672,7 +635,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                           border: Border.all(color: Colors.grey.shade100),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -747,7 +710,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 20,
                   offset: const Offset(0, -5),
                 ),
@@ -758,28 +721,29 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
               children: [
                 SizedBox(
                   width: double.infinity,
+                  // 5. TRACK FRIENDS BUTTON
                   child: OutlinedButton.icon(
-                    icon: const Icon(Icons.person_pin_circle_outlined, size: 18),
                     onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => OutingTrackingScreen(
+                          builder: (context) => OutingTrackingScreen(
                             groupId: widget.groupId,
                             sessionId: widget.sessionId,
                           ),
                         ),
                       );
                     },
+                    icon: const Icon(Icons.location_history_rounded, size: 18),
+                    label: Text(
+                      "LOCATE FRIENDS",
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                    ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.teal,
                       side: const BorderSide(color: AppColors.teal, width: 2),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    ),
-                    label: Text(
-                      "TRACK FRIENDS' JOURNEY",
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -834,9 +798,9 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: AppColors.darkSlate.withOpacity(0.9),
+          color: AppColors.darkSlate.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: Row(
           children: [
@@ -901,7 +865,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 25,
             offset: const Offset(0, 10),
           ),
@@ -1077,7 +1041,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: hasVoted ? AppColors.teal.withOpacity(0.1) : AppColors.teal,
+          color: hasVoted ? AppColors.teal.withValues(alpha: 0.1) : AppColors.teal,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.teal),
         ),

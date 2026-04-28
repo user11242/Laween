@@ -1,7 +1,6 @@
 // lib/features/groups/pages/outing_tracking_screen.dart
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:ui' as ui;
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -9,10 +8,11 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/theme/colors.dart';
-import 'package:live_activities/live_activities.dart';
 import '../data/models/outing_session_model.dart';
 import '../data/services/outing_service.dart';
+import '../../../core/services/location_service.dart';
 
 class OutingTrackingScreen extends StatefulWidget {
   final String groupId;
@@ -38,27 +38,19 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
   bool _hasInitialFit = false;
   bool _shouldFollow = true; // User can toggle this behavior
 
-  final _liveActivitiesPlugin = LiveActivities();
-  String? _activityId;
-  String? _lastParticipantsJson;
-  final Map<String, double> _startDistances = {};
-
   @override
   void initState() {
     super.initState();
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null) {
-      _outingService.startLiveTracking(widget.groupId, widget.sessionId, uid);
+      LocationService().setActiveSession(widget.groupId, widget.sessionId);
+      LocationService().startTracking(uid);
     }
   }
 
   @override
   void dispose() {
     _isDisposed = true;
-    _outingService.stopLiveTracking(); 
-    if (_activityId != null) {
-      _liveActivitiesPlugin.endActivity(_activityId!);
-    }
     super.dispose();
   }
 
@@ -183,6 +175,27 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
       if (!_hasInitialFit || _shouldFollow) {
         _fitBounds();
         _hasInitialFit = true;
+      }
+    }
+
+    // 3. Detect First Arrival
+    if (session.firstArrivedUid == null) {
+      final myUid = FirebaseAuth.instance.currentUser?.uid;
+      final me = session.participants.firstWhere((p) => p.uid == myUid, 
+          orElse: () => session.participants.first); // Fallback to avoid error
+      
+      if (me.location != null && winner != null && winner['location'] != null) {
+        final loc = winner['location'];
+        final vLat = (loc['latitude'] as num).toDouble();
+        final vLng = (loc['longitude'] as num).toDouble();
+        
+        final dist = double.parse(_calculateDistance(
+          me.location!.latitude, me.location!.longitude, vLat, vLng
+        ));
+        
+        if (dist <= 0.1) { // 100 meters
+          _outingService.recordFirstArrival(widget.groupId, session.id, myUid ?? '');
+        }
       }
     }
   }
@@ -332,6 +345,9 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
 
               // --- 3. DYNAMIC ETA BOARD ---
               _buildETASheet(session, winner),
+
+              // --- 4. PRIVACY PILL ---
+              _buildPrivacyPill(),
             ],
           );
         },
@@ -453,94 +469,71 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
     );
   }
 
-  void _syncLiveActivity(OutingSessionModel session, Map<String, dynamic>? winner) async {
-    if (winner == null || winner['location'] == null) return;
+  Widget _buildPrivacyPill() {
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
+    if (uid == null) return const SizedBox();
 
-    if (session.participants.isEmpty) return;
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const SizedBox();
+        
+        final data = snapshot.data!.data() as Map<String, dynamic>?;
+        final isGhost = data?['isGhostMode'] ?? true;
+        final isActive = data?['isTrackingActive'] ?? false;
 
-    // 1. Calculate all participant stats
-    int maxEta = 0;
-    final participantsList = session.participants.where((p) => p.location != null).map((p) {
-      final pDistStr = _calculateDistance(
-        p.location!.latitude,
-        p.location!.longitude,
-        (winner['location']['latitude'] as num).toDouble(),
-        (winner['location']['longitude'] as num).toDouble(),
-      );
-      final pDist = double.tryParse(pDistStr) ?? 0.0;
-      final isMe = p.uid == uid;
-      
-      final pEtaInt = int.tryParse(_estimateTime(pDist)) ?? 0;
-      if (pEtaInt > maxEta) maxEta = pEtaInt;
+        if (!isActive) return const SizedBox();
 
-      // --- RELATIVE JOURNEY PROGRESS ---
-      double progress = 0.0;
-      if (p.startLocation != null) {
-        final totalDist = double.tryParse(_calculateDistance(
-          p.startLocation!.latitude,
-          p.startLocation!.longitude,
-          (winner['location']['latitude'] as num).toDouble(),
-          (winner['location']['longitude'] as num).toDouble(),
-        )) ?? 0.0;
+        return Positioned(
+          top: 130, // Below the back button
+          left: 20,
+          child: GestureDetector(
+            onTap: () => LocationService().updatePrivacy(uid, !isGhost),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: isGhost ? AppColors.darkSlate.withValues(alpha: 0.8) : AppColors.teal.withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+                border: Border.all(
+                  color: isGhost ? Colors.white.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isGhost ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    isGhost ? "PRIVATE (GHOST)" : "SHARING LOCATION",
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ).animate().fadeIn().slideX(begin: -0.2),
+        );
+      },
+    );
+  }
 
-        if (totalDist > 0.05) { // 50m minimum for slider
-          progress = (1.0 - (pDist / totalDist)).clamp(0.0, 1.0);
-        } else {
-          progress = 1.0;
-        }
-      } else {
-        // Fallback for old sessions or missing data
-        progress = (1.0 - (pDist / 10.0)).clamp(0.0, 1.0);
-      }
-
-      return {
-        'name': isMe ? "You" : p.name,
-        'initial': (p.name.isNotEmpty ? p.name[0] : "?").toUpperCase(),
-        'photoUrl': p.photoUrl ?? "",
-        'eta': pEtaInt.toString(),
-        'dist': "$pDistStr km",
-        'progress': progress,
-        'isMe': isMe,
-      };
-    }).toList();
-
-    // 2. Sort and take top 3 by proximity
-    participantsList.sort((a, b) => (b['progress'] as double).compareTo(a['progress'] as double));
-    final topParticipants = participantsList.take(3).toList();
-
-    // 3. Serialize and check for changes
-    final participantsJson = jsonEncode({
-      'list': topParticipants,
-      'groupEta': maxEta.toString(),
-    });
-
-    if (_lastParticipantsJson == participantsJson) return;
-    _lastParticipantsJson = participantsJson;
-
-    // 4. Update or Create Activity
-    final payload = {
-      'participants': participantsJson,
-      'destinationName': winner['name'] ?? 'Destination'
-    };
-
-    if (_activityId == null) {
-      try {
-        _liveActivitiesPlugin.init(appGroupId: "group.laween");
-        _activityId = await _liveActivitiesPlugin.createActivity("laween_tracking", payload);
-        debugPrint("Live Activity Created: $_activityId");
-      } catch (e) {
-        debugPrint("Live Activity Creation Error: $e");
-      }
-    } else {
-      try {
-        await _liveActivitiesPlugin.updateActivity(_activityId!, payload);
-        debugPrint("Live Activity Updated");
-      } catch (e) {
-        debugPrint("Live Activity Update Error: $e");
-      }
-    }
+  void _syncLiveActivity(OutingSessionModel session, Map<String, dynamic>? winner) async {
+    _outingService.syncLiveActivity(session);
   }
 
   Widget _buildMapControl({required IconData icon, Color color = AppColors.darkSlate, required VoidCallback onTap}) {

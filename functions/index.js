@@ -3,142 +3,135 @@ const admin = require("firebase-admin");
 admin.initializeApp();
 
 /**
- * 1. WhatsApp-Style Chat Notifications
- * Triggered when a new document is created in groups/{groupId}/messages/{messageId}
+ * Helper to send a high-priority notification to a group topic
+ * This is the "ROOT FIX" for TestFlight reliability as it bypasses manual token management
+ * and handles Sandbox/Production routing automatically via the topic subscription.
+ */
+async function sendGroupNotification(groupId, senderId, titlePrefix, body, data = {}) {
+  try {
+    const groupDoc = await admin.firestore().collection("groups").doc(groupId).get();
+    if (!groupDoc.exists) return;
+    
+    const groupData = groupDoc.data();
+    const groupName = groupData.name || "Group";
+    
+    // We send to the topic: group_{groupId}
+    const topic = `group_${groupId}`;
+
+    const message = {
+      notification: { 
+        title: `${groupName}: ${titlePrefix}`, 
+        body: body 
+      },
+      data: {
+        ...data,
+        groupId: groupId,
+        senderId: senderId || "",
+      },
+      topic: topic,
+      android: {
+        priority: 'high',
+        notification: {
+          channelId: 'chat_messages',
+          sound: 'default'
+        }
+      },
+      apns: {
+        payload: {
+          aps: {
+            sound: 'default',
+            badge: 1,
+            alert: {
+                title: `${groupName}: ${titlePrefix}`,
+                body: body
+            }
+          }
+        }
+      }
+    };
+
+    const response = await admin.messaging().send(message);
+    console.log(`Successfully sent topic message to ${topic}:`, response);
+  } catch (error) {
+    console.error(`Error in sendGroupNotification (Topic):`, error);
+  }
+}
+
+/**
+ * 1. Chat Notifications (Handles Chat, Outing Starts, etc.)
  */
 exports.onMessageSent = functions.firestore
   .document("groups/{groupId}/messages/{messageId}")
   .onCreate(async (snap, context) => {
     const messageData = snap.data();
     const groupId = context.params.groupId;
-
-    const senderId = messageData.senderId;
     const senderName = messageData.senderName || "Someone";
-    const text = messageData.text;
+    const senderId = messageData.senderId;
+    
+    let body = messageData.text;
+    if (messageData.type === 'image') body = "📷 Photo";
+    if (messageData.type === 'location') body = "📍 Shared a location";
+    if (messageData.type === 'outing') body = "🚀 New Outing Started! Join the journey.";
 
-    // 1. Get the group document to find all participants
-    const groupRef = admin.firestore().collection("groups").doc(groupId);
-    const groupDoc = await groupRef.get();
+    return sendGroupNotification(
+      groupId, 
+      senderId, 
+      senderName, 
+      body, 
+      { type: "chat_message", groupId: groupId }
+    );
+  });
 
-    if (!groupDoc.exists) return null;
+/**
+ * 2. New Member Joins
+ */
+exports.onMemberJoined = functions.firestore
+  .document("groups/{groupId}")
+  .onUpdate(async (change, context) => {
+    const before = change.before.data().memberIds || [];
+    const after = change.after.data().memberIds || [];
+    const groupId = context.params.groupId;
 
-    const groupData = groupDoc.data();
-    const groupName = groupData.name || "A Group";
-    const members = groupData.members || [];
+    if (after.length > before.length) {
+      const newMemberId = after.find(id => !before.includes(id));
+      if (!newMemberId) return null;
 
-    // 2. Filter out the sender so they don't get their own notification
-    const receiverIds = members.filter((uid) => uid !== senderId);
-    if (receiverIds.length === 0) return null;
+      const userDoc = await admin.firestore().collection("users").doc(newMemberId).get();
+      const userName = userDoc.exists ? (userDoc.data().name || "A new member") : "A new member";
 
-    // 3. Fetch fcmTokens for all receivers
-    const tokens = [];
-    for (const uid of receiverIds) {
-      const userDoc = await admin.firestore().collection("users").doc(uid).get();
-      if (userDoc.exists) {
-        const token = userDoc.data().fcmToken;
-        if (token) tokens.push(token);
-      }
-    }
-
-    if (tokens.length === 0) {
-      console.log("No valid FCM tokens found for receivers.");
-      return null;
-    }
-
-    // 4. Build the Push Notification Payload
-    const payload = {
-      notification: {
-        title: `${senderName} (${groupName})`,
-        body: text,
-      },
-      data: {
-        type: "chat_message",
-        groupId: groupId,
-      },
-      tokens: tokens,
-    };
-
-    // 5. Blast to all tokens
-    try {
-      const response = await admin.messaging().sendMulticast(payload);
-      console.log(`Successfully sent ${response.successCount} chat messages.`);
-    } catch (error) {
-      console.error("Error sending chat notification:", error);
+      return sendGroupNotification(
+        groupId,
+        null, // No single "sender" to exclude, everyone should see it
+        "New Member! 🙌",
+        `${userName} just joined the group.`
+      );
     }
     return null;
   });
 
 /**
- * 2. Careem-Style Outing Notifications
- * Triggered when groups/{groupId}/outings/{outingId} changes status to 'completed'
+ * 3. Outing Milestone: First Arrival
  */
-exports.onOutingStatusChanged = functions.firestore
+exports.onFirstArrival = functions.firestore
   .document("groups/{groupId}/outings/{outingId}")
   .onUpdate(async (change, context) => {
-    const beforeData = change.before.data();
-    const afterData = change.after.data();
+    const before = change.before.data();
+    const after = change.after.data();
+    const groupId = context.params.groupId;
 
-    // Check if status changed TO 'completed' (Meaning Winner was decided)
-    if (beforeData.status !== "completed" && afterData.status === "completed") {
-      const groupId = context.params.groupId;
-      const winner = afterData.winner?.name || "The Destination";
-      const participants = afterData.participants || [];
+    if (!before.firstArrivedUid && after.firstArrivedUid) {
+      const userDoc = await admin.firestore().collection("users").doc(after.firstArrivedUid).get();
+      const userName = userDoc.exists ? userDoc.data().name : "A friend";
 
-      // Extract all UIDs of people who joined the outing
-      const uids = participants.map(p => p.uid);
-      if (uids.length === 0) return null;
-
-      // Fetch tokens
-      const tokens = [];
-      for (const uid of uids) {
-        const userDoc = await admin.firestore().collection("users").doc(uid).get();
-        if (userDoc.exists) {
-          const token = userDoc.data().fcmToken;
-          if (token) tokens.push(token);
-        }
-      }
-
-      if (tokens.length === 0) return null;
-
-      const payload = {
-        notification: {
-          title: "🚀 Let's Go!",
-          body: `We have a winner: ${winner}. Everyone is on the map. Start driving!`,
-        },
-        data: {
-          type: "outing_started",
-          groupId: groupId,
-          outingId: context.params.outingId,
-        },
-        tokens: tokens,
-      };
-
-      try {
-        const response = await admin.messaging().sendMulticast(payload);
-        console.log(`Successfully sent ${response.successCount} tracking alerts.`);
-      } catch (error) {
-        console.error("Error sending outing alert:", error);
-      }
+      return sendGroupNotification(
+        groupId,
+        null, // Everyone gets congratulated
+        "🎉 First Arrival!",
+        `${userName} has reached the destination!`
+      );
     }
     return null;
   });
 
-/**
- * 3. Pre-existing helper function: getUserProviders
- */
-exports.getUserProviders = functions.https.onCall(async (data, context) => {
-  const email = data.email;
-  if (!email) {
-    throw new functions.https.HttpsError("invalid-argument", "The function must be called with an 'email' argument.");
-  }
-  try {
-    const userRecord = await admin.auth().getUserByEmail(email);
-    const providers = userRecord.providerData.map(userInfo => userInfo.providerId);
-    return { providers: providers };
-  } catch (error) {
-    if (error.code === "auth/user-not-found") {
-      return { providers: [] };
-    }
-    throw new functions.https.HttpsError("internal", "Error fetching user providers.");
-  }
-});
+// NOTE: onOutingCreated is removed to avoid duplicates, 
+// as onMessageSent already notifies about the outing message.

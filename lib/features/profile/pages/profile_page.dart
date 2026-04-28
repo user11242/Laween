@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:laween/features/auth/data/services/auth_service.dart';
 import '../../../core/theme/colors.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -111,7 +112,9 @@ class ProfilePage extends StatelessWidget {
                             child: CircleAvatar(
                               radius: 55,
                               backgroundColor: AppColors.teal.withValues(alpha: 0.1),
-                              backgroundImage: (photoUrl != null && photoUrl.startsWith('http')) ? NetworkImage(photoUrl) : null,
+                              backgroundImage: (photoUrl != null && photoUrl.startsWith('http')) 
+                                  ? CachedNetworkImageProvider(photoUrl) 
+                                  : null,
                               child: (photoUrl?.startsWith('http') != true)
                                   ? Icon(
                                       Icons.person,

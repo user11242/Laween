@@ -1,15 +1,39 @@
-// lib/core/services/location_service.dart
-
+import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../features/groups/data/services/outing_service.dart';
 
 class LocationService {
+  static final LocationService _instance = LocationService._internal();
+  factory LocationService() => _instance;
+  LocationService._internal();
+
+  StreamSubscription<Position>? _positionSubscription;
+
+  String? _activeGroupId;
+  String? _activeSessionId;
+
+  /// Update the active session for group-level tracking updates
+  Future<void> setActiveSession(String? groupId, String? sessionId) async {
+    _activeGroupId = groupId;
+    _activeSessionId = sessionId;
+    
+    // Persist to user document for Home Page stability
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      await FirebaseFirestore.instance.collection('users').doc(uid).update({
+        'activeGroupId': groupId ?? '',
+        'activeSessionId': sessionId ?? '',
+      });
+    }
+  }
+
   /// Request permissions and get current position
   Future<Position?> getCurrentPosition() async {
     bool serviceEnabled;
     LocationPermission permission;
 
-    // Test if location services are enabled.
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       return Future.error('Location services are disabled.');
@@ -27,14 +51,82 @@ class LocationService {
       return Future.error('Location permissions are permanently denied, we cannot request permissions.');
     } 
 
-    // When we reach here, permissions are granted and we can
-    // continue accessing the position of the device.
     return await Geolocator.getCurrentPosition(
       locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
     );
   }
 
-  /// Convert Position to Firestore GeoPoint
+  /// Start persistent background tracking
+  Future<void> startTracking(String userId) async {
+    if (_positionSubscription != null) return;
+    // 1. Ensure permissions (Request 'Always' for true background)
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission != LocationPermission.always) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    // 2. Cancel existing if any
+    await stopTracking(userId);
+
+    // 3. Mark as active in Firestore & Default to Ghost Mode
+    await FirebaseFirestore.instance.collection('users').doc(userId).update({
+      'isTrackingActive': true,
+      'isGhostMode': true, // Privacy by default
+    });
+
+    // 4. Start Position Stream
+    final locationSettings = AppleSettings(
+      accuracy: LocationAccuracy.best,
+      distanceFilter: 10,
+      pauseLocationUpdatesAutomatically: false,
+      showBackgroundLocationIndicator: true,
+    );
+    
+    _positionSubscription = Geolocator.getPositionStream(
+      locationSettings: locationSettings,
+    ).listen((Position position) {
+      final loc = GeoPoint(position.latitude, position.longitude);
+      
+      // 1. Update User Document
+      FirebaseFirestore.instance.collection('users').doc(userId).update({
+        'location': loc,
+        'lastLocationUpdate': FieldValue.serverTimestamp(),
+      });
+
+      // 2. Update Active Group Session (Persistent Background Sync)
+      if (_activeGroupId != null && _activeSessionId != null) {
+        OutingService().updateParticipantLocation(
+          groupId: _activeGroupId!,
+          sessionId: _activeSessionId!,
+          uid: userId,
+          location: loc,
+        );
+      }
+    });
+  }
+
+  /// Stop tracking
+  Future<void> stopTracking(String userId) async {
+    await _positionSubscription?.cancel();
+    _positionSubscription = null;
+    
+    await FirebaseFirestore.instance.collection('users').doc(userId).update({
+      'isTrackingActive': false,
+      'activeGroupId': '',
+      'activeSessionId': '',
+    });
+    
+    _activeGroupId = null;
+    _activeSessionId = null;
+  }
+
+  /// Toggle Ghost Mode
+  Future<void> updatePrivacy(String userId, bool isGhostMode) async {
+    await FirebaseFirestore.instance.collection('users').doc(userId).update({
+      'isGhostMode': isGhostMode,
+    });
+  }
+
   GeoPoint positionToGeoPoint(Position position) {
     return GeoPoint(position.latitude, position.longitude);
   }

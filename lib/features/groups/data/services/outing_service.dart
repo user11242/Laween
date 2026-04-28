@@ -3,17 +3,26 @@
 import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:async';
-import 'package:geolocator/geolocator.dart';
-import 'package:geolocator_apple/geolocator_apple.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:live_activities/live_activities.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
 import '../models/outing_session_model.dart';
 import '../models/message_model.dart';
 
 class OutingService {
+  static final OutingService _instance = OutingService._internal();
+  factory OutingService() => _instance;
+  OutingService._internal();
+
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  StreamSubscription<Position>? _positionStream;
+  final LiveActivities _liveActivitiesPlugin = LiveActivities();
+  String? _activityId;
+  String? _lastParticipantsJson;
 
   // Create a direct outing session to a specific place
   Future<String> createDirectSession({
@@ -228,43 +237,8 @@ class OutingService {
     });
   }
 
-  // Live GPS Telemetry Broadcaster (Legacy/Background)
-  // Note: Most tracking is now handled via updateParticipantLocation from Screens
-  // to avoid redundant streams and document contention.
-  Future<void> startLiveTracking(String groupId, String sessionId, String uid) async {
-    stopLiveTracking();
-    
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return;
-
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return;
-    }
-    if (permission == LocationPermission.deniedForever) return;
-
-    _positionStream = Geolocator.getPositionStream(
-      locationSettings: AppleSettings(
-        accuracy: LocationAccuracy.medium,
-        distanceFilter: 30,
-        pauseLocationUpdatesAutomatically: false,
-        showBackgroundLocationIndicator: true,
-      ),
-    ).listen((Position position) {
-      updateParticipantLocation(
-        groupId: groupId,
-        sessionId: sessionId,
-        uid: uid,
-        location: GeoPoint(position.latitude, position.longitude),
-      ).catchError((_) { /* Silent fail */ });
-    });
-  }
-
-  void stopLiveTracking() {
-    _positionStream?.cancel();
-    _positionStream = null;
-  }
+  // Telegram-style Telemetry (Managed by LocationService)
+  // This class now only provides the updateParticipantLocation sink.
 
   // Close a session (when timer expires or manually)
   Future<void> updateStatus(String groupId, String sessionId, OutingStatus status) async {
@@ -275,10 +249,28 @@ class OutingService {
         .doc(sessionId)
         .update({'status': status.name});
 
+    // End Live Activity if terminal state
+    if (status == OutingStatus.completed || status == OutingStatus.cancelled) {
+      if (_activityId != null) {
+        _liveActivitiesPlugin.endActivity(_activityId!);
+        _activityId = null;
+      }
+    }
+
     // If moving to 'thinking', trigger the calculation
     if (status == OutingStatus.thinking) {
       _processThinkingPhase(groupId, sessionId);
     }
+  }
+
+  /// Record the first participant to arrive
+  Future<void> recordFirstArrival(String groupId, String sessionId, String uid) async {
+    await _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('outings')
+        .doc(sessionId)
+        .update({'firstArrivedUid': uid});
   }
 
   // Update session category or mode during waiting phase
@@ -542,11 +534,131 @@ class OutingService {
           transaction.update(sessionRef, {
             'participants': participants,
           });
+          
+          // Optimization: Sync Live Activity using the data we already fetched
+          final session = OutingSessionModel.fromMap(data);
+          // Manually update the participant in the local session object to reflect what we just wrote
+          for (var i = 0; i < session.participants.length; i++) {
+            if (session.participants[i].uid == uid) {
+              session.participants[i] = session.participants[i].copyWith(location: location);
+              break;
+            }
+          }
+          if (session.winner != null) {
+            syncLiveActivity(session);
+          }
         }
-      }); // Restored default resilience (5 attempts)
+      });
     } catch (e) {
       // Background location updates should not crash the app
       print("Telemetry update skipped: $e");
     }
+  }
+
+  /// Core logic for syncing Live Activity (Lock Screen)
+  Future<void> syncLiveActivity(OutingSessionModel session) async {
+    final winner = session.winner;
+    if (winner == null || winner['location'] == null) return;
+    
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    if (session.participants.isEmpty) return;
+
+    // 1. Calculate all participant stats
+    int maxEta = 0;
+    final participantsList = session.participants.where((p) => p.location != null).map((p) {
+      final pDistStr = _calculateDistance(
+        p.location!.latitude,
+        p.location!.longitude,
+        (winner['location']['latitude'] as num).toDouble(),
+        (winner['location']['longitude'] as num).toDouble(),
+      );
+      final pDist = double.tryParse(pDistStr) ?? 0.0;
+      final isMe = p.uid == uid;
+      
+      final pEtaInt = int.tryParse(_estimateTime(pDist)) ?? 0;
+      if (pEtaInt > maxEta) maxEta = pEtaInt;
+
+      // --- RELATIVE JOURNEY PROGRESS ---
+      double progress = 0.0;
+      if (p.startLocation != null) {
+        final totalDist = double.tryParse(_calculateDistance(
+          p.startLocation!.latitude,
+          p.startLocation!.longitude,
+          (winner['location']['latitude'] as num).toDouble(),
+          (winner['location']['longitude'] as num).toDouble(),
+        )) ?? 0.0;
+
+        if (totalDist > 0.05) { // 50m minimum for slider
+          progress = (1.0 - (pDist / totalDist)).clamp(0.0, 1.0);
+        } else {
+          progress = 1.0;
+        }
+      } else {
+        progress = (1.0 - (pDist / 10.0)).clamp(0.0, 1.0);
+      }
+
+      return {
+        'name': isMe ? "You" : p.name,
+        'initial': (p.name.isNotEmpty ? p.name[0] : "?").toUpperCase(),
+        'photoUrl': p.photoUrl ?? "",
+        'eta': pEtaInt.toString(),
+        'dist': "$pDistStr km",
+        'progress': progress,
+        'isMe': isMe,
+      };
+    }).toList();
+
+    // 2. Sort and take top 3 by proximity
+    participantsList.sort((a, b) => (b['progress'] as double).compareTo(a['progress'] as double));
+    final topParticipants = participantsList.take(3).toList();
+
+    // 3. Serialize and check for changes
+    final participantsJson = jsonEncode({
+      'list': topParticipants,
+      'groupEta': maxEta.toString(),
+    });
+
+    if (_lastParticipantsJson == participantsJson) return;
+    _lastParticipantsJson = participantsJson;
+
+    // 4. Update or Create Activity
+    final payload = {
+      'participants': participantsJson,
+      'destinationName': winner['name'] ?? 'Destination'
+    };
+
+    if (_activityId == null) {
+      try {
+        _liveActivitiesPlugin.init(appGroupId: "group.laween");
+        _activityId = await _liveActivitiesPlugin.createActivity("laween_tracking", payload);
+      } catch (e) {
+        debugPrint("Live Activity Creation Error in Service: $e");
+      }
+    } else {
+      try {
+        await _liveActivitiesPlugin.updateActivity(_activityId!, payload);
+      } catch (e) {
+        // If activity was ended by user, reset activityId to allow recreation
+        _activityId = null;
+        debugPrint("Live Activity Update Error in Service - Resetting ID: $e");
+      }
+    }
+  }
+
+  String _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+    const p = 0.017453292519943295;
+    final a = 0.5 - math.cos((lat2 - lat1) * p) / 2 +
+        math.cos(lat1 * p) * math.cos(lat2 * p) *
+            (1 - math.cos((lon2 - lon1) * p)) / 2;
+    return (12742 * math.asin(math.sqrt(a))).toStringAsFixed(1);
+  }
+
+  String _estimateTime(double distanceKm) {
+    const averageSpeedKmh = 40.0;
+    final timeHours = distanceKm / averageSpeedKmh;
+    final timeMinutes = (timeHours * 60).ceil();
+    return timeMinutes.toString();
   }
 }

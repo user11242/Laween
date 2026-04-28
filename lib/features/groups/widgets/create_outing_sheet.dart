@@ -42,6 +42,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
   bool _isSearching = false;
   Map<String, dynamic>? _selectedVenue;
   bool _isDirectMode = false;
+  String? _creatorName;
 
   final List<Map<String, dynamic>> _categories = [
     {'name': 'Restaurant', 'icon': Icons.restaurant_rounded, 'color': Colors.orange},
@@ -56,6 +57,25 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
   void initState() {
     super.initState();
     _isDirectMode = widget.initialDirectMode;
+    _fetchCreatorInfo();
+  }
+
+  void _fetchCreatorInfo() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    try {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        if (mounted) {
+          setState(() {
+            _creatorName = data['name'] ?? data['fullName'] ?? user.displayName;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching creator info: $e");
+    }
   }
 
   void _createSession() async {
@@ -92,7 +112,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
         sessionId = await _outingService.createDirectSession(
           groupId: widget.groupId,
           creatorId: user.uid,
-          creatorName: user.displayName ?? "User",
+          creatorName: _creatorName ?? user.displayName ?? "Me",
           creatorPhotoUrl: user.photoURL,
           venue: _selectedVenue!,
           timeLimitMinutes: _timeLimit,
@@ -102,7 +122,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
         sessionId = await _outingService.createSession(
           groupId: widget.groupId,
           creatorId: user.uid,
-          creatorName: user.displayName ?? "User",
+          creatorName: _creatorName ?? user.displayName ?? "Me",
           creatorPhotoUrl: user.photoURL,
           category: _category,
           calculationMode: _calculationMode,

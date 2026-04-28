@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import '../models/user_model.dart';
+import 'fcm_service.dart';
 import '../../../../core/utils/numeric_utils.dart';
 import '../../../../core/templates/email_templates.dart';
 
@@ -90,6 +91,10 @@ class EmailAuthService {
       );
 
       await batch.commit();
+      
+      // Sync FCM token to database
+      FcmService.instance.saveUserFcmToken(uid);
+
       debugPrint("DEBUG: Batch commit successful for $uid");
       return null;
     } on FirebaseAuthException catch (e) {
@@ -114,6 +119,8 @@ class EmailAuthService {
       
       DocumentSnapshot doc = await _firestore.collection('users').doc(cred.user!.uid).get();
       if (doc.exists) {
+        // Sync FCM token to database
+        FcmService.instance.saveUserFcmToken(cred.user!.uid);
         return null; // Success
       }
       

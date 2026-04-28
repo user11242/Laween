@@ -10,6 +10,7 @@ import '../models/user_model.dart';
 import 'auth_service.dart';
 import '../../../../core/utils/numeric_utils.dart';
 import '../../../../core/templates/email_templates.dart';
+import 'fcm_service.dart';
 
 class GoogleAuthService {
   // --- 1. Singleton Setup ---
@@ -99,6 +100,8 @@ class GoogleAuthService {
           .get();
 
       if (doc.exists) {
+        // Sync FCM token to database
+        FcmService.instance.saveUserFcmToken(userCred.user!.uid);
         return null; // Success
       } else {
         return "NEEDS_PROFILE";
@@ -139,7 +142,7 @@ class GoogleAuthService {
       // 2. Create Model
       UserModel newUser = UserModel(
         uid: user.uid,
-        name: user.displayName ?? "User",
+        name: user.displayName ?? "Me",
         email: user.email ?? "",
         acceptedTerms: acceptedTerms,
         photoUrl: finalPhotoUrl,
@@ -209,6 +212,10 @@ class GoogleAuthService {
 
       // 4. Commit everything at once
       await batch.commit();
+      
+      // Sync FCM token to database
+      FcmService.instance.saveUserFcmToken(user.uid);
+      
       debugPrint("✅ Google user document created (uid: ${user.uid})");
       return null; // null means success
     } catch (e) {

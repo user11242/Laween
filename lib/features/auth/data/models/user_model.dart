@@ -16,19 +16,27 @@ class UserModel {
 
   // --- LEGAL ---
   final bool acceptedTerms;
-
-  // --- METADATA ---
   final DateTime createdAt;
+
+  // --- TRACKING & PRIVACY ---
+  final bool isTrackingActive;
+  final bool isGhostMode;
+  final String activeGroupId;
+  final String activeSessionId;
 
   UserModel({
     required this.uid,
     required this.email,
     required this.name,
-    this.authProvider = 'email', // Default to email for backward compatibility
-    this.phone = '', // Default empty if not provided
+    this.authProvider = 'email',
+    this.phone = '',
     this.photoUrl = '',
     this.acceptedTerms = false,
-    this.language = 'en', // Default to English
+    this.language = 'en',
+    this.isTrackingActive = false,
+    this.isGhostMode = false,
+    this.activeGroupId = '',
+    this.activeSessionId = '',
     required this.createdAt,
   });
 
@@ -41,12 +49,14 @@ class UserModel {
       email: map['email'] ?? '',
       authProvider: map['authProvider'] ?? 'email',
       phone: map['phone'] ?? '',
-
       name: map['name'] ?? '',
       acceptedTerms: map['acceptedTerms'] ?? false,
       photoUrl: map['photoUrl'] ?? '',
       language: map['language'] ?? 'en',
-      // Handle Timestamp conversion safely
+      isTrackingActive: map['isTrackingActive'] ?? false,
+      isGhostMode: map['isGhostMode'] ?? false,
+      activeGroupId: map['activeGroupId'] ?? '',
+      activeSessionId: map['activeSessionId'] ?? '',
       createdAt: map['createdAt'] != null
           ? (map['createdAt'] as Timestamp).toDate()
           : DateTime.now(),
@@ -54,23 +64,23 @@ class UserModel {
   }
 
   // ==========================================================
-  // 2. WRITE (To Firebase - users & lock collections)
+  // 2. WRITE (To Firebase)
   // ==========================================================
   Map<String, dynamic> toMap() {
     return {
-      // Identity
       "uid": uid,
-      "email": email, // ✅ Vital for account management
+      "email": email,
       "authProvider": authProvider,
-      "phone": phone, // ✅ Vital for account management
-      // Search Helpers
+      "phone": phone,
       "name": name,
-      "name_lower": name.toLowerCase(), // ✅ Kept your search optimization
-      // Profile
+      "name_lower": name.toLowerCase(),
       "photoUrl": photoUrl,
-      "language": language, // ✅ Persist language
-      // State
+      "language": language,
       "acceptedTerms": acceptedTerms,
+      "isTrackingActive": isTrackingActive,
+      "isGhostMode": isGhostMode,
+      "activeGroupId": activeGroupId,
+      "activeSessionId": activeSessionId,
       "createdAt": Timestamp.fromDate(createdAt),
     };
   }

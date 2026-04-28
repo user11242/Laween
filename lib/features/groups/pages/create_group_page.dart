@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/utils/numeric_utils.dart';
 import '../../../core/theme/colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../data/services/group_service.dart';
@@ -493,11 +495,53 @@ class _ContactPickerSheet extends StatefulWidget {
 class _ContactPickerSheetState extends State<_ContactPickerSheet> {
   late List<Contact> _tempSelected;
   String _searchQuery = "";
+  final Map<String, bool> _appUserStatus = {}; // phone -> isUser
+  bool _isCheckingUsers = true;
 
   @override
   void initState() {
     super.initState();
     _tempSelected = List.from(widget.initiallySelected);
+    _checkAppUsers();
+  }
+
+  Future<void> _checkAppUsers() async {
+    final phones = widget.contacts
+        .expand((c) => c.phones)
+        .map((p) => NumericUtils.normalize(p.number, clean: true))
+        .where((p) => p.isNotEmpty)
+        .toSet()
+        .toList();
+
+    if (phones.isEmpty) {
+      if (mounted) setState(() => _isCheckingUsers = false);
+      return;
+    }
+
+    try {
+      // Chunked lookup
+      const int chunkSize = 30;
+      for (var i = 0; i < phones.length; i += chunkSize) {
+        final end = (i + chunkSize < phones.length) ? i + chunkSize : phones.length;
+        final chunk = phones.sublist(i, end);
+        
+        final query = await FirebaseFirestore.instance
+            .collection('users')
+            .where('phone', whereIn: chunk)
+            .get();
+            
+        final foundPhones = query.docs.map((d) => d.data()['phone'] as String).toList();
+        for (var p in chunk) {
+          _appUserStatus[p] = foundPhones.contains(p);
+        }
+      }
+    } catch (e) {
+      debugPrint("Error checking app users: $e");
+    }
+
+    if (mounted) {
+      setState(() => _isCheckingUsers = false);
+    }
   }
 
   @override
@@ -507,58 +551,162 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
         .toList();
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.8,
+      height: MediaQuery.of(context).size.height * 0.85,
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 20)],
       ),
-      padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                AppLocalizations.of(context)!.addMembers,
-                style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, _tempSelected),
-                child: Text(AppLocalizations.of(context)!.continueText),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            onChanged: (val) => setState(() => _searchQuery = val),
-            decoration: InputDecoration(
-              hintText: "Search contacts...",
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+          // Header
+          Container(
+            padding: const EdgeInsets.fromLTRB(24, 16, 16, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.addMembers,
+                      style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold),
+                    ),
+                    if (_isCheckingUsers)
+                      Text("Finding friends...", style: GoogleFonts.inter(fontSize: 12, color: Colors.grey))
+                    else
+                      Text("${_tempSelected.length} chosen", style: GoogleFonts.inter(fontSize: 12, color: AppColors.teal, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, _tempSelected),
+                  style: TextButton.styleFrom(
+                    backgroundColor: AppColors.teal.withValues(alpha: 0.1),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text(AppLocalizations.of(context)!.continueText, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.teal)),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 16),
+
+          // Search Bar
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: TextField(
+                onChanged: (val) => setState(() => _searchQuery = val),
+                decoration: InputDecoration(
+                  hintText: "Search name or phone...",
+                  hintStyle: GoogleFonts.inter(color: Colors.grey, fontSize: 14),
+                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                ),
+              ),
+            ),
+          ),
+
+          // Contacts List
           Expanded(
             child: ListView.builder(
+              padding: const EdgeInsets.only(bottom: 40),
               itemCount: filteredContacts.length,
               itemBuilder: (context, index) {
                 final contact = filteredContacts[index];
                 final isSelected = _tempSelected.any((c) => c.id == contact.id);
-                return ListTile(
-                  leading: CircleAvatar(child: Text(contact.displayName.isNotEmpty ? contact.displayName[0] : '?')),
-                  title: Text(contact.displayName),
-                  subtitle: Text(contact.phones.isNotEmpty ? contact.phones.first.number : ''),
-                  trailing: Checkbox(
-                    value: isSelected,
-                    onChanged: (val) {
-                      setState(() {
-                        if (val == true) {
-                          _tempSelected.add(contact);
-                        } else {
-                          _tempSelected.removeWhere((c) => c.id == contact.id);
-                        }
-                      });
-                    },
+                final phone = contact.phones.isNotEmpty ? contact.phones.first.number : '';
+                final cleanPhone = NumericUtils.normalize(phone, clean: true);
+                final isOnApp = _appUserStatus[cleanPhone] == true;
+
+                return InkWell(
+                  onTap: () {
+                    setState(() {
+                      if (isSelected) {
+                        _tempSelected.removeWhere((c) => c.id == contact.id);
+                      } else {
+                        _tempSelected.add(contact);
+                      }
+                    });
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    child: Row(
+                      children: [
+                        Stack(
+                          alignment: Alignment.bottomRight,
+                          children: [
+                            CircleAvatar(
+                              radius: 24,
+                              backgroundColor: isOnApp ? AppColors.teal.withValues(alpha: 0.1) : Colors.grey.shade100,
+                              child: Text(
+                                contact.displayName.isNotEmpty ? contact.displayName[0].toUpperCase() : '?',
+                                style: GoogleFonts.outfit(
+                                  color: isOnApp ? AppColors.teal : Colors.grey.shade600,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                ),
+                              ),
+                            ),
+                            if (isOnApp)
+                              Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                                child: const Icon(Icons.check_circle, size: 16, color: AppColors.teal),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                contact.displayName,
+                                style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                  color: AppColors.darkSlate,
+                                ),
+                              ),
+                              Text(
+                                phone,
+                                style: GoogleFonts.inter(fontSize: 12, color: Colors.grey.shade500),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (!isOnApp && !_isCheckingUsers)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text("INVITE", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blue)),
+                          ),
+                        const SizedBox(width: 12),
+                        Checkbox(
+                          value: isSelected,
+                          activeColor: AppColors.teal,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                          onChanged: (val) {
+                            setState(() {
+                              if (val == true) {
+                                _tempSelected.add(contact);
+                              } else {
+                                _tempSelected.removeWhere((c) => c.id == contact.id);
+                              }
+                            });
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },

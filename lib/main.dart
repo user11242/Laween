@@ -23,6 +23,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint("Handling a background message: ${message.messageId}");
 }
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
@@ -58,6 +60,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: AppColors.teal),
         useMaterial3: true,
       ),
+      navigatorKey: navigatorKey,
       builder: (context, child) => Directionality(
         textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
         child: child!,

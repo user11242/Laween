@@ -63,19 +63,19 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyC9eKa83dyDd6z_-rDIfsE04UxgjRFBhdQ',
-    appId: '1:833749469320:ios:07a7a2aa3adfaff008b73d',
+    appId: '1:833749469320:ios:fc232785382233da08b73d',
     messagingSenderId: '833749469320',
     projectId: 'laween-f7c2d',
     storageBucket: 'laween-f7c2d.firebasestorage.app',
-    iosBundleId: 'com.example.laween',
+    iosBundleId: 'com.company.laween',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyC9eKa83dyDd6z_-rDIfsE04UxgjRFBhdQ',
-    appId: '1:833749469320:ios:07a7a2aa3adfaff008b73d',
+    appId: '1:833749469320:ios:fc232785382233da08b73d',
     messagingSenderId: '833749469320',
     projectId: 'laween-f7c2d',
     storageBucket: 'laween-f7c2d.firebasestorage.app',
-    iosBundleId: 'com.example.laween',
+    iosBundleId: 'com.company.laween',
   );
 }

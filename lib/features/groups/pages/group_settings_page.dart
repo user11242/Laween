@@ -1,8 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -10,6 +8,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/theme/colors.dart';
 import '../data/models/group_model.dart';
 import '../data/services/group_service.dart';
+import './group_media_page.dart';
+import './group_locations_page.dart';
 
 class GroupSettingsPage extends StatefulWidget {
   final GroupModel group;
@@ -35,14 +35,6 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
     _currentPhotoUrl = widget.group.photoUrl;
   }
 
-  void _copyGroupCode() {
-    if (widget.group.groupCode == null) return;
-    Clipboard.setData(ClipboardData(text: widget.group.groupCode!));
-    HapticFeedback.lightImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Group code copied to clipboard')),
-    );
-  }
 
   Future<void> _leaveGroup() async {
     final confirm = await showDialog<bool>(
@@ -334,89 +326,25 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                   ),
                   const SizedBox(height: 32),
 
-                  // --- QR Code & Group Code ---
-                  if (widget.group.groupCode != null) ...[
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Scan to Join',
-                            style: GoogleFonts.inter(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.darkSlate,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Center(
-                            child: QrImageView(
-                              data: widget.group.groupCode!,
-                              version: QrVersions.auto,
-                              size: 150.0,
-                              eyeStyle: const QrEyeStyle(
-                                eyeShape: QrEyeShape.square,
-                                color: AppColors.teal,
-                              ),
-                              dataModuleStyle: const QrDataModuleStyle(
-                                dataModuleShape: QrDataModuleShape.square,
-                                color: AppColors.darkSlate,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          const Divider(),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Or use connection code:',
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          GestureDetector(
-                            onTap: _copyGroupCode,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF3F4F6),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    widget.group.groupCode!,
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 2,
-                                      color: AppColors.teal,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  const Icon(Icons.copy, size: 18, color: AppColors.teal),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                  // --- Media & Content Navigation ---
+                  _buildNavigationTile(
+                    icon: Icons.photo_library_outlined,
+                    title: 'Media, Links, and Docs',
+                    onTap: () => Navigator.push(
+                      context, 
+                      MaterialPageRoute(builder: (_) => GroupMediaPage(groupId: widget.group.id))
                     ),
-                    const SizedBox(height: 32),
-                  ],
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  _buildNavigationTile(
+                    icon: Icons.location_on_outlined,
+                    title: 'Shared Locations',
+                    onTap: () => Navigator.push(
+                      context, 
+                      MaterialPageRoute(builder: (_) => GroupLocationsPage(groupId: widget.group.id))
+                    ),
+                  ),
+                  const SizedBox(height: 32),
 
                   // --- Members List ---
                   Text(
@@ -547,6 +475,34 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildNavigationTile({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      onTap: onTap,
+      contentPadding: EdgeInsets.zero,
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: AppColors.darkSlate, size: 22),
+      ),
+      title: Text(
+        title,
+        style: GoogleFonts.inter(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: AppColors.darkSlate,
+        ),
+      ),
+      trailing: const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
     );
   }
 }

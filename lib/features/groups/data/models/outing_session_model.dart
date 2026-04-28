@@ -27,6 +27,24 @@ class OutingParticipant {
     required this.joinedAt,
   });
 
+  OutingParticipant copyWith({
+    String? uid,
+    String? name,
+    String? photoUrl,
+    GeoPoint? location,
+    GeoPoint? startLocation,
+    DateTime? joinedAt,
+  }) {
+    return OutingParticipant(
+      uid: uid ?? this.uid,
+      name: name ?? this.name,
+      photoUrl: photoUrl ?? this.photoUrl,
+      location: location ?? this.location,
+      startLocation: startLocation ?? this.startLocation,
+      joinedAt: joinedAt ?? this.joinedAt,
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'uid': uid,
@@ -63,6 +81,7 @@ class OutingSessionModel {
   final DateTime expiresAt;
   final Map<String, dynamic>? finalLocation; // Result of the session
   final Map<String, dynamic>? winner; // The winning venue
+  final String? firstArrivedUid; // The UID of the friend who reached first
 
   OutingSessionModel({
     required this.id,
@@ -77,6 +96,7 @@ class OutingSessionModel {
     required this.expiresAt,
     this.finalLocation,
     this.winner,
+    this.firstArrivedUid,
   });
 
   Map<String, dynamic> toMap() {
@@ -93,6 +113,7 @@ class OutingSessionModel {
       'expiresAt': Timestamp.fromDate(expiresAt),
       'finalLocation': finalLocation,
       'winner': winner,
+      'firstArrivedUid': firstArrivedUid,
     };
   }
 
@@ -112,6 +133,7 @@ class OutingSessionModel {
       expiresAt: (map['expiresAt'] as Timestamp).toDate(),
       finalLocation: map['finalLocation'],
       winner: map['winner'],
+      firstArrivedUid: map['firstArrivedUid'],
     );
   }
 }

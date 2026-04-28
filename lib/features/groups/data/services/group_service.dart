@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import '../../../../core/utils/numeric_utils.dart';
 import '../models/group_model.dart';
 
 class GroupService {
@@ -43,14 +44,53 @@ class GroupService {
 
       final groupCode = await _generateUniqueGroupCode();
 
+      // 🔍 RESOLVE MEMBERS (App Users vs. Invites)
+      final List<String> resolvedMemberIds = [user.uid];
+      final List<String> pendingPhoneNumbers = [];
+      
+      // Normalize unique phone numbers
+      final normalizedPhones = memberPhoneNumbers
+          .map((p) => NumericUtils.normalize(p, clean: true))
+          .where((p) => p.isNotEmpty)
+          .toSet()
+          .toList();
+
+      if (normalizedPhones.isNotEmpty) {
+        // Firestore whereIn only allows 30 items per query
+        // We chunk the lookup to handle many contacts
+        const int chunkSize = 30;
+        for (var i = 0; i < normalizedPhones.length; i += chunkSize) {
+          final end = (i + chunkSize < normalizedPhones.length) ? i + chunkSize : normalizedPhones.length;
+          final chunk = normalizedPhones.sublist(i, end);
+          
+          final query = await _firestore
+              .collection('users')
+              .where('phone', whereIn: chunk)
+              .get();
+          
+          final foundUids = query.docs.map((d) => d.id).toList();
+          final foundPhones = query.docs.map((d) => d.data()['phone'] as String).toList();
+          
+          resolvedMemberIds.addAll(foundUids);
+          
+          // Identify which chunk numbers were NOT found
+          for (var p in chunk) {
+            if (!foundPhones.contains(p)) {
+              pendingPhoneNumbers.add(p);
+            }
+          }
+        }
+      }
+
       final group = GroupModel(
         id: groupId,
         name: name,
         photoUrl: photoUrl,
         creatorId: user.uid,
-        memberIds: [user.uid], // Initially only creator
+        memberIds: resolvedMemberIds.toSet().toList(), // Ensure uniqueness
         createdAt: DateTime.now(),
         groupCode: groupCode,
+        pendingPhoneNumbers: pendingPhoneNumbers,
       );
 
       await _firestore.collection('groups').doc(groupId).set(group.toMap());
@@ -161,5 +201,33 @@ class GroupService {
     if (updates.isNotEmpty) {
       await groupRef.update(updates);
     }
+  }
+
+  Stream<List<Map<String, dynamic>>> getGroupMedia(String groupId) {
+    return _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('messages')
+        .orderBy('timestamp', descending: true)
+        .limit(50) // Increased limit since we filter in memory
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => doc.data())
+            .where((data) => data['type'] == 'image' || (data['mediaUrls'] as List?)?.isNotEmpty == true)
+            .toList());
+  }
+
+  Stream<List<Map<String, dynamic>>> getGroupLocations(String groupId) {
+    return _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('messages')
+        .orderBy('timestamp', descending: true)
+        .limit(50)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => doc.data())
+            .where((data) => data['type'] == 'location')
+            .toList());
   }
 }

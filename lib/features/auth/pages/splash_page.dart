@@ -8,6 +8,7 @@ import '../../../core/theme/colors.dart';
 import '../../../core/services/biometric_service.dart';
 import 'onboarding_page.dart';
 import '../../home/pages/home_page.dart';
+import '../data/services/fcm_service.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -44,6 +45,8 @@ class _SplashPageState extends State<SplashPage> {
           final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
           if (doc.exists) {
             nextScreen = const HomePage();
+            // Sync FCM token to database
+            FcmService.instance.saveUserFcmToken(user.uid);
           }
         } catch (e) {
           debugPrint("Splash page Firestore error: \$e");

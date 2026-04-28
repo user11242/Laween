@@ -9,8 +9,13 @@ class MessageModel {
   final String? senderPhotoUrl;
   final String text;
   final DateTime timestamp;
+  final List<String> mediaUrls;
   final String type; // 'text', 'image', 'system', 'outing'
   final String? outingSessionId;
+  final String? replyToId;
+  final String? replyToText;
+  final String? replyToSenderId;
+  final String? replyToSenderName;
   final Map<String, List<String>> reactions; // emoji -> list of uids
   final List<String> readBy; // list of uids
   final List<String> deletedFor; // list of uids who deleted for them
@@ -27,12 +32,17 @@ class MessageModel {
     required this.timestamp,
     this.type = 'text',
     this.outingSessionId,
+    this.replyToId,
+    this.replyToText,
+    this.replyToSenderId,
+    this.replyToSenderName,
     this.reactions = const {},
     this.readBy = const [],
     this.deletedFor = const [],
     this.isDeleted = false,
     this.isEdited = false,
     this.updatedAt,
+    this.mediaUrls = const [],
   });
 
   Map<String, dynamic> toMap() {
@@ -43,8 +53,13 @@ class MessageModel {
       'senderPhotoUrl': senderPhotoUrl,
       'text': text,
       'timestamp': Timestamp.fromDate(timestamp),
+      'mediaUrls': mediaUrls,
       'type': type,
       'outingSessionId': outingSessionId,
+      'replyToId': replyToId,
+      'replyToText': replyToText,
+      'replyToSenderId': replyToSenderId,
+      'replyToSenderName': replyToSenderName,
       'reactions': reactions,
       'readBy': readBy,
       'deletedFor': deletedFor,
@@ -62,8 +77,13 @@ class MessageModel {
       senderPhotoUrl: map['senderPhotoUrl'],
       text: map['text'] ?? '',
       timestamp: (map['timestamp'] as Timestamp).toDate(),
+      mediaUrls: List<String>.from(map['mediaUrls'] ?? []),
       type: map['type'] ?? 'text',
       outingSessionId: map['outingSessionId'],
+      replyToId: map['replyToId'],
+      replyToText: map['replyToText'],
+      replyToSenderId: map['replyToSenderId'],
+      replyToSenderName: map['replyToSenderName'],
       reactions: Map<String, List<String>>.from(
         (map['reactions'] as Map? ?? {}).map(
           (k, v) => MapEntry(k, List<String>.from(v)),

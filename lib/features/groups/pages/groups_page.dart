@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -8,7 +9,9 @@ import '../../../core/theme/colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../widgets/create_join_dialog.dart';
 import '../data/models/group_model.dart';
+import '../../auth/data/services/fcm_service.dart';
 import './chat_page.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class GroupsPage extends StatefulWidget {
   const GroupsPage({super.key});
@@ -17,9 +20,35 @@ class GroupsPage extends StatefulWidget {
   State<GroupsPage> createState() => _GroupsPageState();
 }
 
-class _GroupsPageState extends State<GroupsPage> {
+class _GroupsPageState extends State<GroupsPage> with AutomaticKeepAliveClientMixin {
   bool _showMenu = false;
   final currentUser = FirebaseAuth.instance.currentUser;
+  final Set<String> _syncedGroupIds = {};
+  Stream<QuerySnapshot>? _groupsStream;
+  Timer? _rebuildTimer;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _groupsStream = FirebaseFirestore.instance
+        .collection('groups')
+        .where('memberIds', arrayContains: currentUser?.uid)
+        .orderBy('lastMessageTime', descending: true)
+        .snapshots();
+
+    _rebuildTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _rebuildTimer?.cancel();
+    super.dispose();
+  }
 
   void _toggleMenu() {
     setState(() {
@@ -29,6 +58,7 @@ class _GroupsPageState extends State<GroupsPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required by AutomaticKeepAliveClientMixin
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
@@ -36,11 +66,7 @@ class _GroupsPageState extends State<GroupsPage> {
       body: Stack(
         children: [
           StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('groups')
-                .where('memberIds', arrayContains: currentUser?.uid)
-                // .orderBy('createdAt', descending: true) // Requires composite index!
-                .snapshots(),
+            stream: _groupsStream,
             builder: (context, snapshot) {
               if (snapshot.hasError) {
                 return CustomScrollView(
@@ -67,6 +93,16 @@ class _GroupsPageState extends State<GroupsPage> {
                       .map((doc) => GroupModel.fromMap(doc.data() as Map<String, dynamic>))
                       .toList()
                   : <GroupModel>[];
+
+              // Sync FCM topic subscriptions for all groups
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                for (var g in groups) {
+                  if (!_syncedGroupIds.contains(g.id)) {
+                    FcmService.instance.subscribeToGroup(g.id);
+                    _syncedGroupIds.add(g.id);
+                  }
+                }
+              });
 
               return CustomScrollView(
                 slivers: [
@@ -396,25 +432,95 @@ class _GroupCard extends StatelessWidget {
                     Row(
                       children: [
                         Expanded(
-                          child: RichText(
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            text: TextSpan(
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                color: Colors.grey.shade600,
-                              ),
-                              children: [
-                                if (group.lastMessageSender != null)
-                                  TextSpan(
-                                    text: "${group.lastMessageSender == currentUser?.displayName || group.lastMessageSender == currentUser?.uid ? (isAr ? "أنت" : "You") : group.lastMessageSender}: ",
-                                    style: const TextStyle(fontWeight: FontWeight.w500),
+                          child: Builder(
+                            builder: (context) {
+                              final now = DateTime.now();
+                              final otherTypers = group.typingUsers.entries
+                                  .where((e) {
+                                    if (e.key == currentUser?.uid) return false;
+                                    final val = e.value;
+                                    if (val is Map) {
+                                      final isTyping = val['isTyping'] == true;
+                                      final Timestamp? ts = val['timestamp'] as Timestamp?;
+                                      if (ts != null) {
+                                        final diff = now.difference(ts.toDate()).inSeconds;
+                                        if (diff > 5) return false; // 🛡️ 5 second TTL
+                                      }
+                                      return isTyping;
+                                    }
+                                    return val == true; // Legacy support
+                                  })
+                                  .toList();
+
+                              if (otherTypers.isNotEmpty) {
+                                final firstVal = otherTypers[0].value;
+                                final String typerName = (firstVal is Map) ? firstVal['userName'] ?? (isAr ? "شخص ما" : "Someone") : (isAr ? "شخص ما" : "Someone");
+                                
+                                return Row(
+                                  children: [
+                                    Text(
+                                      isAr ? "$typerName يكتب الآن" : "$typerName is typing",
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 13,
+                                        color: AppColors.teal,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Row(
+// ...
+                                      children: List.generate(3, (index) {
+                                        return Container(
+                                          width: 3,
+                                          height: 3,
+                                          margin: const EdgeInsets.symmetric(horizontal: 0.5),
+                                          decoration: const BoxDecoration(
+                                            color: AppColors.teal,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ).animate(onPlay: (c) => c.repeat())
+                                         .scale(
+                                           begin: const Offset(1, 1),
+                                           end: const Offset(1.5, 1.5),
+                                           duration: 600.ms,
+                                           delay: (index * 200).ms,
+                                           curve: Curves.easeInOut,
+                                         )
+                                         .then()
+                                         .scale(
+                                           begin: const Offset(1.5, 1.5),
+                                           end: const Offset(1, 1),
+                                           duration: 600.ms,
+                                         );
+                                      }),
+                                    ),
+                                  ],
+                                );
+                              }
+
+                              return RichText(
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                text: TextSpan(
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    color: Colors.grey.shade600,
                                   ),
-                                TextSpan(
-                                  text: group.lastMessage ?? (isAr ? "انضم للمحادثة..." : "Start chatting..."),
+                                  children: [
+                                    if (group.lastMessageSender != null)
+                                      TextSpan(
+                                        text: "${group.lastMessageSender == currentUser?.displayName || group.lastMessageSender == currentUser?.uid ? (isAr ? "أنت" : "You") : group.lastMessageSender}: ",
+                                        style: const TextStyle(fontWeight: FontWeight.w500),
+                                      ),
+                                    TextSpan(
+                                      text: group.lastMessage ?? (isAr ? "انضم للمحادثة..." : "Start chatting..."),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              );
+                            },
                           ),
                         ),
                         if (unreadCount > 0)
