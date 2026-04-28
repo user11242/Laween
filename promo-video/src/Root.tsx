@@ -7,10 +7,10 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="LaweenPromo"
         component={MainComposition}
-        durationInFrames={1800} // 1 min at 30 fps
+        durationInFrames={2340} // ~78s at 30 fps
         fps={30}
-        width={1080}
-        height={1920}
+        width={1920}
+        height={1080}
       />
     </>
   );

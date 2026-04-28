@@ -1,55 +1,67 @@
-import { AbsoluteFill, useVideoConfig, Sequence } from 'remotion';
-import { Scene1Ecosystem } from './scenes/Scene1Ecosystem';
-import { Scene2Security } from './scenes/Scene2Security';
-import { Scene3JoinGroup } from './scenes/Scene3JoinGroup';
-import { Scene4OutingStory } from './scenes/Scene4OutingStory';
-import { Scene5LiveMap } from './scenes/Scene5LiveMap';
-import { Scene6DynamicIsland } from './scenes/Scene6DynamicIsland';
-import { Scene7MediaVault } from './scenes/Scene7MediaVault';
+import { AbsoluteFill, Sequence } from 'remotion';
+import { Scene1MultiPOV } from './scenes/Scene1MultiPOV';
+import { Scene3Security } from './scenes/Scene3Security';
+import { Scene2Ecosystem } from './scenes/Scene2Ecosystem';
+import { Scene4SocialConnection } from './scenes/Scene4SocialConnection';
+import { Scene5OutingBegins } from './scenes/Scene5OutingBegins';
+import { Scene5bResponses } from './scenes/Scene5bResponses';
+import { Scene7WaitingRoom } from './scenes/Scene7WaitingRoom';
+import { Scene8VotingHero } from './scenes/Scene8VotingHero';
+import { Scene9Winner } from './scenes/Scene9Winner';
+import { Scene10LiveTracking } from './scenes/Scene10LiveTracking';
+import { Scene11LockScreen } from './scenes/Scene11LockScreen';
+import { Scene12Montage } from './scenes/Scene12Montage';
+import { Scene13EndCard } from './scenes/Scene13EndCard';
 import { NetworkBackground } from './components/NetworkBackground';
 
 export const MainComposition = () => {
-  const { fps, durationInFrames, width, height } = useVideoConfig();
+  // 30 fps
+  const s1  = 270;  // MultiPOV Chaos
+  const s2  = 150;  // Security / FaceID
+  const s3  = 210;  // Join Group Methods
+  const s4  = 180;  // Ecosystem Chat Group
+  const s5  = 210;  // Outing Begins
+  const s6  = 180;  // Responses & Notifications
+  const s7  = 180;  // Waiting Room
+  const s8  = 270;  // Discovery + Voting (HERO)
+  const s9  = 150;  // Winner
+  const s10 = 210;  // Live Tracking
+  const s11 = 150;  // Lock Screen
+  const s12 = 120;  // Montage
+  const s13 = 150;  // End Card
 
-  // Basic timeline math at 30 fps
-  const s1 = 120; // 4 seconds
-  const s2 = 60;  // 2 seconds
-  const s3 = 90;  // 3 seconds
-  const s4 = 150; // 5 seconds
-  const s5 = 180; // 6 seconds
-  const s6 = 120; // 4 seconds
-  const s7 = 120; // 4 seconds
+  // Cumulative offsets
+  const t1  = 0;
+  const t2  = t1 + s1;
+  const t3  = t2 + s2;
+  const t4  = t3 + s3;
+  const t5  = t4 + s4;
+  const t6  = t5 + s5;
+  const t7  = t6 + s6;
+  const t8  = t7 + s7;
+  const t9  = t8 + s8;
+  const t10 = t9 + s9;
+  const t11 = t10 + s10;
+  const t12 = t11 + s11;
+  const t13 = t12 + s12;
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#050714', color: 'white' }}>
       <NetworkBackground />
-      <Sequence from={0} durationInFrames={s1}>
-        <Scene1Ecosystem />
-      </Sequence>
-      
-      <Sequence from={s1} durationInFrames={s2}>
-        <Scene2Security />
-      </Sequence>
 
-      <Sequence from={s1 + s2} durationInFrames={s3}>
-        <Scene3JoinGroup />
-      </Sequence>
-
-      <Sequence from={s1 + s2 + s3} durationInFrames={s4}>
-        <Scene4OutingStory />
-      </Sequence>
-
-      <Sequence from={s1 + s2 + s3 + s4} durationInFrames={s5}>
-        <Scene5LiveMap />
-      </Sequence>
-
-      <Sequence from={s1 + s2 + s3 + s4 + s5} durationInFrames={s6}>
-        <Scene6DynamicIsland />
-      </Sequence>
-
-      <Sequence from={s1 + s2 + s3 + s4 + s5 + s6} durationInFrames={s7}>
-        <Scene7MediaVault />
-      </Sequence>
+      <Sequence from={t1}  durationInFrames={s1} ><Scene1MultiPOV /></Sequence>
+      <Sequence from={t2}  durationInFrames={s2} ><Scene3Security /></Sequence>
+      <Sequence from={t3}  durationInFrames={s3} ><Scene4SocialConnection /></Sequence>
+      <Sequence from={t4}  durationInFrames={s4} ><Scene2Ecosystem /></Sequence>
+      <Sequence from={t5}  durationInFrames={s5} ><Scene5OutingBegins /></Sequence>
+      <Sequence from={t6}  durationInFrames={s6} ><Scene5bResponses /></Sequence>
+      <Sequence from={t7}  durationInFrames={s7} ><Scene7WaitingRoom /></Sequence>
+      <Sequence from={t8}  durationInFrames={s8} ><Scene8VotingHero /></Sequence>
+      <Sequence from={t9}  durationInFrames={s9} ><Scene9Winner /></Sequence>
+      <Sequence from={t10} durationInFrames={s10}><Scene10LiveTracking /></Sequence>
+      <Sequence from={t11} durationInFrames={s11}><Scene11LockScreen /></Sequence>
+      <Sequence from={t12} durationInFrames={s12}><Scene12Montage /></Sequence>
+      <Sequence from={t13} durationInFrames={s13}><Scene13EndCard /></Sequence>
     </AbsoluteFill>
   );
 };
