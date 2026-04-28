@@ -37,6 +37,11 @@ async function sendGroupNotification(groupId, senderId, titlePrefix, body, data 
         }
       },
       apns: {
+        headers: {
+          'apns-topic': 'com.company.laween',
+          'apns-push-type': 'alert',
+          'apns-priority': '10',
+        },
         payload: {
           aps: {
             sound: 'default',
