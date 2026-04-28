@@ -174,7 +174,27 @@ class FcmService {
     // ✅ Subscribe to personal topic for "Exclude Sender" logic in Cloud Functions
     await subscribeToTopic('user_$uid');
     
-    debugPrint("💾 FCM Token successfully synced and subscribed to user_$uid");
+    // ✅ NEW: Sync all group memberships to topics for background delivery
+    await syncAllUserGroups(uid);
+    
+    debugPrint("💾 FCM Token successfully synced and topics balanced for user_$uid");
+  }
+
+  /// Fetches all groups a user belongs to and ensures they are subscribed to their FCM topics
+  Future<void> syncAllUserGroups(String uid) async {
+    try {
+      final groupsSnap = await _firestore
+          .collection('groups')
+          .where('memberIds', arrayContains: uid)
+          .get();
+
+      for (var doc in groupsSnap.docs) {
+        await subscribeToTopic('group_${doc.id}');
+      }
+      debugPrint("✅ Synced \${groupsSnap.docs.length} group topics for background delivery.");
+    } catch (e) {
+      debugPrint("❌ Error syncing group topics: $e");
+    }
   }
 
   Future<void> _handleNotificationTap(RemoteMessage message) async {
