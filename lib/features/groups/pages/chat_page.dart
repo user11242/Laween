@@ -1814,8 +1814,8 @@ class _ChatPageState extends State<ChatPage> {
 
   Widget _buildInputBar() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(32),
@@ -1840,7 +1840,7 @@ class _ChatPageState extends State<ChatPage> {
                   child: IconButton(
                     onPressed: _showAttachmentMenu,
                     icon: Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         color: AppColors.teal.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
@@ -1856,7 +1856,7 @@ class _ChatPageState extends State<ChatPage> {
                 Expanded(
                   child: Container(
                     constraints: const BoxConstraints(
-                      minHeight: 40,
+                      minHeight: 36,
                       maxHeight: 120,
                     ),
                     child: TextField(
@@ -1876,7 +1876,7 @@ class _ChatPageState extends State<ChatPage> {
                         ),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(
-                          vertical: 10,
+                          vertical: 8,
                           horizontal: 8,
                         ),
                       ),
@@ -2019,9 +2019,8 @@ class _ChatPageState extends State<ChatPage> {
                       }
                     },
                     child: Container(
-                      width: 48,
-                      height: 48,
-                      margin: const EdgeInsets.only(bottom: 2),
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: _isCanceling
