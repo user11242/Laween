@@ -202,7 +202,11 @@ class OutingService {
   }
 
   // Leave a session
-  Future<void> leaveSession(String groupId, String sessionId, String uid) async {
+  Future<void> leaveSession(
+    String groupId,
+    String sessionId,
+    String uid,
+  ) async {
     final sessionRef = _firestore
         .collection('groups')
         .doc(groupId)
@@ -214,13 +218,11 @@ class OutingService {
 
     final data = snapshot.data()!;
     final List participants = data['participants'] ?? [];
-    
+
     // Find and remove the participant with the matching UID
     participants.removeWhere((p) => p['uid'] == uid);
 
-    await sessionRef.update({
-      'participants': participants,
-    });
+    await sessionRef.update({'participants': participants});
   }
 
   // Stream a specific session's state
@@ -232,16 +234,20 @@ class OutingService {
         .doc(sessionId)
         .snapshots()
         .map((doc) {
-      if (!doc.exists) return null;
-      return OutingSessionModel.fromMap(doc.data()!);
-    });
+          if (!doc.exists) return null;
+          return OutingSessionModel.fromMap(doc.data()!);
+        });
   }
 
   // Telegram-style Telemetry (Managed by LocationService)
   // This class now only provides the updateParticipantLocation sink.
 
   // Close a session (when timer expires or manually)
-  Future<void> updateStatus(String groupId, String sessionId, OutingStatus status) async {
+  Future<void> updateStatus(
+    String groupId,
+    String sessionId,
+    OutingStatus status,
+  ) async {
     await _firestore
         .collection('groups')
         .doc(groupId)
@@ -264,7 +270,11 @@ class OutingService {
   }
 
   /// Record the first participant to arrive
-  Future<void> recordFirstArrival(String groupId, String sessionId, String uid) async {
+  Future<void> recordFirstArrival(
+    String groupId,
+    String sessionId,
+    String uid,
+  ) async {
     await _firestore
         .collection('groups')
         .doc(groupId)
@@ -283,7 +293,7 @@ class OutingService {
     final Map<String, dynamic> updates = {};
     if (category != null) updates['category'] = category;
     if (calculationMode != null) updates['calculationMode'] = calculationMode;
-    
+
     if (updates.isEmpty) return;
 
     await _firestore
@@ -296,19 +306,25 @@ class OutingService {
 
   /// THE CORE ALGORITHM: Calculate Middle Point and Fetch Venues from Google
   Future<void> _processThinkingPhase(String groupId, String sessionId) async {
-    final sessionRef = _firestore.collection('groups').doc(groupId).collection('outings').doc(sessionId);
+    final sessionRef = _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('outings')
+        .doc(sessionId);
     final snapshot = await sessionRef.get();
     if (!snapshot.exists) return;
 
     final session = OutingSessionModel.fromMap(snapshot.data()!);
-    
+
     // IF FIXED DESTINATION: Jump directly to completed!
     if (session.calculationMode == 'Fixed') {
       await updateStatus(groupId, sessionId, OutingStatus.completed);
       return;
     }
 
-    final participants = session.participants.where((p) => p.location != null).toList();
+    final participants = session.participants
+        .where((p) => p.location != null)
+        .toList();
 
     if (participants.isEmpty) {
       await updateStatus(groupId, sessionId, OutingStatus.cancelled);
@@ -343,11 +359,11 @@ class OutingService {
 
     final midLat = centralLat * 180 / math.pi;
     final midLng = centralLng * 180 / math.pi;
-    
+
     // 2. Query Google Places API
     final apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'];
     final category = session.category.toLowerCase();
-    
+
     // Use the New Places API (Text Search) for better results
     final url = Uri.parse('https://places.googleapis.com/v1/places:searchText');
     final response = await http.post(
@@ -355,15 +371,16 @@ class OutingService {
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': apiKey!,
-        'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.photos,places.location,places.id',
+        'X-Goog-FieldMask':
+            'places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.photos,places.location,places.id',
       },
       body: jsonEncode({
         'textQuery': '$category near $midLat, $midLng',
         'locationBias': {
           'circle': {
             'center': {'latitude': midLat, 'longitude': midLng},
-            'radius': 2000.0 // 2km radius
-          }
+            'radius': 2000.0, // 2km radius
+          },
         },
         'maxResultCount': 3,
       }),
@@ -372,20 +389,27 @@ class OutingService {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final List places = data['places'] ?? [];
-      
+
       // 3. Update session with results and move to 'voting'
       await sessionRef.update({
         'finalLocation': {
           'center': {'lat': midLat, 'lng': midLng},
-          'topVenues': places.map((p) => {
-            'id': p['id'],
-            'name': p['displayName']['text'],
-            'address': p['formattedAddress'],
-            'rating': p['rating'],
-            'userRatingCount': p['userRatingCount'],
-            'location': p['location'],
-            'photoReference': (p['photos'] != null && p['photos'].isNotEmpty) ? p['photos'][0]['name'] : null,
-          }).toList(),
+          'topVenues': places
+              .map(
+                (p) => {
+                  'id': p['id'],
+                  'name': p['displayName']['text'],
+                  'address': p['formattedAddress'],
+                  'rating': p['rating'],
+                  'userRatingCount': p['userRatingCount'],
+                  'location': p['location'],
+                  'photoReference':
+                      (p['photos'] != null && p['photos'].isNotEmpty)
+                      ? p['photos'][0]['name']
+                      : null,
+                },
+              )
+              .toList(),
         },
         'status': OutingStatus.voting.name,
       });
@@ -402,7 +426,11 @@ class OutingService {
     required String venueId,
     required String uid,
   }) async {
-    final sessionRef = _firestore.collection('groups').doc(groupId).collection('outings').doc(sessionId);
+    final sessionRef = _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('outings')
+        .doc(sessionId);
 
     await _firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(sessionRef);
@@ -410,7 +438,7 @@ class OutingService {
 
       final data = snapshot.data()!;
       final List topVenues = List.from(data['finalLocation']['topVenues']);
-      
+
       // Update the vote count for the specific venue
       for (var venue in topVenues) {
         if (venue['id'] == venueId) {
@@ -423,9 +451,7 @@ class OutingService {
         }
       }
 
-      transaction.update(sessionRef, {
-        'finalLocation.topVenues': topVenues,
-      });
+      transaction.update(sessionRef, {'finalLocation.topVenues': topVenues});
 
       // AUTO-FINALIZE: If everyone has voted, finish now
       final List participants = data['participants'] ?? [];
@@ -436,11 +462,11 @@ class OutingService {
       }
 
       if (totalVotes >= totalJoined && totalJoined > 0) {
-        // We can't call finalizeSession inside a transaction easily without a ref, 
+        // We can't call finalizeSession inside a transaction easily without a ref,
         // so we'll do the sorting logic here or just set a flag to finalize after.
         // For simplicity, let's just update the status to trigger the winner picker logic if we had one,
         // or just perform the winner pick here.
-        
+
         if (topVenues.isNotEmpty) {
           topVenues.sort((a, b) {
             final votesA = (a['votes'] as List?)?.length ?? 0;
@@ -468,17 +494,19 @@ class OutingService {
 
   /// Finalize the session and pick the winner
   Future<void> finalizeSession(String groupId, String sessionId) async {
-    final sessionRef = _firestore.collection('groups').doc(groupId).collection('outings').doc(sessionId);
+    final sessionRef = _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('outings')
+        .doc(sessionId);
     final snapshot = await sessionRef.get();
     if (!snapshot.exists) return;
 
     final data = snapshot.data()!;
     final List topVenues = List.from(data['finalLocation']['topVenues']);
-    
+
     if (topVenues.isEmpty) {
-      await sessionRef.update({
-        'status': OutingStatus.completed.name,
-      });
+      await sessionRef.update({'status': OutingStatus.completed.name});
       return;
     }
 
@@ -520,7 +548,7 @@ class OutingService {
 
         final data = snapshot.data()!;
         final List participants = List.from(data['participants'] ?? []);
-        
+
         bool updated = false;
         for (var i = 0; i < participants.length; i++) {
           if (participants[i]['uid'] == uid) {
@@ -531,16 +559,16 @@ class OutingService {
         }
 
         if (updated) {
-          transaction.update(sessionRef, {
-            'participants': participants,
-          });
-          
+          transaction.update(sessionRef, {'participants': participants});
+
           // Optimization: Sync Live Activity using the data we already fetched
           final session = OutingSessionModel.fromMap(data);
           // Manually update the participant in the local session object to reflect what we just wrote
           for (var i = 0; i < session.participants.length; i++) {
             if (session.participants[i].uid == uid) {
-              session.participants[i] = session.participants[i].copyWith(location: location);
+              session.participants[i] = session.participants[i].copyWith(
+                location: location,
+              );
               break;
             }
           }
@@ -559,7 +587,7 @@ class OutingService {
   Future<void> syncLiveActivity(OutingSessionModel session) async {
     final winner = session.winner;
     if (winner == null || winner['location'] == null) return;
-    
+
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
@@ -567,51 +595,61 @@ class OutingService {
 
     // 1. Calculate all participant stats
     int maxEta = 0;
-    final participantsList = session.participants.where((p) => p.location != null).map((p) {
-      final pDistStr = _calculateDistance(
-        p.location!.latitude,
-        p.location!.longitude,
-        (winner['location']['latitude'] as num).toDouble(),
-        (winner['location']['longitude'] as num).toDouble(),
-      );
-      final pDist = double.tryParse(pDistStr) ?? 0.0;
-      final isMe = p.uid == uid;
-      
-      final pEtaInt = int.tryParse(_estimateTime(pDist)) ?? 0;
-      if (pEtaInt > maxEta) maxEta = pEtaInt;
+    final participantsList = session.participants
+        .where((p) => p.location != null)
+        .map((p) {
+          final pDistStr = _calculateDistance(
+            p.location!.latitude,
+            p.location!.longitude,
+            (winner['location']['latitude'] as num).toDouble(),
+            (winner['location']['longitude'] as num).toDouble(),
+          );
+          final pDist = double.tryParse(pDistStr) ?? 0.0;
+          final isMe = p.uid == uid;
 
-      // --- RELATIVE JOURNEY PROGRESS ---
-      double progress = 0.0;
-      if (p.startLocation != null) {
-        final totalDist = double.tryParse(_calculateDistance(
-          p.startLocation!.latitude,
-          p.startLocation!.longitude,
-          (winner['location']['latitude'] as num).toDouble(),
-          (winner['location']['longitude'] as num).toDouble(),
-        )) ?? 0.0;
+          final pEtaInt = int.tryParse(_estimateTime(pDist)) ?? 0;
+          if (pEtaInt > maxEta) maxEta = pEtaInt;
 
-        if (totalDist > 0.05) { // 50m minimum for slider
-          progress = (1.0 - (pDist / totalDist)).clamp(0.0, 1.0);
-        } else {
-          progress = 1.0;
-        }
-      } else {
-        progress = (1.0 - (pDist / 10.0)).clamp(0.0, 1.0);
-      }
+          // --- RELATIVE JOURNEY PROGRESS ---
+          double progress = 0.0;
+          if (p.startLocation != null) {
+            final totalDist =
+                double.tryParse(
+                  _calculateDistance(
+                    p.startLocation!.latitude,
+                    p.startLocation!.longitude,
+                    (winner['location']['latitude'] as num).toDouble(),
+                    (winner['location']['longitude'] as num).toDouble(),
+                  ),
+                ) ??
+                0.0;
 
-      return {
-        'name': isMe ? "You" : p.name,
-        'initial': (p.name.isNotEmpty ? p.name[0] : "?").toUpperCase(),
-        'photoUrl': p.photoUrl ?? "",
-        'eta': pEtaInt.toString(),
-        'dist': "$pDistStr km",
-        'progress': progress,
-        'isMe': isMe,
-      };
-    }).toList();
+            if (totalDist > 0.05) {
+              // 50m minimum for slider
+              progress = (1.0 - (pDist / totalDist)).clamp(0.0, 1.0);
+            } else {
+              progress = 1.0;
+            }
+          } else {
+            progress = (1.0 - (pDist / 10.0)).clamp(0.0, 1.0);
+          }
+
+          return {
+            'name': isMe ? "You" : p.name,
+            'initial': (p.name.isNotEmpty ? p.name[0] : "?").toUpperCase(),
+            'photoUrl': p.photoUrl ?? "",
+            'eta': pEtaInt.toString(),
+            'dist': "$pDistStr km",
+            'progress': progress,
+            'isMe': isMe,
+          };
+        })
+        .toList();
 
     // 2. Sort and take top 3 by proximity
-    participantsList.sort((a, b) => (b['progress'] as double).compareTo(a['progress'] as double));
+    participantsList.sort(
+      (a, b) => (b['progress'] as double).compareTo(a['progress'] as double),
+    );
     final topParticipants = participantsList.take(3).toList();
 
     // 3. Serialize and check for changes
@@ -626,13 +664,16 @@ class OutingService {
     // 4. Update or Create Activity
     final payload = {
       'participants': participantsJson,
-      'destinationName': winner['name'] ?? 'Destination'
+      'destinationName': winner['name'] ?? 'Destination',
     };
 
     if (_activityId == null) {
       try {
         _liveActivitiesPlugin.init(appGroupId: "group.laween");
-        _activityId = await _liveActivitiesPlugin.createActivity("laween_tracking", payload);
+        _activityId = await _liveActivitiesPlugin.createActivity(
+          "laween_tracking",
+          payload,
+        );
       } catch (e) {
         debugPrint("Live Activity Creation Error in Service: $e");
       }
@@ -647,11 +688,20 @@ class OutingService {
     }
   }
 
-  String _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+  String _calculateDistance(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
     const p = 0.017453292519943295;
-    final a = 0.5 - math.cos((lat2 - lat1) * p) / 2 +
-        math.cos(lat1 * p) * math.cos(lat2 * p) *
-            (1 - math.cos((lon2 - lon1) * p)) / 2;
+    final a =
+        0.5 -
+        math.cos((lat2 - lat1) * p) / 2 +
+        math.cos(lat1 * p) *
+            math.cos(lat2 * p) *
+            (1 - math.cos((lon2 - lon1) * p)) /
+            2;
     return (12742 * math.asin(math.sqrt(a))).toStringAsFixed(1);
   }
 

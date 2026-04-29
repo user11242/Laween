@@ -17,7 +17,7 @@ class AppMessenger {
   }) {
     Color primaryColor = AppColors.teal;
     IconData icon = Icons.info_outline;
-    
+
     if (type == MessengerType.error) {
       primaryColor = Colors.redAccent;
       icon = Icons.error_outline;
@@ -43,7 +43,7 @@ class AppMessenger {
     _currentOverlay = null;
 
     final overlay = Overlay.of(context);
-    
+
     _currentOverlay = OverlayEntry(
       builder: (context) => _MessengerOverlay(
         title: title,
@@ -103,24 +103,42 @@ class _MessengerOverlayState extends State<_MessengerOverlay> {
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
-    
+
     return Positioned(
       bottom: bottomPadding + keyboardInset + 20,
       left: 20,
       right: 20,
       child: Material(
         color: Colors.transparent,
-        child: _isVisible 
-          ? _buildContent()
-              .animate()
-              .scale(duration: 400.ms, curve: Curves.easeOutBack, begin: const Offset(0.8, 0.8))
-              .moveY(begin: 50, end: 0, duration: 400.ms, curve: Curves.easeOutQuad)
-              .fadeIn(duration: 400.ms)
-          : _buildContent()
-              .animate()
-              .scale(duration: 300.ms, curve: Curves.easeInBack, end: const Offset(0.7, 0.7))
-              .moveY(begin: 0, end: 60, duration: 300.ms, curve: Curves.easeIn)
-              .fadeOut(duration: 200.ms),
+        child: _isVisible
+            ? _buildContent()
+                  .animate()
+                  .scale(
+                    duration: 400.ms,
+                    curve: Curves.easeOutBack,
+                    begin: const Offset(0.8, 0.8),
+                  )
+                  .moveY(
+                    begin: 50,
+                    end: 0,
+                    duration: 400.ms,
+                    curve: Curves.easeOutQuad,
+                  )
+                  .fadeIn(duration: 400.ms)
+            : _buildContent()
+                  .animate()
+                  .scale(
+                    duration: 300.ms,
+                    curve: Curves.easeInBack,
+                    end: const Offset(0.7, 0.7),
+                  )
+                  .moveY(
+                    begin: 0,
+                    end: 60,
+                    duration: 300.ms,
+                    curve: Curves.easeIn,
+                  )
+                  .fadeOut(duration: 200.ms),
       ),
     );
   }
@@ -135,7 +153,10 @@ class _MessengerOverlayState extends State<_MessengerOverlay> {
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.96),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: widget.primaryColor.withValues(alpha: 0.2), width: 1.5),
+            border: Border.all(
+              color: widget.primaryColor.withValues(alpha: 0.2),
+              width: 1.5,
+            ),
             boxShadow: [
               BoxShadow(
                 color: widget.primaryColor.withValues(alpha: 0.08),
@@ -183,7 +204,11 @@ class _MessengerOverlayState extends State<_MessengerOverlay> {
               ),
               const SizedBox(width: 8),
               IconButton(
-                icon: Icon(Icons.close, color: Colors.grey.withValues(alpha: 0.5), size: 18),
+                icon: Icon(
+                  Icons.close,
+                  color: Colors.grey.withValues(alpha: 0.5),
+                  size: 18,
+                ),
                 onPressed: _close,
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),

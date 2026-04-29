@@ -14,7 +14,8 @@ class LoginPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.black,
-      resizeToAvoidBottomInset: false, // Handle inset manually for cleaner layout
+      resizeToAvoidBottomInset:
+          false, // Handle inset manually for cleaner layout
       body: Stack(
         children: [
           // 1. Immersive Background with Sophisticated Tint
@@ -97,7 +98,9 @@ class LoginPage extends StatelessWidget {
             left: 0,
             right: 0,
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(48)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(48),
+              ),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
                 child: Container(
@@ -109,7 +112,9 @@ class LoginPage extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.03),
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(48)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(48),
+                    ),
                     border: Border.all(
                       color: Colors.white.withValues(alpha: 0.08),
                       width: 0.5,

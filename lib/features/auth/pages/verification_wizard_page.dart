@@ -52,7 +52,7 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
   void _goToNextStep() {
     setState(() {
       _otpKey = GlobalKey<UniversalOtpStepState>();
-      _step++; 
+      _step++;
     });
   }
 
@@ -76,38 +76,41 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
     setState(() => isLoading = true);
 
     try {
-    final error = await _authService.registerWithEmail(
-      name: widget.name,
-      email: widget.email,
-      password: widget.password,
-      confirmPassword: widget.password,
-      phone: widget.phone,
-      acceptedTerms: widget.acceptedTerms,
-      language: widget.language,
-    );
+      final error = await _authService.registerWithEmail(
+        name: widget.name,
+        email: widget.email,
+        password: widget.password,
+        confirmPassword: widget.password,
+        phone: widget.phone,
+        acceptedTerms: widget.acceptedTerms,
+        language: widget.language,
+      );
 
-    if (!mounted) return;
-    setState(() => isLoading = false);
+      if (!mounted) return;
+      setState(() => isLoading = false);
 
-    if (error == null) {
-      // ✅ Save FCM Token immediately after successful registration
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser != null) {
-        // If we already pre-fetched the token, save it directly
-        if (widget.fcmToken != null) {
-           await FirebaseFirestore.instance.collection("users").doc(currentUser.uid).update({
-             "fcmToken": widget.fcmToken,
-             "lastTokenUpdate": FieldValue.serverTimestamp(),
-           });
-        } else {
-           await _authService.saveUserFcmToken(currentUser.uid);
+      if (error == null) {
+        // ✅ Save FCM Token immediately after successful registration
+        final currentUser = FirebaseAuth.instance.currentUser;
+        if (currentUser != null) {
+          // If we already pre-fetched the token, save it directly
+          if (widget.fcmToken != null) {
+            await FirebaseFirestore.instance
+                .collection("users")
+                .doc(currentUser.uid)
+                .update({
+                  "fcmToken": widget.fcmToken,
+                  "lastTokenUpdate": FieldValue.serverTimestamp(),
+                });
+          } else {
+            await _authService.saveUserFcmToken(currentUser.uid);
+          }
         }
-      }
 
-      navigator.pop(true);
-    } else {
-      _showDetailedErrorDialog("Registration Error", error);
-    }
+        navigator.pop(true);
+      } else {
+        _showDetailedErrorDialog("Registration Error", error);
+      }
     } catch (e, stack) {
       if (mounted) setState(() => isLoading = false);
       _showDetailedErrorDialog("Crash in Registration", "$e\n$stack");
@@ -120,12 +123,20 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(title, style: const TextStyle(color: Colors.redAccent)),
-        content: SingleChildScrollView(child: Text(message, style: const TextStyle(color: Colors.white, fontSize: 12))),
+        content: SingleChildScrollView(
+          child: Text(
+            message,
+            style: const TextStyle(color: Colors.white, fontSize: 12),
+          ),
+        ),
         backgroundColor: const Color(0xFF1E1E1E),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("OK", style: TextStyle(color: Colors.amber)))
-        ]
-      )
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("OK", style: TextStyle(color: Colors.amber)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -160,10 +171,10 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
       canPop: !isLoading, // Prevent pop if we are currently cleaning up
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return; // If already popped by something else
-        
+
         // 👻 Cleanup if system back or swipe exits the wizard
         await _authService.cleanupGhostAccount();
-        
+
         if (context.mounted) {
           Navigator.pop(context, false);
         }
@@ -181,10 +192,11 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
                 margin: const EdgeInsets.symmetric(horizontal: 24),
                 padding: const EdgeInsets.all(20),
                 constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.85 - bottomInset,
+                  maxHeight:
+                      MediaQuery.of(context).size.height * 0.85 - bottomInset,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white, 
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
@@ -204,8 +216,11 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
                           children: [
                             Align(
                               alignment: AlignmentDirectional.topEnd,
-                                child: IconButton(
-                                  icon: const Icon(Icons.close, color: Colors.black54),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: Colors.black54,
+                                ),
                                 onPressed: _handleCancel,
                               ),
                             ),
@@ -214,12 +229,19 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
                         if (currentStepIndex <= totalStepsCount)
                           Text(
                             l10n.stepOf(currentStepIndex, totalStepsCount),
-                            style: TextStyle(color: Colors.black.withValues(alpha: 0.4), fontSize: 13, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              color: Colors.black.withValues(alpha: 0.4),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         const SizedBox(height: 10),
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 350),
-                          child: Container(key: ValueKey<int>(_step), child: _buildStepContent()),
+                          child: Container(
+                            key: ValueKey<int>(_step),
+                            child: _buildStepContent(),
+                          ),
                         ),
                         const SizedBox(height: 24),
                         Row(
@@ -230,9 +252,13 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.accentGold,
                                   foregroundColor: Colors.black,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                 ),
-                                onPressed: isLoading ? null : _handlePrimaryAction,
+                                onPressed: isLoading
+                                    ? null
+                                    : _handlePrimaryAction,
                                 child: isLoading
                                     ? Row(
                                         mainAxisSize: MainAxisSize.min,
@@ -240,13 +266,28 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
                                           SizedBox(
                                             height: 20,
                                             width: 20,
-                                            child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2),
+                                            child: CircularProgressIndicator(
+                                              color: Colors.black,
+                                              strokeWidth: 2,
+                                            ),
                                           ),
                                           SizedBox(width: 10),
-                                          Text(l10n.finalizing, style: const TextStyle(color: Colors.black, fontSize: 13)),
+                                          Text(
+                                            l10n.finalizing,
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 13,
+                                            ),
+                                          ),
                                         ],
                                       )
-                                    : Text(l10n.finishAndRegister, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                                    : Text(
+                                        l10n.finishAndRegister,
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                               ),
                           ],
                         ),

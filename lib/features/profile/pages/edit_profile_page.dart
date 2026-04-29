@@ -34,7 +34,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Future<void> _loadUserData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
         _nameController.text = data['name'] ?? data['fullName'] ?? "";
@@ -86,7 +89,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
         updates['profilePic'] = photoUrl;
       }
 
-      await FirebaseFirestore.instance.collection('users').doc(user?.uid).update(updates);
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user?.uid)
+          .update(updates);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -100,10 +106,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -136,7 +139,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
         centerTitle: true,
       ),
       body: _isInitialLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.teal))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.teal),
+            )
           : SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.all(24.0),
@@ -151,12 +156,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           GestureDetector(
                             onTap: _pickImage,
                             child: StreamBuilder<DocumentSnapshot>(
-                              stream: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).snapshots(),
+                              stream: FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(FirebaseAuth.instance.currentUser?.uid)
+                                  .snapshots(),
                               builder: (context, snapshot) {
                                 String? photoUrl;
                                 if (snapshot.hasData && snapshot.data!.exists) {
-                                  final data = snapshot.data!.data() as Map<String, dynamic>;
-                                  photoUrl = data['photoUrl'] ?? data['profilePic'];
+                                  final data =
+                                      snapshot.data!.data()
+                                          as Map<String, dynamic>;
+                                  photoUrl =
+                                      data['photoUrl'] ?? data['profilePic'];
                                 }
                                 return Container(
                                   padding: const EdgeInsets.all(4),
@@ -165,7 +176,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.08),
+                                        color: Colors.black.withValues(
+                                          alpha: 0.08,
+                                        ),
                                         blurRadius: 15,
                                         spreadRadius: 2,
                                         offset: const Offset(0, 8),
@@ -174,17 +187,25 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                   ),
                                   child: CircleAvatar(
                                     radius: 55,
-                                    backgroundColor: AppColors.teal.withValues(alpha: 0.1),
+                                    backgroundColor: AppColors.teal.withValues(
+                                      alpha: 0.1,
+                                    ),
                                     backgroundImage: _imageFile != null
                                         ? FileImage(_imageFile!)
-                                        : (photoUrl != null && photoUrl.startsWith('http'))
-                                            ? NetworkImage(photoUrl)
-                                            : null,
-                                    child: (_imageFile == null && photoUrl?.startsWith('http') != true)
+                                        : (photoUrl != null &&
+                                              photoUrl.startsWith('http'))
+                                        ? NetworkImage(photoUrl)
+                                        : null,
+                                    child:
+                                        (_imageFile == null &&
+                                            photoUrl?.startsWith('http') !=
+                                                true)
                                         ? Icon(
                                             Icons.person,
                                             size: 70,
-                                            color: AppColors.teal.withValues(alpha: 0.5),
+                                            color: AppColors.teal.withValues(
+                                              alpha: 0.5,
+                                            ),
                                           )
                                         : null,
                                   ),
@@ -202,9 +223,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                 decoration: BoxDecoration(
                                   color: AppColors.primary,
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white, width: 3),
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 3,
+                                  ),
                                 ),
-                                child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
+                                child: const Icon(
+                                  Icons.camera_alt,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
                               ),
                             ),
                           ),
@@ -218,13 +246,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       controller: _nameController,
                       label: l10n.fullName,
                       icon: Icons.person_outline,
-                      validator: (v) => v == null || v.isEmpty ? "Required" : null,
+                      validator: (v) =>
+                          v == null || v.isEmpty ? "Required" : null,
                     ),
                     const SizedBox(height: 20),
 
                     // Email Field (Locked)
                     _buildPremiumTextField(
-                      controller: TextEditingController(text: FirebaseAuth.instance.currentUser?.email ?? ""),
+                      controller: TextEditingController(
+                        text: FirebaseAuth.instance.currentUser?.email ?? "",
+                      ),
                       label: l10n.email,
                       icon: Icons.email_outlined,
                       readOnly: true,
@@ -246,7 +277,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       width: double.infinity,
                       height: 56,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(colors: AppColors.tealGradient),
+                        gradient: LinearGradient(
+                          colors: AppColors.tealGradient,
+                        ),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
@@ -261,13 +294,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,
                           shadowColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
                         child: _isLoading
                             ? const SizedBox(
                                 height: 24,
                                 width: 24,
-                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
                               )
                             : Text(
                                 l10n.save,
@@ -340,7 +378,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide.none,
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 18,
+              ),
             ),
           ),
         ),

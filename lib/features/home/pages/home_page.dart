@@ -38,7 +38,8 @@ class _HomePageState extends State<HomePage> {
           .map((snapshot) {
             int total = 0;
             for (var doc in snapshot.docs) {
-              final unreadCounts = doc.data()['unreadCounts'] as Map<String, dynamic>?;
+              final unreadCounts =
+                  doc.data()['unreadCounts'] as Map<String, dynamic>?;
               if (unreadCounts != null) {
                 total += (unreadCounts[user.uid] as num? ?? 0).toInt();
               }
@@ -56,10 +57,7 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: pages),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -105,18 +103,24 @@ class _HomePageState extends State<HomePage> {
                     label: Text(count.toString()),
                     isLabelVisible: count > 0,
                     backgroundColor: Colors.redAccent,
-                    child: Icon(_currentIndex == 1 ? Icons.people : Icons.people_outline),
+                    child: Icon(
+                      _currentIndex == 1 ? Icons.people : Icons.people_outline,
+                    ),
                   );
-                }
+                },
               ),
               label: l10n.groups,
             ),
             BottomNavigationBarItem(
-              icon: Icon(_currentIndex == 2 ? Icons.favorite : Icons.favorite_border),
+              icon: Icon(
+                _currentIndex == 2 ? Icons.favorite : Icons.favorite_border,
+              ),
               label: l10n.favorite,
             ),
             BottomNavigationBarItem(
-              icon: Icon(_currentIndex == 3 ? Icons.person : Icons.person_outline),
+              icon: Icon(
+                _currentIndex == 3 ? Icons.person : Icons.person_outline,
+              ),
               label: l10n.profile,
             ),
           ],
@@ -134,18 +138,21 @@ class _HomePageState extends State<HomePage> {
         children: [
           // 1. BLURRY ACCENT BLOBS (Premium "WOW")
           Positioned(
-            top: -50,
-            right: -50,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF6366F1).withValues(alpha: 0.08),
-              ),
-            ),
-          ).animate().fadeIn(duration: 2.seconds).scale(begin: const Offset(0.8, 0.8), curve: Curves.easeOutBack),
-          
+                top: -50,
+                right: -50,
+                child: Container(
+                  width: 300,
+                  height: 300,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF6366F1).withValues(alpha: 0.08),
+                  ),
+                ),
+              )
+              .animate()
+              .fadeIn(duration: 2.seconds)
+              .scale(begin: const Offset(0.8, 0.8), curve: Curves.easeOutBack),
+
           Positioned(
             top: 150,
             left: -80,
@@ -167,15 +174,15 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 20),
-                  
+
                   // 2. MODERN HEADER (White text for dark mode)
                   _buildModernHeader(user),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // 3. LIVE TRACKING DISCOVERY (Careem Style)
                   const LiveTrackingDashboardWidget(),
-                  
+
                   // 4. QUICK ACTIONS GRID (2x2)
                   Text(
                     "Quick Actions",
@@ -185,12 +192,12 @@ class _HomePageState extends State<HomePage> {
                       color: AppColors.primary,
                     ),
                   ).animate().fadeIn(delay: 200.ms).slideX(begin: -0.1),
-                  
+
                   const SizedBox(height: 16),
                   _buildQuickActionsGrid(),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // 5. RECENTLY ACTIVE GROUPS
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -215,10 +222,10 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ],
                   ).animate().fadeIn(delay: 400.ms).slideX(begin: -0.05),
-                  
+
                   const SizedBox(height: 8),
                   _buildRecentlyActive(user),
-                  
+
                   const SizedBox(height: 120),
                 ],
               ),
@@ -231,7 +238,10 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildModernHeader(User? user) {
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('users').doc(user?.uid).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user?.uid)
+          .snapshots(),
       builder: (context, snapshot) {
         String name = "User";
         String? photoUrl;
@@ -240,7 +250,7 @@ class _HomePageState extends State<HomePage> {
           name = data['name'] ?? data['fullName'] ?? user?.displayName ?? "Me";
           photoUrl = data['photoUrl'] ?? data['profilePic'];
         }
-        
+
         return Row(
           children: [
             Column(
@@ -269,7 +279,10 @@ class _HomePageState extends State<HomePage> {
             Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.slate.withValues(alpha: 0.1), width: 2),
+                border: Border.all(
+                  color: AppColors.slate.withValues(alpha: 0.1),
+                  width: 2,
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.05),
@@ -283,9 +296,16 @@ class _HomePageState extends State<HomePage> {
                 child: CircleAvatar(
                   radius: 26,
                   backgroundColor: AppColors.lightSlate,
-                  backgroundImage: (photoUrl != null && photoUrl.startsWith('http')) ? CachedNetworkImageProvider(photoUrl) : null,
+                  backgroundImage:
+                      (photoUrl != null && photoUrl.startsWith('http'))
+                      ? CachedNetworkImageProvider(photoUrl)
+                      : null,
                   child: (photoUrl == null || !photoUrl.startsWith('http'))
-                      ? const Icon(Icons.person, color: AppColors.slate, size: 30)
+                      ? const Icon(
+                          Icons.person,
+                          color: AppColors.slate,
+                          size: 30,
+                        )
                       : null,
                 ),
               ),
@@ -310,7 +330,10 @@ class _HomePageState extends State<HomePage> {
         "icon": Icons.add_circle_outline_rounded,
         "color": const Color(0xFF6366F1), // Indigo
         "onTap": () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const CreateGroupPage()));
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CreateGroupPage()),
+          );
         },
       },
       {
@@ -318,7 +341,10 @@ class _HomePageState extends State<HomePage> {
         "icon": Icons.qr_code_scanner_rounded,
         "color": AppColors.teal,
         "onTap": () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const JoinGroupPage()));
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const JoinGroupPage()),
+          );
         },
       },
       {
@@ -354,7 +380,10 @@ class _HomePageState extends State<HomePage> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.slate.withValues(alpha: 0.1), width: 1),
+              border: Border.all(
+                color: AppColors.slate.withValues(alpha: 0.1),
+                width: 1,
+              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.05),
@@ -373,7 +402,11 @@ class _HomePageState extends State<HomePage> {
                     color: (action['color'] as Color).withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(action['icon'] as IconData, color: action['color'] as Color, size: 22),
+                  child: Icon(
+                    action['icon'] as IconData,
+                    color: action['color'] as Color,
+                    size: 22,
+                  ),
                 ),
                 Text(
                   action['title'] as String,
@@ -408,7 +441,11 @@ class _HomePageState extends State<HomePage> {
             alignment: Alignment.center,
             child: Column(
               children: [
-                Icon(Icons.chat_bubble_outline_rounded, size: 48, color: AppColors.slate.withValues(alpha: 0.3)),
+                Icon(
+                  Icons.chat_bubble_outline_rounded,
+                  size: 48,
+                  color: AppColors.slate.withValues(alpha: 0.3),
+                ),
                 const SizedBox(height: 12),
                 Text(
                   "No recent activity",
@@ -422,7 +459,9 @@ class _HomePageState extends State<HomePage> {
         final groups = snapshot.data!.docs;
         return Column(
           children: groups.map((doc) {
-            final group = GroupModel.fromMap(doc.data() as Map<String, dynamic>);
+            final group = GroupModel.fromMap(
+              doc.data() as Map<String, dynamic>,
+            );
             return RecentGroupCard(group: group);
           }).toList(),
         ).animate().fadeIn(delay: 500.ms);

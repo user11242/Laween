@@ -10,6 +10,7 @@ import '../data/models/group_model.dart';
 import '../data/services/group_service.dart';
 import './group_media_page.dart';
 import './group_locations_page.dart';
+import './chat_wallpaper_page.dart';
 
 class GroupSettingsPage extends StatefulWidget {
   final GroupModel group;
@@ -34,7 +35,6 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
     _currentName = widget.group.name;
     _currentPhotoUrl = widget.group.photoUrl;
   }
-
 
   Future<void> _leaveGroup() async {
     final confirm = await showDialog<bool>(
@@ -67,9 +67,9 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -109,9 +109,9 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -119,7 +119,7 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
   }
 
   Future<List<DocumentSnapshot>> _fetchMembers() async {
-    // Note: If memberIds has more than requested chunks, we should chunk it, 
+    // Note: If memberIds has more than requested chunks, we should chunk it,
     // but fetching them individually in parallel is fine for small/medium groups.
     final futures = widget.group.memberIds.map(
       (uid) => FirebaseFirestore.instance.collection('users').doc(uid).get(),
@@ -128,7 +128,9 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
   }
 
   Future<void> _showEditGroupSheet() async {
-    final TextEditingController nameController = TextEditingController(text: _currentName);
+    final TextEditingController nameController = TextEditingController(
+      text: _currentName,
+    );
     File? newImage;
 
     await showModalBottomSheet(
@@ -138,9 +140,14 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
       builder: (context) => StatefulBuilder(
         builder: (context, setSheetState) {
           final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
-          
+
           return Container(
-            padding: EdgeInsets.only(bottom: bottomPadding + 32, top: 32, left: 24, right: 24),
+            padding: EdgeInsets.only(
+              bottom: bottomPadding + 32,
+              top: 32,
+              left: 24,
+              right: 24,
+            ),
             decoration: const BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -150,15 +157,21 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
               children: [
                 Text(
                   'Edit Group',
-                  style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.darkSlate),
+                  style: GoogleFonts.outfit(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.darkSlate,
+                  ),
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Photo Picker
                 GestureDetector(
                   onTap: () async {
                     final picker = ImagePicker();
-                    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+                    final pickedFile = await picker.pickImage(
+                      source: ImageSource.gallery,
+                    );
                     if (pickedFile != null) {
                       setSheetState(() => newImage = File(pickedFile.path));
                     }
@@ -172,13 +185,25 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                           color: AppColors.teal.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                           image: newImage != null
-                              ? DecorationImage(image: FileImage(newImage!), fit: BoxFit.cover)
+                              ? DecorationImage(
+                                  image: FileImage(newImage!),
+                                  fit: BoxFit.cover,
+                                )
                               : _currentPhotoUrl != null
-                                  ? DecorationImage(image: CachedNetworkImageProvider(_currentPhotoUrl!), fit: BoxFit.cover)
-                                  : null,
+                              ? DecorationImage(
+                                  image: CachedNetworkImageProvider(
+                                    _currentPhotoUrl!,
+                                  ),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
                         ),
                         child: (newImage == null && _currentPhotoUrl == null)
-                            ? const Icon(Icons.add_a_photo, color: AppColors.teal, size: 32)
+                            ? const Icon(
+                                Icons.add_a_photo,
+                                color: AppColors.teal,
+                                size: 32,
+                              )
                             : null,
                       ),
                       Positioned(
@@ -186,8 +211,15 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                         right: 0,
                         child: Container(
                           padding: const EdgeInsets.all(6),
-                          decoration: const BoxDecoration(color: AppColors.teal, shape: BoxShape.circle),
-                          child: const Icon(Icons.edit, color: Colors.white, size: 14),
+                          decoration: const BoxDecoration(
+                            color: AppColors.teal,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.edit,
+                            color: Colors.white,
+                            size: 14,
+                          ),
                         ),
                       ),
                     ],
@@ -200,10 +232,15 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                   controller: nameController,
                   decoration: InputDecoration(
                     labelText: 'Group Name',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.teal, width: 2),
+                      borderSide: const BorderSide(
+                        color: AppColors.teal,
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),
@@ -217,7 +254,7 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                       if (nameController.text.trim().isEmpty) return;
                       final messenger = ScaffoldMessenger.of(context);
                       final nav = Navigator.of(context);
-                      
+
                       nav.pop(); // close sheet immediately on save
                       setState(() => _isLoading = true);
 
@@ -227,14 +264,16 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                           newName: nameController.text.trim(),
                           newImageFile: newImage,
                         );
-                        
+
                         // Optimistically update local state so UI updates
                         setState(() {
                           _currentName = nameController.text.trim();
                         });
-                        
+
                         messenger.showSnackBar(
-                          const SnackBar(content: Text('Group updated successfully!')),
+                          const SnackBar(
+                            content: Text('Group updated successfully!'),
+                          ),
                         );
                       } catch (e) {
                         messenger.showSnackBar(
@@ -248,9 +287,14 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                       backgroundColor: AppColors.teal,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    child: Text('Save Changes', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+                    child: Text(
+                      'Save Changes',
+                      style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
               ],
@@ -270,7 +314,10 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
       appBar: AppBar(
         title: Text(
           'Group Info',
-          style: GoogleFonts.outfit(color: AppColors.darkSlate, fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(
+            color: AppColors.darkSlate,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -285,7 +332,9 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.teal))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.teal),
+            )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -293,17 +342,29 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                 children: [
                   // --- Header ---
                   Center(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(50),
-                          child: _currentPhotoUrl != null
-                              ? CachedNetworkImage(
-                                  imageUrl: _currentPhotoUrl!,
-                                  fit: BoxFit.cover,
-                                  placeholder: (context, url) => const CircularProgressIndicator(strokeWidth: 2, color: AppColors.teal),
-                                  errorWidget: (context, url, error) => const Icon(Icons.groups, color: AppColors.teal, size: 40),
-                                )
-                              : const Icon(Icons.groups, color: AppColors.teal, size: 40),
-                        ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(50),
+                      child: _currentPhotoUrl != null
+                          ? CachedNetworkImage(
+                              imageUrl: _currentPhotoUrl!,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) =>
+                                  const CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.teal,
+                                  ),
+                              errorWidget: (context, url, error) => const Icon(
+                                Icons.groups,
+                                color: AppColors.teal,
+                                size: 40,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.groups,
+                              color: AppColors.teal,
+                              size: 40,
+                            ),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -331,8 +392,11 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                     icon: Icons.photo_library_outlined,
                     title: 'Media, Links, and Docs',
                     onTap: () => Navigator.push(
-                      context, 
-                      MaterialPageRoute(builder: (_) => GroupMediaPage(groupId: widget.group.id))
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            GroupMediaPage(groupId: widget.group.id),
+                      ),
                     ),
                   ),
                   const Divider(height: 1, indent: 56),
@@ -340,8 +404,23 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                     icon: Icons.location_on_outlined,
                     title: 'Shared Locations',
                     onTap: () => Navigator.push(
-                      context, 
-                      MaterialPageRoute(builder: (_) => GroupLocationsPage(groupId: widget.group.id))
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            GroupLocationsPage(groupId: widget.group.id),
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  _buildNavigationTile(
+                    icon: Icons.wallpaper_rounded,
+                    title: 'Chat Wallpaper',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            ChatWallpaperPage(groupId: widget.group.id),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -386,10 +465,12 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                           separatorBuilder: (_, __) => const Divider(height: 1),
                           itemBuilder: (context, index) {
                             final doc = members[index];
-                            final data = doc.data() as Map<String, dynamic>? ?? {};
+                            final data =
+                                doc.data() as Map<String, dynamic>? ?? {};
                             final name = data['name'] ?? 'Unknown User';
                             final photo = data['photoUrl'];
-                            final isCreatorMember = doc.id == widget.group.creatorId;
+                            final isCreatorMember =
+                                doc.id == widget.group.creatorId;
 
                             return ListTile(
                               leading: Container(
@@ -405,10 +486,21 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                                       ? CachedNetworkImage(
                                           imageUrl: photo,
                                           fit: BoxFit.cover,
-                                          placeholder: (context, url) => const CircularProgressIndicator(strokeWidth: 2, color: AppColors.teal),
-                                          errorWidget: (context, url, error) => const Icon(Icons.person, color: AppColors.teal),
+                                          placeholder: (context, url) =>
+                                              const CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: AppColors.teal,
+                                              ),
+                                          errorWidget: (context, url, error) =>
+                                              const Icon(
+                                                Icons.person,
+                                                color: AppColors.teal,
+                                              ),
                                         )
-                                      : const Icon(Icons.person, color: AppColors.teal),
+                                      : const Icon(
+                                          Icons.person,
+                                          color: AppColors.teal,
+                                        ),
                                 ),
                               ),
                               title: Text(
@@ -420,9 +512,14 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                               ),
                               trailing: isCreatorMember
                                   ? Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: AppColors.primary.withValues(alpha: 0.1),
+                                        color: AppColors.primary.withValues(
+                                          alpha: 0.1,
+                                        ),
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       child: Text(
@@ -454,7 +551,9 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                         foregroundColor: Colors.red,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
                     ),
                   ] else ...[
@@ -467,7 +566,9 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                         foregroundColor: Colors.red,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
                     ),
                   ],

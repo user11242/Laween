@@ -18,8 +18,18 @@ class HeaderCurveClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     Path path = Path();
     path.lineTo(0, size.height - 60);
-    path.quadraticBezierTo(size.width * 0.25, size.height, size.width * 0.5, size.height - 30);
-    path.quadraticBezierTo(size.width * 0.75, size.height - 60, size.width, size.height - 20);
+    path.quadraticBezierTo(
+      size.width * 0.25,
+      size.height,
+      size.width * 0.5,
+      size.height - 30,
+    );
+    path.quadraticBezierTo(
+      size.width * 0.75,
+      size.height - 60,
+      size.width,
+      size.height - 20,
+    );
     path.lineTo(size.width, 0);
     path.close();
     return path;
@@ -54,7 +64,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       if (mounted) {
         setState(() => _isLoading = false);
         // Navigate to OTP page
-        Navigator.pushNamed(context, '/forgot_password_verify', arguments: _fullPhoneNumber);
+        Navigator.pushNamed(
+          context,
+          '/forgot_password_verify',
+          arguments: _fullPhoneNumber,
+        );
       }
     });
   }
@@ -90,7 +104,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             child: IconButton(
                               icon: Transform.flip(
                                 flipX: l10n.isAr,
-                                child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
+                                child: const Icon(
+                                  Icons.arrow_back_ios_new,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
                               ),
                               onPressed: () => Navigator.pop(context),
                             ),
@@ -132,12 +150,28 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       ),
                       // Dot pattern around the icon (simulated)
                       Positioned(
-                        top: 20, right: 10,
-                        child: Container(width: 6, height: 6, decoration: const BoxDecoration(color: AppColors.teal, shape: BoxShape.circle)),
+                        top: 20,
+                        right: 10,
+                        child: Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(
+                            color: AppColors.teal,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
                       ),
                       Positioned(
-                        bottom: 30, left: 15,
-                        child: Container(width: 4, height: 4, decoration: const BoxDecoration(color: AppColors.teal, shape: BoxShape.circle)),
+                        bottom: 30,
+                        left: 15,
+                        child: Container(
+                          width: 4,
+                          height: 4,
+                          decoration: const BoxDecoration(
+                            color: AppColors.teal,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
                       ),
                       // The Icon/Graphic
                       Container(
@@ -147,18 +181,23 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           color: const Color(0xFFFFD166).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Icon(Icons.mail_outline, size: 50, color: Color(0xFFFFD166)),
+                        child: const Icon(
+                          Icons.mail_outline,
+                          size: 50,
+                          color: Color(0xFFFFD166),
+                        ),
                       ),
                       // Floating dots near graphics
                       Positioned(
-                        top: 0, left: 0,
+                        top: 0,
+                        left: 0,
                         child: _buildDecorativeDots(AppColors.teal),
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   Text(
                     l10n.resetYourPassword,
                     style: GoogleFonts.inter(
@@ -177,12 +216,14 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       height: 1.5,
                     ),
                   ),
-                  
+
                   const SizedBox(height: 40),
-                  
+
                   // Phone Input
                   Align(
-                    alignment: l10n.isAr ? Alignment.centerRight : Alignment.centerLeft,
+                    alignment: l10n.isAr
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
                     child: Text(
                       l10n.phoneNumber,
                       style: GoogleFonts.inter(
@@ -195,7 +236,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   IntlPhoneField(
                     controller: _phoneController,
                     initialCountryCode: _initialCountryCode,
-                    onChanged: (phone) => _fullPhoneNumber = phone.completeNumber,
+                    onChanged: (phone) =>
+                        _fullPhoneNumber = phone.completeNumber,
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: Colors.white,
@@ -213,9 +255,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // Send Code Button
                   SizedBox(
                     width: double.infinity,
@@ -233,7 +275,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           ? const SizedBox(
                               width: 24,
                               height: 24,
-                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
                             )
                           : Text(
                               l10n.sendCode,
@@ -245,9 +290,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 20),
-                  
+
                   TextButton(
                     onPressed: () => Navigator.pop(context),
                     child: Text(
@@ -259,9 +304,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 40),
-                  
+
                   // Bottom decorative dots
                   Align(
                     alignment: Alignment.centerLeft,
@@ -281,13 +326,25 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       children: [
         Row(
           children: [
-            Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
             const SizedBox(width: 8),
-            Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
           ],
         ),
         const SizedBox(height: 8),
-        Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
       ],
     );
   }

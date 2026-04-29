@@ -93,7 +93,9 @@ class MessageModel {
       deletedFor: List<String>.from(map['deletedFor'] ?? []),
       isDeleted: map['isDeleted'] ?? false,
       isEdited: map['isEdited'] ?? false,
-      updatedAt: map['updatedAt'] != null ? (map['updatedAt'] as Timestamp).toDate() : null,
+      updatedAt: map['updatedAt'] != null
+          ? (map['updatedAt'] as Timestamp).toDate()
+          : null,
     );
   }
 }

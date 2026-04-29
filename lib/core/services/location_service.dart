@@ -18,7 +18,7 @@ class LocationService {
   Future<void> setActiveSession(String? groupId, String? sessionId) async {
     _activeGroupId = groupId;
     _activeSessionId = sessionId;
-    
+
     // Persist to user document for Home Page stability
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null) {
@@ -46,10 +46,12 @@ class LocationService {
         return Future.error('Location permissions are denied');
       }
     }
-    
+
     if (permission == LocationPermission.deniedForever) {
-      return Future.error('Location permissions are permanently denied, we cannot request permissions.');
-    } 
+      return Future.error(
+        'Location permissions are permanently denied, we cannot request permissions.',
+      );
+    }
 
     return await Geolocator.getCurrentPosition(
       locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
@@ -81,41 +83,42 @@ class LocationService {
       pauseLocationUpdatesAutomatically: false,
       showBackgroundLocationIndicator: true,
     );
-    
-    _positionSubscription = Geolocator.getPositionStream(
-      locationSettings: locationSettings,
-    ).listen((Position position) {
-      final loc = GeoPoint(position.latitude, position.longitude);
-      
-      // 1. Update User Document
-      FirebaseFirestore.instance.collection('users').doc(userId).update({
-        'location': loc,
-        'lastLocationUpdate': FieldValue.serverTimestamp(),
-      });
 
-      // 2. Update Active Group Session (Persistent Background Sync)
-      if (_activeGroupId != null && _activeSessionId != null) {
-        OutingService().updateParticipantLocation(
-          groupId: _activeGroupId!,
-          sessionId: _activeSessionId!,
-          uid: userId,
-          location: loc,
+    _positionSubscription =
+        Geolocator.getPositionStream(locationSettings: locationSettings).listen(
+          (Position position) {
+            final loc = GeoPoint(position.latitude, position.longitude);
+
+            // 1. Update User Document
+            FirebaseFirestore.instance.collection('users').doc(userId).update({
+              'location': loc,
+              'lastLocationUpdate': FieldValue.serverTimestamp(),
+            });
+
+            // 2. Update Active Group Session (Persistent Background Sync)
+            if (_activeGroupId != null && _activeSessionId != null) {
+              OutingService().updateParticipantLocation(
+                groupId: _activeGroupId!,
+                sessionId: _activeSessionId!,
+                uid: userId,
+                location: loc,
+              );
+            }
+          },
         );
-      }
-    });
   }
 
   /// Stop tracking
   Future<void> stopTracking(String userId) async {
     await _positionSubscription?.cancel();
     _positionSubscription = null;
-    
+
     await FirebaseFirestore.instance.collection('users').doc(userId).update({
       'isTrackingActive': false,
       'activeGroupId': '',
       'activeSessionId': '',
     });
-    
+
     _activeGroupId = null;
     _activeSessionId = null;
   }

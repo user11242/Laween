@@ -33,16 +33,24 @@ class ProfilePage extends StatelessWidget {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50, // Slightly off-white for premium card contrast
+      backgroundColor:
+          Colors.grey.shade50, // Slightly off-white for premium card contrast
       body: StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance.collection('users').doc(user?.uid).snapshots(),
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(user?.uid)
+            .snapshots(),
         builder: (context, snapshot) {
           String displayName = "User Name";
           String? photoUrl = user?.photoURL;
 
           if (snapshot.hasData && snapshot.data!.exists) {
             final data = snapshot.data!.data() as Map<String, dynamic>;
-            displayName = data['name'] ?? data['fullName'] ?? user?.displayName ?? "User Name";
+            displayName =
+                data['name'] ??
+                data['fullName'] ??
+                user?.displayName ??
+                "User Name";
             photoUrl = data['photoUrl'] ?? data['profilePic'] ?? photoUrl;
           }
 
@@ -62,13 +70,15 @@ class ProfilePage extends StatelessWidget {
                         height: screenHeight * 0.28,
                         width: double.infinity,
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(colors: AppColors.tealGradient),
+                          gradient: LinearGradient(
+                            colors: AppColors.tealGradient,
+                          ),
                           boxShadow: [
                             BoxShadow(
                               color: AppColors.teal.withValues(alpha: 0.3),
                               blurRadius: 10,
                               offset: const Offset(0, 5),
-                            )
+                            ),
                           ],
                         ),
                         padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -89,7 +99,7 @@ class ProfilePage extends StatelessWidget {
                         ),
                       ),
                     ),
-                    
+
                     // Profile Avatar with Dual Border & Camera Badge
                     Positioned(
                       bottom: -55,
@@ -111,15 +121,21 @@ class ProfilePage extends StatelessWidget {
                             ),
                             child: CircleAvatar(
                               radius: 55,
-                              backgroundColor: AppColors.teal.withValues(alpha: 0.1),
-                              backgroundImage: (photoUrl != null && photoUrl.startsWith('http')) 
-                                  ? CachedNetworkImageProvider(photoUrl) 
+                              backgroundColor: AppColors.teal.withValues(
+                                alpha: 0.1,
+                              ),
+                              backgroundImage:
+                                  (photoUrl != null &&
+                                      photoUrl.startsWith('http'))
+                                  ? CachedNetworkImageProvider(photoUrl)
                                   : null,
                               child: (photoUrl?.startsWith('http') != true)
                                   ? Icon(
                                       Icons.person,
                                       size: 70,
-                                      color: AppColors.teal.withValues(alpha: 0.5),
+                                      color: AppColors.teal.withValues(
+                                        alpha: 0.5,
+                                      ),
                                     )
                                   : null,
                             ),
@@ -129,9 +145,9 @@ class ProfilePage extends StatelessWidget {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 70),
-                
+
                 // --- 2. User Info ---
                 Text(
                   displayName,
@@ -143,7 +159,10 @@ class ProfilePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.grey.shade200,
                     borderRadius: BorderRadius.circular(20),
@@ -157,9 +176,9 @@ class ProfilePage extends StatelessWidget {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 32),
-                
+
                 // --- 3. Grouped Settings Menu ---
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -198,22 +217,36 @@ class ProfilePage extends StatelessWidget {
                               iconBgColor: Colors.blue.withValues(alpha: 0.15),
                               iconColor: Colors.blue.shade700,
                               title: l10n.editProfile,
-                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const EditProfilePage())),
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const EditProfilePage(),
+                                ),
+                              ),
                             ),
-                            const Divider(height: 1, indent: 64, color: Color(0xFFEDF2F7)),
+                            const Divider(
+                              height: 1,
+                              indent: 64,
+                              color: Color(0xFFEDF2F7),
+                            ),
                             _buildPremiumMenuItem(
                               icon: Icons.favorite_border,
                               iconBgColor: Colors.pink.withValues(alpha: 0.15),
                               iconColor: Colors.pink.shade600,
                               title: l10n.myFavorites,
-                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const FavoritesPage())),
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const FavoritesPage(),
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      
+
                       const SizedBox(height: 24),
-                      
+
                       Padding(
                         padding: const EdgeInsets.only(left: 8.0, bottom: 8.0),
                         child: Text(
@@ -243,40 +276,71 @@ class ProfilePage extends StatelessWidget {
                           children: [
                             _buildPremiumMenuItem(
                               icon: Icons.language,
-                              iconBgColor: AppColors.teal.withValues(alpha: 0.15),
+                              iconBgColor: AppColors.teal.withValues(
+                                alpha: 0.15,
+                              ),
                               iconColor: AppColors.teal,
                               title: l10n.language,
                               trailingText: l10n.isAr ? "العربية" : "English",
-                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const LanguagePage())),
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const LanguagePage(),
+                                ),
+                              ),
                             ),
-                            const Divider(height: 1, indent: 64, color: Color(0xFFEDF2F7)),
+                            const Divider(
+                              height: 1,
+                              indent: 64,
+                              color: Color(0xFFEDF2F7),
+                            ),
                             _buildPremiumMenuItem(
                               icon: Icons.settings_outlined,
-                              iconBgColor: Colors.purple.withValues(alpha: 0.15),
+                              iconBgColor: Colors.purple.withValues(
+                                alpha: 0.15,
+                              ),
                               iconColor: Colors.purple.shade600,
                               title: l10n.settings,
-                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsPage())),
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const SettingsPage(),
+                                ),
+                              ),
                             ),
-                            const Divider(height: 1, indent: 64, color: Color(0xFFEDF2F7)),
+                            const Divider(
+                              height: 1,
+                              indent: 64,
+                              color: Color(0xFFEDF2F7),
+                            ),
                             _buildPremiumMenuItem(
                               icon: Icons.info_outline,
-                              iconBgColor: Colors.orange.withValues(alpha: 0.15),
+                              iconBgColor: Colors.orange.withValues(
+                                alpha: 0.15,
+                              ),
                               iconColor: Colors.orange.shade700,
                               title: l10n.aboutLaween,
-                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AboutPage())),
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const AboutPage(),
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       ),
 
                       const SizedBox(height: 32),
-                      
+
                       // --- 4. Standalone Logout Action ---
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.red.withValues(alpha: 0.1)),
+                          border: Border.all(
+                            color: Colors.red.withValues(alpha: 0.1),
+                          ),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.red.withValues(alpha: 0.05),
@@ -296,7 +360,7 @@ class ProfilePage extends StatelessWidget {
                           isDestructive: true,
                         ),
                       ),
-                      
+
                       const SizedBox(height: 40),
                     ],
                   ),
@@ -343,7 +407,9 @@ class ProfilePage extends StatelessWidget {
                   title,
                   style: GoogleFonts.inter(
                     fontSize: 16,
-                    fontWeight: isDestructive ? FontWeight.w600 : FontWeight.w500,
+                    fontWeight: isDestructive
+                        ? FontWeight.w600
+                        : FontWeight.w500,
                     color: textColor ?? const Color(0xFF2D3748),
                   ),
                 ),
@@ -362,7 +428,9 @@ class ProfilePage extends StatelessWidget {
               Icon(
                 Icons.arrow_forward_ios,
                 size: 14,
-                color: isDestructive ? Colors.red.withValues(alpha: 0.3) : Colors.grey.shade400,
+                color: isDestructive
+                    ? Colors.red.withValues(alpha: 0.3)
+                    : Colors.grey.shade400,
               ),
             ],
           ),
@@ -377,7 +445,12 @@ class ProfileHeaderClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     Path path = Path();
     path.lineTo(0, size.height - 40);
-    path.quadraticBezierTo(size.width * 0.5, size.height + 30, size.width, size.height - 40);
+    path.quadraticBezierTo(
+      size.width * 0.5,
+      size.height + 30,
+      size.width,
+      size.height - 40,
+    );
     path.lineTo(size.width, 0);
     path.close();
     return path;

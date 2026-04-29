@@ -51,13 +51,17 @@ class CreateJoinDialog extends StatelessWidget {
                     color: Colors.grey.withValues(alpha: 0.05),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.close, color: Colors.black54, size: 20),
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.black54,
+                    size: 20,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 24),
-          
+
           // Create Group Option
           _buildEnhancedOption(
             context: context,
@@ -69,13 +73,15 @@ class CreateJoinDialog extends StatelessWidget {
               onClose();
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const CreateGroupPage()),
+                MaterialPageRoute(
+                  builder: (context) => const CreateGroupPage(),
+                ),
               );
             },
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Join Group Option
           _buildEnhancedOption(
             context: context,
@@ -133,14 +139,18 @@ class _AnimatedOptionCard extends StatefulWidget {
   State<_AnimatedOptionCard> createState() => _AnimatedOptionCardState();
 }
 
-class _AnimatedOptionCardState extends State<_AnimatedOptionCard> with SingleTickerProviderStateMixin {
+class _AnimatedOptionCardState extends State<_AnimatedOptionCard>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 150));
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
     _scaleAnimation = Tween<double>(begin: 1.0, end: 0.96).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOutBack),
     );

@@ -24,12 +24,16 @@ class OnboardingPage extends StatefulWidget {
 class _OnboardingPageState extends State<OnboardingPage> {
   bool _isGoogleLoading = false;
   final AuthService _authService = AuthService();
-  
+
   String _localizeError(String error, AppLocalizations l10n) {
     if (error.contains("ACCOUNT_EXISTS_DIFFERENT_CREDENTIAL")) {
-       return l10n.isAr ? "هذا الحساب مسجل بالفعل بطريقة دخول أخرى. يرجى استخدام البريد الإلكتروني وكلمة المرور." : "This account is already registered with a different sign-in method. Please use email and password.";
+      return l10n.isAr
+          ? "هذا الحساب مسجل بالفعل بطريقة دخول أخرى. يرجى استخدام البريد الإلكتروني وكلمة المرور."
+          : "This account is already registered with a different sign-in method. Please use email and password.";
     }
-    if (error.toLowerCase().contains("canceled") || error.toLowerCase().contains("cancel")) return "";
+    if (error.toLowerCase().contains("canceled") ||
+        error.toLowerCase().contains("cancel"))
+      return "";
     return error;
   }
 
@@ -50,10 +54,15 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      final isGoogle = user.providerData.any((p) => p.providerId == 'google.com');
+      final isGoogle = user.providerData.any(
+        (p) => p.providerId == 'google.com',
+      );
       if (isGoogle) {
-        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-        
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
         if (!mounted) return;
 
         if (doc.exists) {
@@ -85,7 +94,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
     try {
       final result = await _authService.loginWithGoogle();
-      
+
       if (!mounted) return;
 
       if (result == null) {
@@ -100,9 +109,13 @@ class _OnboardingPageState extends State<OnboardingPage> {
             barrierDismissible: false,
             builder: (context) => LinkAccountDialog(email: email),
           );
-          
+
           if (linked == true && mounted) {
-            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/home',
+              (route) => false,
+            );
           }
         }
       } else if (result != "NEEDS_PROFILE") {
@@ -143,7 +156,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               fit: BoxFit.cover,
             ),
           ),
-          
+
           // Gradient Overlay to make text readable (darkened as requested)
           Positioned.fill(
             child: Container(
@@ -162,21 +175,29 @@ class _OnboardingPageState extends State<OnboardingPage> {
               ),
             ),
           ),
-          
+
           // Language Switcher
           Positioned(
             top: 60,
             right: 24,
             child: GestureDetector(
               onTap: () {
-                Provider.of<LocaleProvider>(context, listen: false).toggleLanguage();
+                Provider.of<LocaleProvider>(
+                  context,
+                  listen: false,
+                ).toggleLanguage();
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -195,16 +216,19 @@ class _OnboardingPageState extends State<OnboardingPage> {
               ),
             ),
           ),
-          
+
           // Content
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 24.0,
+              ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                   Text(
+                  Text(
                     loc.onboardingTitle,
                     textAlign: TextAlign.center,
                     style: loc.isAr
@@ -252,7 +276,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                           ),
                   ),
                   const SizedBox(height: 48),
-                  
+
                   // Google Button
                   ElevatedButton(
                     onPressed: _isGoogleLoading ? null : _handleGoogleLogin,
@@ -294,9 +318,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
                             ],
                           ),
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Email Button
                   ElevatedButton(
                     onPressed: () {
@@ -306,7 +330,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.teal, // Teal color matched from design
+                      backgroundColor:
+                          AppColors.teal, // Teal color matched from design
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
@@ -329,9 +354,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // Sign In Text
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -347,13 +372,17 @@ class _OnboardingPageState extends State<OnboardingPage> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const RegisterPage()),
+                            MaterialPageRoute(
+                              builder: (_) => const RegisterPage(),
+                            ),
                           );
                         },
                         child: Text(
                           loc.signUpNow,
                           style: GoogleFonts.inter(
-                            color: const Color(0xFFF4A261), // Orange matched from design
+                            color: const Color(
+                              0xFFF4A261,
+                            ), // Orange matched from design
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),

@@ -18,7 +18,11 @@ class GroupService {
     final random = Random();
     while (true) {
       final code = (100000 + random.nextInt(900000)).toString();
-      final query = await _firestore.collection('groups').where('groupCode', isEqualTo: code).limit(1).get();
+      final query = await _firestore
+          .collection('groups')
+          .where('groupCode', isEqualTo: code)
+          .limit(1)
+          .get();
       if (query.docs.isEmpty) return code;
     }
   }
@@ -47,7 +51,7 @@ class GroupService {
       // 🔍 RESOLVE MEMBERS (App Users vs. Invites)
       final List<String> resolvedMemberIds = [user.uid];
       final List<String> pendingPhoneNumbers = [];
-      
+
       // Normalize unique phone numbers
       final normalizedPhones = memberPhoneNumbers
           .map((p) => NumericUtils.normalize(p, clean: true))
@@ -60,19 +64,23 @@ class GroupService {
         // We chunk the lookup to handle many contacts
         const int chunkSize = 30;
         for (var i = 0; i < normalizedPhones.length; i += chunkSize) {
-          final end = (i + chunkSize < normalizedPhones.length) ? i + chunkSize : normalizedPhones.length;
+          final end = (i + chunkSize < normalizedPhones.length)
+              ? i + chunkSize
+              : normalizedPhones.length;
           final chunk = normalizedPhones.sublist(i, end);
-          
+
           final query = await _firestore
               .collection('users')
               .where('phone', whereIn: chunk)
               .get();
-          
+
           final foundUids = query.docs.map((d) => d.id).toList();
-          final foundPhones = query.docs.map((d) => d.data()['phone'] as String).toList();
-          
+          final foundPhones = query.docs
+              .map((d) => d.data()['phone'] as String)
+              .toList();
+
           resolvedMemberIds.addAll(foundUids);
-          
+
           // Identify which chunk numbers were NOT found
           for (var p in chunk) {
             if (!foundPhones.contains(p)) {
@@ -104,18 +112,24 @@ class GroupService {
     // Brute-force protection
     final activityDoc = _firestore.collection('user_activity').doc(userId);
     final activity = await activityDoc.get();
-    
+
     if (activity.exists) {
       final data = activity.data();
       final count = data?['failedJoinAttempts'] ?? 0;
       final lastFailed = (data?['lastFailedAttempt'] as Timestamp?)?.toDate();
-      
-      if (count >= 5 && lastFailed != null && DateTime.now().difference(lastFailed).inMinutes < 30) {
+
+      if (count >= 5 &&
+          lastFailed != null &&
+          DateTime.now().difference(lastFailed).inMinutes < 30) {
         throw Exception("Too many attempts. Locked for 30 mins.");
       }
     }
 
-    final query = await _firestore.collection('groups').where('groupCode', isEqualTo: code).limit(1).get();
+    final query = await _firestore
+        .collection('groups')
+        .where('groupCode', isEqualTo: code)
+        .limit(1)
+        .get();
     if (query.docs.isEmpty) {
       await activityDoc.set({
         'failedJoinAttempts': FieldValue.increment(1),
@@ -135,21 +149,24 @@ class GroupService {
     });
 
     // Fetch the updated group model to return
-    final updatedDoc = await _firestore.collection('groups').doc(groupDoc.id).get();
+    final updatedDoc = await _firestore
+        .collection('groups')
+        .doc(groupDoc.id)
+        .get();
     return GroupModel.fromMap(updatedDoc.data()!);
   }
 
   Future<void> leaveGroup(String groupId, String userId) async {
     final groupRef = _firestore.collection('groups').doc(groupId);
     final groupDoc = await groupRef.get();
-    
+
     if (!groupDoc.exists) throw Exception("Group not found");
-    
+
     final data = groupDoc.data()!;
     final List<String> memberIds = List<String>.from(data['memberIds'] ?? []);
-    
+
     if (!memberIds.contains(userId)) throw Exception("Not a member");
-    
+
     await groupRef.update({
       'memberIds': FieldValue.arrayRemove([userId]),
     });
@@ -158,9 +175,9 @@ class GroupService {
   Future<void> deleteGroup(String groupId, String userId) async {
     final groupRef = _firestore.collection('groups').doc(groupId);
     final groupDoc = await groupRef.get();
-    
+
     if (!groupDoc.exists) throw Exception("Group not found");
-    
+
     final data = groupDoc.data()!;
     if (data['creatorId'] != userId) {
       throw Exception("Only the creator can delete the group");
@@ -178,10 +195,14 @@ class GroupService {
     await groupRef.delete();
   }
 
-  Future<void> updateGroup(String groupId, {String? newName, File? newImageFile}) async {
+  Future<void> updateGroup(
+    String groupId, {
+    String? newName,
+    File? newImageFile,
+  }) async {
     final groupRef = _firestore.collection('groups').doc(groupId);
     final groupDoc = await groupRef.get();
-    
+
     if (!groupDoc.exists) throw Exception("Group not found");
 
     Map<String, dynamic> updates = {};
@@ -211,10 +232,16 @@ class GroupService {
         .orderBy('timestamp', descending: true)
         .limit(50) // Increased limit since we filter in memory
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => doc.data())
-            .where((data) => data['type'] == 'image' || (data['mediaUrls'] as List?)?.isNotEmpty == true)
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => doc.data())
+              .where(
+                (data) =>
+                    data['type'] == 'image' ||
+                    (data['mediaUrls'] as List?)?.isNotEmpty == true,
+              )
+              .toList(),
+        );
   }
 
   Stream<List<Map<String, dynamic>>> getGroupLocations(String groupId) {
@@ -225,9 +252,11 @@ class GroupService {
         .orderBy('timestamp', descending: true)
         .limit(50)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => doc.data())
-            .where((data) => data['type'] == 'location')
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => doc.data())
+              .where((data) => data['type'] == 'location')
+              .toList(),
+        );
   }
 }

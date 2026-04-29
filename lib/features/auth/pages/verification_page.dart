@@ -31,7 +31,9 @@ class _VerificationPageState extends State<VerificationPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _phoneNumber = (ModalRoute.of(context)?.settings.arguments as String?) ?? "+96212345678";
+    _phoneNumber =
+        (ModalRoute.of(context)?.settings.arguments as String?) ??
+        "+96212345678";
   }
 
   @override
@@ -89,7 +91,8 @@ class _VerificationPageState extends State<VerificationPage> {
     // Mask phone number
     String maskedPhone = _phoneNumber;
     if (_phoneNumber.length > 7) {
-      maskedPhone = "${_phoneNumber.substring(0, 5)}******${_phoneNumber.substring(_phoneNumber.length - 2)}";
+      maskedPhone =
+          "${_phoneNumber.substring(0, 5)}******${_phoneNumber.substring(_phoneNumber.length - 2)}";
     }
 
     return Scaffold(
@@ -118,7 +121,11 @@ class _VerificationPageState extends State<VerificationPage> {
                             child: IconButton(
                               icon: Transform.flip(
                                 flipX: l10n.isAr,
-                                child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
+                                child: const Icon(
+                                  Icons.arrow_back_ios_new,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
                               ),
                               onPressed: () => Navigator.pop(context),
                             ),
@@ -170,12 +177,24 @@ class _VerificationPageState extends State<VerificationPage> {
                           color: AppColors.teal.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Icon(Icons.phonelink_ring_outlined, size: 50, color: AppColors.teal),
+                        child: const Icon(
+                          Icons.phonelink_ring_outlined,
+                          size: 50,
+                          color: AppColors.teal,
+                        ),
                       ),
                       // Dot pattern around
                       Positioned(
-                        bottom: 40, right: 10,
-                        child: Container(width: 6, height: 6, decoration: const BoxDecoration(color: AppColors.teal, shape: BoxShape.circle)),
+                        bottom: 40,
+                        right: 10,
+                        child: Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(
+                            color: AppColors.teal,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -253,7 +272,10 @@ class _VerificationPageState extends State<VerificationPage> {
                           ? const SizedBox(
                               width: 24,
                               height: 24,
-                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
                             )
                           : Text(
                               l10n.continueText,
@@ -267,7 +289,7 @@ class _VerificationPageState extends State<VerificationPage> {
                   ),
 
                   const SizedBox(height: 40),
-                   // Bottom decorative dots
+                  // Bottom decorative dots
                   Align(
                     alignment: Alignment.centerLeft,
                     child: _buildDecorativeDots(AppColors.teal),
@@ -288,13 +310,25 @@ class _VerificationPageState extends State<VerificationPage> {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
             const SizedBox(width: 8),
-            Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
           ],
         ),
         const SizedBox(height: 8),
-        Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
       ],
     );
   }

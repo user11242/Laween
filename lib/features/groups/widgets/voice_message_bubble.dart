@@ -27,7 +27,8 @@ class VoiceMessageBubble extends StatefulWidget {
   State<VoiceMessageBubble> createState() => _VoiceMessageBubbleState();
 }
 
-class _VoiceMessageBubbleState extends State<VoiceMessageBubble> with AutomaticKeepAliveClientMixin {
+class _VoiceMessageBubbleState extends State<VoiceMessageBubble>
+    with AutomaticKeepAliveClientMixin {
   final AudioPlayer _audioPlayer = AudioPlayer();
   PlayerState _playerState = PlayerState.stopped;
   Duration _duration = Duration.zero;
@@ -47,7 +48,7 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> with AutomaticK
   void initState() {
     super.initState();
     _initAudio();
-    
+
     // 🛡️ Listen for global audio sync
     widget.activeAudioIdNotifier?.addListener(_handleActiveAudioChange);
   }
@@ -61,14 +62,17 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> with AutomaticK
     } else {
       // 🎵 AUTO-START: If this becomes active and isn't playing yet, start it!
       // We check for stopped/completed state to avoid fighting manual pauses.
-      if (_playerState == PlayerState.stopped || _playerState == PlayerState.completed) {
+      if (_playerState == PlayerState.stopped ||
+          _playerState == PlayerState.completed) {
         _playPause();
       }
     }
   }
 
   Future<void> _initAudio() async {
-    final url = widget.message.mediaUrls.isNotEmpty ? widget.message.mediaUrls[0] : widget.message.text;
+    final url = widget.message.mediaUrls.isNotEmpty
+        ? widget.message.mediaUrls[0]
+        : widget.message.text;
     if (url.isEmpty || !url.startsWith('http')) return;
 
     // ⚡ PRE-FETCH BYTES for zero-latency
@@ -89,13 +93,15 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> with AutomaticK
           _position = Duration.zero;
         });
         _audioPlayer.seek(Duration.zero);
-        
+
         // 🔄 Trigger sequential playback
         widget.onComplete?.call();
       }
     });
 
-    _playerStateSubscription = _audioPlayer.onPlayerStateChanged.listen((state) {
+    _playerStateSubscription = _audioPlayer.onPlayerStateChanged.listen((
+      state,
+    ) {
       if (mounted) setState(() => _playerState = state);
     });
 
@@ -141,7 +147,9 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> with AutomaticK
   }
 
   void _playPause() async {
-    final url = widget.message.mediaUrls.isNotEmpty ? widget.message.mediaUrls[0] : widget.message.text;
+    final url = widget.message.mediaUrls.isNotEmpty
+        ? widget.message.mediaUrls[0]
+        : widget.message.text;
     if (url.isEmpty || !url.startsWith('http')) return;
 
     try {
@@ -161,10 +169,12 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> with AutomaticK
         }
 
         // If we are at the end, or in a stopped state, seek to start
-        if (_position >= _duration || _playerState == PlayerState.stopped || _playerState == PlayerState.completed) {
+        if (_position >= _duration ||
+            _playerState == PlayerState.stopped ||
+            _playerState == PlayerState.completed) {
           await _audioPlayer.seek(Duration.zero);
         }
-        
+
         // ⚡ RE-USE SOURCE: Use resume() if possible, or play() if it's the first time
         // audioplayers resume() is faster after setting source.
         await _audioPlayer.resume();
@@ -212,11 +222,15 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> with AutomaticK
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: widget.isMe ? Colors.white.withValues(alpha: 0.2) : AppColors.teal.withValues(alpha: 0.1),
+                color: widget.isMe
+                    ? Colors.white.withValues(alpha: 0.2)
+                    : AppColors.teal.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                _playerState == PlayerState.playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                _playerState == PlayerState.playing
+                    ? Icons.pause_rounded
+                    : Icons.play_arrow_rounded,
                 color: widget.isMe ? Colors.white : AppColors.teal,
                 size: 28,
               ),
@@ -231,19 +245,29 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> with AutomaticK
                 SliderTheme(
                   data: SliderTheme.of(context).copyWith(
                     trackHeight: 3,
-                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                    overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
-                    activeTrackColor: widget.isMe ? Colors.white : AppColors.teal,
-                    inactiveTrackColor: widget.isMe ? Colors.white.withValues(alpha: 0.3) : Colors.grey.shade300,
+                    thumbShape: const RoundSliderThumbShape(
+                      enabledThumbRadius: 6,
+                    ),
+                    overlayShape: const RoundSliderOverlayShape(
+                      overlayRadius: 10,
+                    ),
+                    activeTrackColor: widget.isMe
+                        ? Colors.white
+                        : AppColors.teal,
+                    inactiveTrackColor: widget.isMe
+                        ? Colors.white.withValues(alpha: 0.3)
+                        : Colors.grey.shade300,
                     thumbColor: widget.isMe ? Colors.white : AppColors.teal,
                   ),
                   child: Slider(
                     value: _position.inMilliseconds.toDouble(),
-                    max: _duration.inMilliseconds.toDouble() > 0 
-                        ? _duration.inMilliseconds.toDouble() 
+                    max: _duration.inMilliseconds.toDouble() > 0
+                        ? _duration.inMilliseconds.toDouble()
                         : 1.0,
                     onChanged: (value) async {
-                      await _audioPlayer.seek(Duration(milliseconds: value.toInt()));
+                      await _audioPlayer.seek(
+                        Duration(milliseconds: value.toInt()),
+                      );
                     },
                   ),
                 ),
@@ -256,14 +280,18 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> with AutomaticK
                         _formatDuration(_position),
                         style: GoogleFonts.inter(
                           fontSize: 10,
-                          color: widget.isMe ? Colors.white70 : Colors.grey.shade500,
+                          color: widget.isMe
+                              ? Colors.white70
+                              : Colors.grey.shade500,
                         ),
                       ),
                       Text(
                         _formatDuration(_duration),
                         style: GoogleFonts.inter(
                           fontSize: 10,
-                          color: widget.isMe ? Colors.white70 : Colors.grey.shade500,
+                          color: widget.isMe
+                              ? Colors.white70
+                              : Colors.grey.shade500,
                         ),
                       ),
                     ],
@@ -278,7 +306,9 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> with AutomaticK
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
               decoration: BoxDecoration(
-                color: widget.isMe ? Colors.white.withValues(alpha: 0.1) : AppColors.teal.withValues(alpha: 0.05),
+                color: widget.isMe
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : AppColors.teal.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(

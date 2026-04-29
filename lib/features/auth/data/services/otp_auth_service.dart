@@ -18,8 +18,10 @@ class OtpAuthService {
       // 1. CLEAN PHONE: Remove all spaces, dashes, parentheses
       // Keep '+' if it exists at the start
       final String cleanPhone = phone.replaceAll(RegExp(r'[^\d+]'), '');
-      
-      debugPrint("📱 Starting verification for: $cleanPhone (Original: $phone)");
+
+      debugPrint(
+        "📱 Starting verification for: $cleanPhone (Original: $phone)",
+      );
 
       await _auth.verifyPhoneNumber(
         phoneNumber: cleanPhone,
@@ -33,7 +35,7 @@ class OtpAuthService {
         // ❌ FAILED
         verificationFailed: (FirebaseAuthException e) {
           String userFriendlyError = "Phone verification failed.";
-          
+
           if (e.code == 'invalid-phone-number') {
             userFriendlyError = "The provided phone number is not valid.";
           } else if (e.code == 'too-many-requests') {
@@ -41,7 +43,8 @@ class OtpAuthService {
           } else if (e.code == 'captcha-check-failed') {
             userFriendlyError = "Safety check failed. Please try again.";
           } else if (e.code == 'app-not-authorized') {
-            userFriendlyError = "App not authorized. Check SHA-256 fingerprints in Firebase.";
+            userFriendlyError =
+                "App not authorized. Check SHA-256 fingerprints in Firebase.";
           }
 
           // Return both the friendly message and the internal code for debugging
@@ -81,32 +84,34 @@ class OtpAuthService {
       // Just creating the object doesn't verify the code with the server.
       final currentUser = _auth.currentUser;
       if (currentUser != null) {
-         try {
-           // If a user is logged in (e.g., Google Wizard or linking phone), try to LINK.
-           await currentUser.linkWithCredential(credential);
-         } on FirebaseAuthException catch (e) {
-           if (e.code == 'user-not-found' || e.code == 'user-disabled') {
-             // ⚠️ Vital Fix: If the current user was deleted on the server,
-             // the local token is stale. linking will fail with 'user-not-found'.
-             // We must sign out and treat this as a fresh sign-in.
-             debugPrint("⚠️ Stale user detected (User deleted on server). Signing out and retrying...");
-             await _auth.signOut();
-             // We do NOT sign in here. The registration flow handles auth entirely.
-           } else {
-             rethrow; // Other errors (like invalid code) should be handled normally
-           }
-         }
+        try {
+          // If a user is logged in (e.g., Google Wizard or linking phone), try to LINK.
+          await currentUser.linkWithCredential(credential);
+        } on FirebaseAuthException catch (e) {
+          if (e.code == 'user-not-found' || e.code == 'user-disabled') {
+            // ⚠️ Vital Fix: If the current user was deleted on the server,
+            // the local token is stale. linking will fail with 'user-not-found'.
+            // We must sign out and treat this as a fresh sign-in.
+            debugPrint(
+              "⚠️ Stale user detected (User deleted on server). Signing out and retrying...",
+            );
+            await _auth.signOut();
+            // We do NOT sign in here. The registration flow handles auth entirely.
+          } else {
+            rethrow; // Other errors (like invalid code) should be handled normally
+          }
+        }
       }
 
-      // If we got here, the code is VALID. We do NOT sign in for new users here, 
+      // If we got here, the code is VALID. We do NOT sign in for new users here,
       // because Email/Password registration handles the actual account creation later.
       return credential;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'invalid-verification-code') {
         throw "The code you entered is incorrect.";
       } else if (e.code == 'credential-already-in-use') {
-         // This is a specific case for linking: the phone is already used.
-         throw "This phone number is already linked to another account. If you started registration before, please try to sign in with that account.";
+        // This is a specific case for linking: the phone is already used.
+        throw "This phone number is already linked to another account. If you started registration before, please try to sign in with that account.";
       }
       throw e.message ?? "Invalid OTP Code";
     } catch (e) {

@@ -14,8 +14,10 @@ class GroupModel {
   final String? lastMessageSender;
   final DateTime? lastMessageTime;
   final Map<String, int> unreadCounts; // userId -> count
-  final Map<String, dynamic> typingUsers; // userId -> {isTyping: bool, userName: String}
-  final List<String> pendingPhoneNumbers; // Normalized numbers for users not yet on app
+  final Map<String, dynamic>
+  typingUsers; // userId -> {isTyping: bool, userName: String}
+  final List<String>
+  pendingPhoneNumbers; // Normalized numbers for users not yet on app
 
   GroupModel({
     required this.id,
@@ -44,7 +46,9 @@ class GroupModel {
       'groupCode': groupCode,
       'lastMessage': lastMessage,
       'lastMessageSender': lastMessageSender,
-      'lastMessageTime': lastMessageTime != null ? Timestamp.fromDate(lastMessageTime!) : null,
+      'lastMessageTime': lastMessageTime != null
+          ? Timestamp.fromDate(lastMessageTime!)
+          : null,
       'unreadCounts': unreadCounts,
       'typingUsers': typingUsers,
       'pendingPhoneNumbers': pendingPhoneNumbers,
@@ -62,7 +66,9 @@ class GroupModel {
       groupCode: map['groupCode'],
       lastMessage: map['lastMessage'],
       lastMessageSender: map['lastMessageSender'],
-      lastMessageTime: map['lastMessageTime'] != null ? (map['lastMessageTime'] as Timestamp).toDate() : null,
+      lastMessageTime: map['lastMessageTime'] != null
+          ? (map['lastMessageTime'] as Timestamp).toDate()
+          : null,
       unreadCounts: Map<String, int>.from(map['unreadCounts'] ?? {}),
       typingUsers: Map<String, dynamic>.from(map['typingUsers'] ?? {}),
       pendingPhoneNumbers: List<String>.from(map['pendingPhoneNumbers'] ?? []),

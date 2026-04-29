@@ -20,7 +20,8 @@ class GroupsPage extends StatefulWidget {
   State<GroupsPage> createState() => _GroupsPageState();
 }
 
-class _GroupsPageState extends State<GroupsPage> with AutomaticKeepAliveClientMixin {
+class _GroupsPageState extends State<GroupsPage>
+    with AutomaticKeepAliveClientMixin {
   bool _showMenu = false;
   final currentUser = FirebaseAuth.instance.currentUser;
   final Set<String> _syncedGroupIds = {};
@@ -71,7 +72,11 @@ class _GroupsPageState extends State<GroupsPage> with AutomaticKeepAliveClientMi
               if (snapshot.hasError) {
                 return CustomScrollView(
                   slivers: [
-                    const SliverAppBar(pinned: true, backgroundColor: AppColors.teal, title: Text("Error")),
+                    const SliverAppBar(
+                      pinned: true,
+                      backgroundColor: AppColors.teal,
+                      title: Text("Error"),
+                    ),
                     SliverFillRemaining(
                       child: Padding(
                         padding: const EdgeInsets.all(24.0),
@@ -90,8 +95,12 @@ class _GroupsPageState extends State<GroupsPage> with AutomaticKeepAliveClientMi
 
               final groups = snapshot.hasData
                   ? snapshot.data!.docs
-                      .map((doc) => GroupModel.fromMap(doc.data() as Map<String, dynamic>))
-                      .toList()
+                        .map(
+                          (doc) => GroupModel.fromMap(
+                            doc.data() as Map<String, dynamic>,
+                          ),
+                        )
+                        .toList()
                   : <GroupModel>[];
 
               // Sync FCM topic subscriptions for all groups
@@ -115,7 +124,10 @@ class _GroupsPageState extends State<GroupsPage> with AutomaticKeepAliveClientMi
                     elevation: 0,
                     flexibleSpace: FlexibleSpaceBar(
                       centerTitle: false,
-                      titlePadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      titlePadding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 16,
+                      ),
                       title: Text(
                         l10n.groups,
                         style: GoogleFonts.inter(
@@ -171,10 +183,20 @@ class _GroupsPageState extends State<GroupsPage> with AutomaticKeepAliveClientMi
                         child: TextField(
                           decoration: InputDecoration(
                             hintText: l10n.search,
-                            hintStyle: GoogleFonts.inter(color: Colors.grey.shade400, fontSize: 14),
-                            prefixIcon: const Icon(Icons.search, color: AppColors.teal, size: 22),
+                            hintStyle: GoogleFonts.inter(
+                              color: Colors.grey.shade400,
+                              fontSize: 14,
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.search,
+                              color: AppColors.teal,
+                              size: 22,
+                            ),
                             border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                              horizontal: 20,
+                            ),
                           ),
                         ),
                       ),
@@ -184,7 +206,9 @@ class _GroupsPageState extends State<GroupsPage> with AutomaticKeepAliveClientMi
                   if (snapshot.connectionState == ConnectionState.waiting)
                     const SliverFillRemaining(
                       hasScrollBody: false,
-                      child: Center(child: CircularProgressIndicator(color: AppColors.teal)),
+                      child: Center(
+                        child: CircularProgressIndicator(color: AppColors.teal),
+                      ),
                     )
                   else if (groups.isEmpty)
                     SliverFillRemaining(
@@ -193,21 +217,27 @@ class _GroupsPageState extends State<GroupsPage> with AutomaticKeepAliveClientMi
                     )
                   else
                     SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 0,
+                        vertical: 8,
+                      ),
                       sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            if (index.isOdd) {
-                              return Padding(
-                                padding: const EdgeInsets.only(left: 88, right: 24),
-                                child: Divider(height: 1, color: Colors.grey.shade100),
-                              );
-                            }
-                            final groupIndex = index ~/ 2;
-                            return _GroupCard(group: groups[groupIndex]);
-                          },
-                          childCount: groups.length * 2 - 1,
-                        ),
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          if (index.isOdd) {
+                            return Padding(
+                              padding: const EdgeInsets.only(
+                                left: 88,
+                                right: 24,
+                              ),
+                              child: Divider(
+                                height: 1,
+                                color: Colors.grey.shade100,
+                              ),
+                            );
+                          }
+                          final groupIndex = index ~/ 2;
+                          return _GroupCard(group: groups[groupIndex]);
+                        }, childCount: groups.length * 2 - 1),
                       ),
                     ),
 
@@ -216,7 +246,7 @@ class _GroupsPageState extends State<GroupsPage> with AutomaticKeepAliveClientMi
               );
             },
           ),
-          
+
           // Floating Action Menu Overlay Dimming
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 200),
@@ -228,7 +258,7 @@ class _GroupsPageState extends State<GroupsPage> with AutomaticKeepAliveClientMi
                   )
                 : const SizedBox.shrink(key: ValueKey('overlay_empty')),
           ),
-          
+
           // The Dialog that pops up
           Positioned(
             bottom: 110,
@@ -247,7 +277,8 @@ class _GroupsPageState extends State<GroupsPage> with AutomaticKeepAliveClientMi
                         reverseCurve: Curves.easeInQuint,
                       ),
                     ),
-                    alignment: Alignment.bottomRight, // Originates towards the FAB
+                    alignment:
+                        Alignment.bottomRight, // Originates towards the FAB
                     child: child,
                   ),
                 );
@@ -258,9 +289,7 @@ class _GroupsPageState extends State<GroupsPage> with AutomaticKeepAliveClientMi
                       tag: 'group_menu',
                       child: Material(
                         color: Colors.transparent,
-                        child: CreateJoinDialog(
-                          onClose: _toggleMenu,
-                        ),
+                        child: CreateJoinDialog(onClose: _toggleMenu),
                       ),
                     )
                   : const SizedBox.shrink(key: ValueKey('dialog_empty')),
@@ -316,14 +345,11 @@ class _GroupsPageState extends State<GroupsPage> with AutomaticKeepAliveClientMi
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 48),
           child: Text(
-            l10n.isAr 
-                ? "ابدأ بإنشاء مجموعة جديدة أو انضم إلى المجموعات المتاحة" 
+            l10n.isAr
+                ? "ابدأ بإنشاء مجموعة جديدة أو انضم إلى المجموعات المتاحة"
                 : "Start by creating a new group or join existing ones",
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              color: Colors.grey.shade500,
-            ),
+            style: GoogleFonts.inter(fontSize: 14, color: Colors.grey.shade500),
           ),
         ),
       ],
@@ -385,18 +411,28 @@ class _GroupCard extends StatelessWidget {
                               child: SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.teal),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.teal,
+                                ),
                               ),
                             ),
                           ),
-                          errorWidget: (context, url, error) => 
-                            const Icon(Icons.groups, color: AppColors.teal, size: 28),
+                          errorWidget: (context, url, error) => const Icon(
+                            Icons.groups,
+                            color: AppColors.teal,
+                            size: 28,
+                          ),
                         )
-                      : const Icon(Icons.groups, color: AppColors.teal, size: 28),
+                      : const Icon(
+                          Icons.groups,
+                          color: AppColors.teal,
+                          size: 28,
+                        ),
                 ),
               ),
               const SizedBox(width: 16),
-              
+
               // Group Info
               Expanded(
                 child: Column(
@@ -422,8 +458,12 @@ class _GroupCard extends StatelessWidget {
                             _formatTime(group.lastMessageTime),
                             style: GoogleFonts.inter(
                               fontSize: 11,
-                              color: unreadCount > 0 ? AppColors.teal : Colors.grey.shade500,
-                              fontWeight: unreadCount > 0 ? FontWeight.bold : FontWeight.normal,
+                              color: unreadCount > 0
+                                  ? AppColors.teal
+                                  : Colors.grey.shade500,
+                              fontWeight: unreadCount > 0
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                             ),
                           ),
                       ],
@@ -441,10 +481,14 @@ class _GroupCard extends StatelessWidget {
                                     final val = e.value;
                                     if (val is Map) {
                                       final isTyping = val['isTyping'] == true;
-                                      final Timestamp? ts = val['timestamp'] as Timestamp?;
+                                      final Timestamp? ts =
+                                          val['timestamp'] as Timestamp?;
                                       if (ts != null) {
-                                        final diff = now.difference(ts.toDate()).inSeconds;
-                                        if (diff > 5) return false; // 🛡️ 5 second TTL
+                                        final diff = now
+                                            .difference(ts.toDate())
+                                            .inSeconds;
+                                        if (diff > 5)
+                                          return false; // 🛡️ 5 second TTL
                                       }
                                       return isTyping;
                                     }
@@ -454,12 +498,17 @@ class _GroupCard extends StatelessWidget {
 
                               if (otherTypers.isNotEmpty) {
                                 final firstVal = otherTypers[0].value;
-                                final String typerName = (firstVal is Map) ? firstVal['userName'] ?? (isAr ? "شخص ما" : "Someone") : (isAr ? "شخص ما" : "Someone");
-                                
+                                final String typerName = (firstVal is Map)
+                                    ? firstVal['userName'] ??
+                                          (isAr ? "شخص ما" : "Someone")
+                                    : (isAr ? "شخص ما" : "Someone");
+
                                 return Row(
                                   children: [
                                     Text(
-                                      isAr ? "$typerName يكتب الآن" : "$typerName is typing",
+                                      isAr
+                                          ? "$typerName يكتب الآن"
+                                          : "$typerName is typing",
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: GoogleFonts.inter(
@@ -470,30 +519,34 @@ class _GroupCard extends StatelessWidget {
                                     ),
                                     const SizedBox(width: 4),
                                     Row(
-// ...
+                                      // ...
                                       children: List.generate(3, (index) {
                                         return Container(
-                                          width: 3,
-                                          height: 3,
-                                          margin: const EdgeInsets.symmetric(horizontal: 0.5),
-                                          decoration: const BoxDecoration(
-                                            color: AppColors.teal,
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ).animate(onPlay: (c) => c.repeat())
-                                         .scale(
-                                           begin: const Offset(1, 1),
-                                           end: const Offset(1.5, 1.5),
-                                           duration: 600.ms,
-                                           delay: (index * 200).ms,
-                                           curve: Curves.easeInOut,
-                                         )
-                                         .then()
-                                         .scale(
-                                           begin: const Offset(1.5, 1.5),
-                                           end: const Offset(1, 1),
-                                           duration: 600.ms,
-                                         );
+                                              width: 3,
+                                              height: 3,
+                                              margin:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 0.5,
+                                                  ),
+                                              decoration: const BoxDecoration(
+                                                color: AppColors.teal,
+                                                shape: BoxShape.circle,
+                                              ),
+                                            )
+                                            .animate(onPlay: (c) => c.repeat())
+                                            .scale(
+                                              begin: const Offset(1, 1),
+                                              end: const Offset(1.5, 1.5),
+                                              duration: 600.ms,
+                                              delay: (index * 200).ms,
+                                              curve: Curves.easeInOut,
+                                            )
+                                            .then()
+                                            .scale(
+                                              begin: const Offset(1.5, 1.5),
+                                              end: const Offset(1, 1),
+                                              duration: 600.ms,
+                                            );
                                       }),
                                     ),
                                   ],
@@ -511,11 +564,18 @@ class _GroupCard extends StatelessWidget {
                                   children: [
                                     if (group.lastMessageSender != null)
                                       TextSpan(
-                                        text: "${group.lastMessageSender == currentUser?.displayName || group.lastMessageSender == currentUser?.uid ? (isAr ? "أنت" : "You") : group.lastMessageSender}: ",
-                                        style: const TextStyle(fontWeight: FontWeight.w500),
+                                        text:
+                                            "${group.lastMessageSender == currentUser?.displayName || group.lastMessageSender == currentUser?.uid ? (isAr ? "أنت" : "You") : group.lastMessageSender}: ",
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                       ),
                                     TextSpan(
-                                      text: group.lastMessage ?? (isAr ? "انضم للمحادثة..." : "Start chatting..."),
+                                      text:
+                                          group.lastMessage ??
+                                          (isAr
+                                              ? "انضم للمحادثة..."
+                                              : "Start chatting..."),
                                     ),
                                   ],
                                 ),
@@ -525,7 +585,10 @@ class _GroupCard extends StatelessWidget {
                         ),
                         if (unreadCount > 0)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 4,
+                            ),
                             decoration: const BoxDecoration(
                               color: AppColors.teal,
                               shape: BoxShape.circle,

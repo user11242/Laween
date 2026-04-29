@@ -20,7 +20,7 @@ class CreateOutingSheet extends StatefulWidget {
   final bool initialDirectMode;
 
   const CreateOutingSheet({
-    super.key, 
+    super.key,
     required this.groupId,
     this.initialDirectMode = false,
   });
@@ -35,7 +35,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
   String _category = 'Restaurant';
   int _timeLimit = 5; // 2, 5, 10
   bool _isCreating = false;
-  
+
   // Direct Mode additions
   final TextEditingController _searchController = TextEditingController();
   List<dynamic> _searchResults = [];
@@ -45,11 +45,19 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
   String? _creatorName;
 
   final List<Map<String, dynamic>> _categories = [
-    {'name': 'Restaurant', 'icon': Icons.restaurant_rounded, 'color': Colors.orange},
+    {
+      'name': 'Restaurant',
+      'icon': Icons.restaurant_rounded,
+      'color': Colors.orange,
+    },
     {'name': 'Cafe', 'icon': Icons.coffee_rounded, 'color': Colors.brown},
     {'name': 'Park', 'icon': Icons.park_rounded, 'color': Colors.green},
     {'name': 'Mall', 'icon': Icons.shopping_bag_rounded, 'color': Colors.blue},
-    {'name': 'Sporty', 'icon': Icons.sports_basketball_rounded, 'color': Colors.red},
+    {
+      'name': 'Sporty',
+      'icon': Icons.sports_basketball_rounded,
+      'color': Colors.red,
+    },
     {'name': 'Cinema', 'icon': Icons.movie_rounded, 'color': Colors.purple},
   ];
 
@@ -64,7 +72,10 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     try {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
         if (mounted) {
@@ -86,7 +97,9 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
     if (_isDirectMode && _selectedVenue == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Please select a specific location from the suggestions"),
+          content: Text(
+            "Please select a specific location from the suggestions",
+          ),
           backgroundColor: Colors.orange,
           behavior: SnackBarBehavior.floating,
         ),
@@ -116,7 +129,10 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
           creatorPhotoUrl: user.photoURL,
           venue: _selectedVenue!,
           timeLimitMinutes: _timeLimit,
-          creatorLocation: GeoPoint(pickedLocation.latitude, pickedLocation.longitude),
+          creatorLocation: GeoPoint(
+            pickedLocation.latitude,
+            pickedLocation.longitude,
+          ),
         );
       } else {
         sessionId = await _outingService.createSession(
@@ -130,10 +146,10 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
           location: GeoPoint(pickedLocation.latitude, pickedLocation.longitude),
         );
       }
-      
+
       if (mounted) {
         Navigator.pop(context); // Close creation sheet
-        
+
         // Both modes now go to the waiting room first
         showModalBottomSheet(
           context: context,
@@ -171,21 +187,22 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
     }
 
     setState(() => _isSearching = true);
-    
+
     try {
       final apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'];
-      final url = Uri.parse('https://places.googleapis.com/v1/places:searchText');
-      
+      final url = Uri.parse(
+        'https://places.googleapis.com/v1/places:searchText',
+      );
+
       final response = await http.post(
         url,
         headers: {
           'Content-Type': 'application/json',
           'X-Goog-Api-Key': apiKey ?? '',
-          'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.photos',
+          'X-Goog-FieldMask':
+              'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.photos',
         },
-        body: jsonEncode({
-          'textQuery': query,
-        }),
+        body: jsonEncode({'textQuery': query}),
       );
 
       if (response.statusCode == 200) {
@@ -205,11 +222,11 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
     setState(() {
       _searchController.text = place['displayName']?['text'] ?? "";
       _searchResults = [];
-      
+
       final loc = place['location'];
       final lat = loc?['latitude'];
       final lng = loc?['longitude'];
-      
+
       _selectedVenue = {
         'id': place['id'],
         'name': place['displayName']?['text'],
@@ -217,7 +234,8 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
         'location': {'latitude': lat, 'longitude': lng},
         'rating': place['rating'],
         'userRatingCount': place['userRatingCount'],
-        'photoReference': (place['photos'] != null && place['photos'].isNotEmpty) 
+        'photoReference':
+            (place['photos'] != null && place['photos'].isNotEmpty)
             ? place['photos'][0]['name'] // V1 uses 'name' for photo reference
             : null,
         'category': _category,
@@ -234,7 +252,10 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.9),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1.5),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.5),
+            width: 1.5,
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.1),
@@ -260,17 +281,16 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
               ),
             ),
             const SizedBox(height: 32),
-            
+
             // Search Bar (Only shown in Direct Mode)
             if (_isDirectMode) ...[
               _buildSearchBar(),
-              
-              if (_searchResults.isNotEmpty)
-                _buildSearchResults(),
+
+              if (_searchResults.isNotEmpty) _buildSearchResults(),
 
               const SizedBox(height: 32),
             ],
-            
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -287,7 +307,9 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                       ),
                     ),
                     Text(
-                      _isDirectMode ? "Pick a destination and let's go!" : "Find the perfect mid-point",
+                      _isDirectMode
+                          ? "Pick a destination and let's go!"
+                          : "Find the perfect mid-point",
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         color: Colors.grey.shade500,
@@ -302,13 +324,21 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                     color: AppColors.teal.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.flash_on_rounded, color: AppColors.teal, size: 24),
-                ).animate().scale(delay: 200.milliseconds, duration: 400.milliseconds, curve: Curves.easeOutBack),
+                  child: const Icon(
+                    Icons.flash_on_rounded,
+                    color: AppColors.teal,
+                    size: 24,
+                  ),
+                ).animate().scale(
+                  delay: 200.milliseconds,
+                  duration: 400.milliseconds,
+                  curve: Curves.easeOutBack,
+                ),
               ],
             ),
-            
+
             const SizedBox(height: 40),
-            
+
             // Section 1: Mode (Hidden in Direct Mode as it's not needed for discovery)
             if (!_isDirectMode) ...[
               _buildSectionHeader("Calculation Mode"),
@@ -316,7 +346,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
               _buildModeSwitcher(),
               const SizedBox(height: 32),
             ],
-            
+
             // Section 2: Category (Only shown in Discovery Mode)
             if (!_isDirectMode) ...[
               _buildSectionHeader("Select Category"),
@@ -327,19 +357,20 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                   scrollDirection: Axis.horizontal,
                   clipBehavior: Clip.none,
                   itemCount: _categories.length,
-                  itemBuilder: (context, index) => _buildCategoryCard(_categories[index]),
+                  itemBuilder: (context, index) =>
+                      _buildCategoryCard(_categories[index]),
                 ),
               ),
               const SizedBox(height: 40),
             ],
-            
+
             // Section 3: Time Limit
             _buildSectionHeader("Join Time Limit"),
             const SizedBox(height: 16),
             _buildTimeLimitRow(),
-            
+
             const SizedBox(height: 48),
-            
+
             // Final Action
             _buildMainButton(),
             const SizedBox(height: 12),
@@ -389,21 +420,23 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
           decoration: BoxDecoration(
             color: isSelected ? Colors.white : Colors.transparent,
             borderRadius: BorderRadius.circular(15),
-            boxShadow: isSelected ? [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              )
-            ] : [],
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : [],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                icon, 
-                size: 20, 
-                color: isSelected ? AppColors.teal : Colors.grey.shade400
+                icon,
+                size: 20,
+                color: isSelected ? AppColors.teal : Colors.grey.shade400,
               ),
               const SizedBox(width: 8),
               Text(
@@ -411,7 +444,9 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                 style: GoogleFonts.outfit(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: isSelected ? AppColors.darkSlate : Colors.grey.shade400,
+                  color: isSelected
+                      ? AppColors.darkSlate
+                      : Colors.grey.shade400,
                 ),
               ),
             ],
@@ -424,7 +459,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
   Widget _buildCategoryCard(Map<String, dynamic> cat) {
     final isSelected = _category == cat['name'];
     final color = cat['color'] as Color;
-    
+
     return GestureDetector(
       onTap: () => setState(() => _category = cat['name']),
       child: AnimatedContainer(
@@ -432,7 +467,9 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
         width: 100,
         margin: const EdgeInsets.only(right: 16),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.5),
+          color: isSelected
+              ? Colors.white
+              : Colors.white.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: isSelected ? AppColors.teal : Colors.transparent,
@@ -440,8 +477,8 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
           ),
           boxShadow: [
             BoxShadow(
-              color: isSelected 
-                  ? AppColors.teal.withValues(alpha: 0.15) 
+              color: isSelected
+                  ? AppColors.teal.withValues(alpha: 0.15)
                   : Colors.black.withValues(alpha: 0.03),
               blurRadius: 15,
               offset: const Offset(0, 8),
@@ -489,16 +526,20 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                 color: isSelected ? AppColors.darkSlate : Colors.white,
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
-                  color: isSelected ? AppColors.darkSlate : Colors.grey.shade200,
+                  color: isSelected
+                      ? AppColors.darkSlate
+                      : Colors.grey.shade200,
                   width: 1.5,
                 ),
-                boxShadow: isSelected ? [
-                   BoxShadow(
-                    color: AppColors.darkSlate.withValues(alpha: 0.2),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
-                  )
-                ] : [],
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: AppColors.darkSlate.withValues(alpha: 0.2),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ]
+                    : [],
               ),
               child: Center(
                 child: Text(
@@ -535,35 +576,44 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
         onChanged: _searchPlaces,
         decoration: InputDecoration(
           hintText: "Where are we going?",
-          hintStyle: GoogleFonts.inter(color: Colors.grey.shade400, fontSize: 15),
+          hintStyle: GoogleFonts.inter(
+            color: Colors.grey.shade400,
+            fontSize: 15,
+          ),
           prefixIcon: const Icon(Icons.search_rounded, color: AppColors.teal),
-          suffixIcon: _isSearching 
-            ? const Padding(
-                padding: EdgeInsets.all(12),
-                child: SizedBox(
-                  width: 15,
-                  height: 15,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.teal),
-                ),
-              )
-            : (_searchController.text.isNotEmpty 
-                ? IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 20),
-                    onPressed: () {
-                      setState(() {
-                        _searchController.clear();
-                        _searchResults = [];
-                        // Only switch back to Discovery if it wasn't the initial mode
-                        if (!widget.initialDirectMode) {
-                          _isDirectMode = false;
-                        }
-                        _selectedVenue = null;
-                      });
-                    },
-                  )
-                : null),
+          suffixIcon: _isSearching
+              ? const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: SizedBox(
+                    width: 15,
+                    height: 15,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.teal,
+                    ),
+                  ),
+                )
+              : (_searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 20),
+                        onPressed: () {
+                          setState(() {
+                            _searchController.clear();
+                            _searchResults = [];
+                            // Only switch back to Discovery if it wasn't the initial mode
+                            if (!widget.initialDirectMode) {
+                              _isDirectMode = false;
+                            }
+                            _selectedVenue = null;
+                          });
+                        },
+                      )
+                    : null),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 15,
+          ),
         ),
       ),
     );
@@ -587,7 +637,10 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
           final place = _searchResults[index];
           final name = place['displayName']?['text'] ?? "Unknown Place";
           return ListTile(
-            leading: const Icon(Icons.location_on_outlined, color: AppColors.teal),
+            leading: const Icon(
+              Icons.location_on_outlined,
+              color: AppColors.teal,
+            ),
             title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
             onTap: () => _selectVenue(place),
           );
@@ -602,7 +655,9 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
       height: 64,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: _isDirectMode ? [const Color(0xFF00C9A7), const Color(0xFF0097A7)] : AppColors.tealGradient,
+          colors: _isDirectMode
+              ? [const Color(0xFF00C9A7), const Color(0xFF0097A7)]
+              : AppColors.tealGradient,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -620,14 +675,25 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
         ),
         child: _isCreating
-            ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 3)
+            ? const CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 3,
+              )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(_isDirectMode ? Icons.map_rounded : Icons.auto_awesome_rounded, color: Colors.white, size: 20),
+                  Icon(
+                    _isDirectMode
+                        ? Icons.map_rounded
+                        : Icons.auto_awesome_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                   const SizedBox(width: 12),
                   Text(
                     _isDirectMode ? "Start Journey" : "Launch Outing Session",

@@ -9,7 +9,12 @@ class SignupHeaderClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     Path path = Path();
     path.lineTo(0, size.height - 50);
-    path.quadraticBezierTo(size.width / 2, size.height + 20, size.width, size.height - 50);
+    path.quadraticBezierTo(
+      size.width / 2,
+      size.height + 20,
+      size.width,
+      size.height - 50,
+    );
     path.lineTo(size.width, 0);
     path.close();
     return path;
@@ -46,7 +51,9 @@ class RegisterPage extends StatelessWidget {
                       decoration: const BoxDecoration(
                         color: AppColors.teal,
                         image: DecorationImage(
-                          image: AssetImage('assets/onboarding_imgs/onboarding_img2.jpg'),
+                          image: AssetImage(
+                            'assets/onboarding_imgs/onboarding_img2.jpg',
+                          ),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -64,7 +71,10 @@ class RegisterPage extends StatelessWidget {
                         child: SafeArea(
                           bottom: false,
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24.0,
+                              vertical: 16.0,
+                            ),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -74,7 +84,9 @@ class RegisterPage extends StatelessWidget {
                                     width: 36,
                                     height: 36,
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.25),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.25,
+                                      ),
                                       shape: BoxShape.circle,
                                     ),
                                     child: const Icon(
@@ -109,7 +121,7 @@ class RegisterPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  
+
                   // Profile Icon Placeholder Overlapping
                   Positioned(
                     bottom: 0,
@@ -135,7 +147,10 @@ class RegisterPage extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: Colors.grey.shade50,
                               shape: BoxShape.circle,
-                              border: Border.all(color: Colors.grey.shade200, width: 1),
+                              border: Border.all(
+                                color: Colors.grey.shade200,
+                                width: 1,
+                              ),
                             ),
                             child: Icon(
                               Icons.add_a_photo_outlined,
@@ -157,8 +172,8 @@ class RegisterPage extends StatelessWidget {
                                   color: Colors.black.withValues(alpha: 0.1),
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
-                                )
-                              ]
+                                ),
+                              ],
                             ),
                             child: const Icon(
                               Icons.add_circle,
@@ -173,9 +188,9 @@ class RegisterPage extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             Text(
               AppLocalizations.of(context)!.welcome,
               style: AppLocalizations.of(context)!.isAr
@@ -208,15 +223,15 @@ class RegisterPage extends StatelessWidget {
                       height: 1.5,
                     ),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Form
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 32.0),
               child: RegisterForm(),
             ),
-            
+
             const SizedBox(height: 32),
           ],
         ),
@@ -224,4 +239,3 @@ class RegisterPage extends StatelessWidget {
     );
   }
 }
-

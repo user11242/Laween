@@ -40,9 +40,9 @@ class _BiometricAuthDialogState extends State<BiometricAuthDialog> {
           email: user.email!,
           password: _passwordController.text,
         );
-        
+
         await user.reauthenticateWithCredential(credential);
-        
+
         if (mounted) {
           Navigator.pop(context, _passwordController.text);
         }
@@ -84,7 +84,11 @@ class _BiometricAuthDialogState extends State<BiometricAuthDialog> {
                   color: AppColors.teal.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.security, color: AppColors.teal, size: 32),
+                child: const Icon(
+                  Icons.security,
+                  color: AppColors.teal,
+                  size: 32,
+                ),
               ),
               const SizedBox(height: 20),
               Text(
@@ -111,14 +115,22 @@ class _BiometricAuthDialogState extends State<BiometricAuthDialog> {
                 obscureText: !_isPasswordVisible,
                 decoration: InputDecoration(
                   hintText: l10n.password,
-                  prefixIcon: const Icon(Icons.lock_outline, color: AppColors.teal, size: 20),
+                  prefixIcon: const Icon(
+                    Icons.lock_outline,
+                    color: AppColors.teal,
+                    size: 20,
+                  ),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                      _isPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
                       color: Colors.grey,
                       size: 20,
                     ),
-                    onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+                    onPressed: () => setState(
+                      () => _isPasswordVisible = !_isPasswordVisible,
+                    ),
                   ),
                   filled: true,
                   fillColor: Colors.grey.shade100,

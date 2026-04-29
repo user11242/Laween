@@ -1,7 +1,8 @@
 import 'package:flutter/services.dart';
 
 class NumericUtils {
-  static TextInputFormatter get digitFormatter => FilteringTextInputFormatter.digitsOnly;
+  static TextInputFormatter get digitFormatter =>
+      FilteringTextInputFormatter.digitsOnly;
 
   static String normalize(String input, {bool clean = false}) {
     String normalized = normalizeDigits(input);

@@ -29,25 +29,25 @@ class OtpInputWidget extends StatelessWidget {
                 length: 6,
                 pinController: controller,
                 keyboardType: TextInputType.number,
-                
+
                 // Styling to match your BoxDecoration
                 theme: MaterialPinTheme(
                   shape: MaterialPinShape.outlined,
                   borderRadius: BorderRadius.circular(10),
                   cellSize: const Size(45, 55),
-                  
+
                   // Colors matching: Colors.black.withValues(alpha: 0.25)
                   fillColor: Colors.black.withValues(alpha: 0.25),
                   focusedFillColor: Colors.black.withValues(alpha: 0.25),
                   filledFillColor: Colors.black.withValues(alpha: 0.4),
-                  
+
                   // Borders (Set to transparent to let the shadow/box define the look)
                   borderColor: Colors.transparent,
                   focusedBorderColor: Colors.transparent,
                   filledBorderColor: Colors.white.withValues(alpha: 0.5),
-                  
+
                   textStyle: const TextStyle(color: Colors.white, fontSize: 20),
-                  
+
                   // Applying your specific BoxShadow
                   boxShadows: [
                     BoxShadow(

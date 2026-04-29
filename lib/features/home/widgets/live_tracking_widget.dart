@@ -16,7 +16,10 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
     if (user == null) return const SizedBox.shrink();
 
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .snapshots(),
       builder: (context, userSnapshot) {
         if (!userSnapshot.hasData) return const SizedBox.shrink();
 
@@ -45,7 +48,7 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
             final session = OutingSessionModel.fromMap(
               sessionSnapshot.data!.data() as Map<String, dynamic>,
             );
-            
+
             return _buildCareemStyleWidget(context, session);
           },
         );
@@ -53,7 +56,10 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildCareemStyleWidget(BuildContext context, OutingSessionModel session) {
+  Widget _buildCareemStyleWidget(
+    BuildContext context,
+    OutingSessionModel session,
+  ) {
     final winner = session.winner;
     if (winner == null) return const SizedBox.shrink();
 
@@ -63,13 +69,25 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
     int participantCount = 0;
 
     for (var p in session.participants) {
-      if (p.location != null && p.startLocation != null && winner['location'] != null) {
+      if (p.location != null &&
+          p.startLocation != null &&
+          winner['location'] != null) {
         final dest = winner['location'];
         final dLat = (dest['latitude'] as num).toDouble();
         final dLng = (dest['longitude'] as num).toDouble();
 
-        final startDist = _calculateDistance(p.startLocation!.latitude, p.startLocation!.longitude, dLat, dLng);
-        final currentDist = _calculateDistance(p.location!.latitude, p.location!.longitude, dLat, dLng);
+        final startDist = _calculateDistance(
+          p.startLocation!.latitude,
+          p.startLocation!.longitude,
+          dLat,
+          dLng,
+        );
+        final currentDist = _calculateDistance(
+          p.location!.latitude,
+          p.location!.longitude,
+          dLat,
+          dLng,
+        );
 
         if (startDist > 0) {
           final pProgress = (startDist - currentDist) / startDist;
@@ -79,7 +97,9 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
       }
     }
 
-    final displayProgress = participantCount > 0 ? (totalProgress / participantCount) : 0.0;
+    final displayProgress = participantCount > 0
+        ? (totalProgress / participantCount)
+        : 0.0;
     final percentage = (displayProgress * 100).toInt();
 
     return GestureDetector(
@@ -100,7 +120,10 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.slate.withValues(alpha: 0.1), width: 1),
+          border: Border.all(
+            color: AppColors.slate.withValues(alpha: 0.1),
+            width: 1,
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
@@ -120,7 +143,11 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
                     color: AppColors.teal.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.navigation_rounded, color: AppColors.teal, size: 20),
+                  child: const Icon(
+                    Icons.navigation_rounded,
+                    color: AppColors.teal,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -150,7 +177,10 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.teal.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -180,7 +210,9 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
                 AnimatedContainer(
                   duration: const Duration(seconds: 1),
                   height: 6,
-                  width: (MediaQuery.of(context).size.width - 88) * displayProgress,
+                  width:
+                      (MediaQuery.of(context).size.width - 88) *
+                      displayProgress,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(colors: AppColors.tealGradient),
                     borderRadius: BorderRadius.circular(3),
@@ -217,7 +249,11 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.teal, size: 10),
+                    const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: AppColors.teal,
+                      size: 10,
+                    ),
                   ],
                 ),
               ],
@@ -228,9 +264,15 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
     );
   }
 
-  double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+  double _calculateDistance(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
     const p = 0.017453292519943295;
-    final a = 0.5 -
+    final a =
+        0.5 -
         math.cos((lat2 - lat1) * p) / 2 +
         math.cos(lat1 * p) *
             math.cos(lat2 * p) *

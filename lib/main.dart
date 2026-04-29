@@ -14,6 +14,7 @@ import 'package:laween/features/auth/pages/forgot_password_page.dart';
 import 'package:laween/features/auth/pages/create_new_password_page.dart';
 import 'package:laween/features/auth/pages/login_page.dart';
 import 'package:laween/features/auth/pages/register_page.dart';
+import 'package:laween/features/groups/providers/wallpaper_provider.dart';
 import 'package:laween/core/theme/colors.dart';
 import 'firebase_options.dart';
 
@@ -39,7 +40,10 @@ void main() async {
 
   runApp(
     MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => LocaleProvider())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => LocaleProvider()),
+        ChangeNotifierProvider(create: (_) => WallpaperProvider()),
+      ],
       child: const MyApp(),
     ),
   );

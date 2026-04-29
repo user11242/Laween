@@ -2,12 +2,12 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-enum OutingStatus { 
-  waiting,   // Friends are joining
-  thinking,  // Algorithm is calculating
-  voting,    // Friends are voting on Top 3
+enum OutingStatus {
+  waiting, // Friends are joining
+  thinking, // Algorithm is calculating
+  voting, // Friends are voting on Top 3
   completed, // Location picked
-  cancelled  // Session aborted
+  cancelled, // Session aborted
 }
 
 class OutingParticipant {

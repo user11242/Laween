@@ -327,69 +327,98 @@ class TermsOfServicePage extends StatelessWidget {
       p = p.trim();
       if (p.isEmpty) return const SizedBox.shrink();
 
-      final isMainTitle = p.contains('Laween Terms of Service') || p.contains('شروط استخدام Laween');
-      final isHeading = RegExp(r'^\d+\.\s').hasMatch(p) || RegExp(r'^[A-Zأ-ي]\.\s').hasMatch(p);
+      final isMainTitle =
+          p.contains('Laween Terms of Service') ||
+          p.contains('شروط استخدام Laween');
+      final isHeading =
+          RegExp(r'^\d+\.\s').hasMatch(p) ||
+          RegExp(r'^[A-Zأ-ي]\.\s').hasMatch(p);
       final isEmail = p.contains('laween.support@gmail.com');
 
-      final baseStyle = isAr 
-          ? GoogleFonts.cairo(fontSize: 15, height: 1.8, color: Colors.grey.shade800)
-          : GoogleFonts.nunito(fontSize: 15, height: 1.6, color: Colors.grey.shade800);
+      final baseStyle = isAr
+          ? GoogleFonts.cairo(
+              fontSize: 15,
+              height: 1.8,
+              color: Colors.grey.shade800,
+            )
+          : GoogleFonts.nunito(
+              fontSize: 15,
+              height: 1.6,
+              color: Colors.grey.shade800,
+            );
 
       if (isMainTitle) {
-         return Padding(
-           padding: const EdgeInsets.only(bottom: 24, top: 8),
-           child: Text(
-             p,
-             style: isAr 
-                ? GoogleFonts.cairo(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.teal)
-                : GoogleFonts.nunito(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.teal),
-             textAlign: isAr ? TextAlign.right : TextAlign.left,
-             textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
-           ),
-         );
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 24, top: 8),
+          child: Text(
+            p,
+            style: isAr
+                ? GoogleFonts.cairo(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.teal,
+                  )
+                : GoogleFonts.nunito(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.teal,
+                  ),
+            textAlign: isAr ? TextAlign.right : TextAlign.left,
+            textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+          ),
+        );
       }
 
       if (isHeading) {
-         return Padding(
-           padding: const EdgeInsets.only(top: 24, bottom: 12),
-           child: Text(
-             p,
-             style: isAr 
-                ? GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.black87)
-                : GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.black87),
-             textAlign: isAr ? TextAlign.right : TextAlign.left,
-             textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
-           ),
-         );
+        return Padding(
+          padding: const EdgeInsets.only(top: 24, bottom: 12),
+          child: Text(
+            p,
+            style: isAr
+                ? GoogleFonts.cairo(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                  )
+                : GoogleFonts.nunito(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                  ),
+            textAlign: isAr ? TextAlign.right : TextAlign.left,
+            textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+          ),
+        );
       }
 
       if (isEmail) {
-         final parts = p.split('laween.support@gmail.com');
-         return Padding(
-           padding: const EdgeInsets.only(bottom: 16),
-           child: RichText(
-             textAlign: isAr ? TextAlign.right : TextAlign.left,
-             textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
-             text: TextSpan(
-               style: baseStyle,
-               children: [
-                 TextSpan(text: parts[0]),
-                 TextSpan(
-                   text: 'laween.support@gmail.com',
-                   style: baseStyle.copyWith(
-                     color: AppColors.teal, 
-                     fontWeight: FontWeight.bold, 
-                     decoration: TextDecoration.underline
-                   ),
-                   recognizer: TapGestureRecognizer()..onTap = () {
-                     launchUrl(Uri.parse('mailto:laween.support@gmail.com'));
-                   }
-                 ),
-                 if (parts.length > 1) TextSpan(text: parts[1]),
-               ]
-             )
-           )
-         );
+        final parts = p.split('laween.support@gmail.com');
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: RichText(
+            textAlign: isAr ? TextAlign.right : TextAlign.left,
+            textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+            text: TextSpan(
+              style: baseStyle,
+              children: [
+                TextSpan(text: parts[0]),
+                TextSpan(
+                  text: 'laween.support@gmail.com',
+                  style: baseStyle.copyWith(
+                    color: AppColors.teal,
+                    fontWeight: FontWeight.bold,
+                    decoration: TextDecoration.underline,
+                  ),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () {
+                      launchUrl(Uri.parse('mailto:laween.support@gmail.com'));
+                    },
+                ),
+                if (parts.length > 1) TextSpan(text: parts[1]),
+              ],
+            ),
+          ),
+        );
       }
 
       return Padding(
@@ -399,7 +428,7 @@ class TermsOfServicePage extends StatelessWidget {
           style: baseStyle,
           textAlign: isAr ? TextAlign.right : TextAlign.left,
           textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
-        )
+        ),
       );
     }).toList();
   }
@@ -414,8 +443,16 @@ class TermsOfServicePage extends StatelessWidget {
         title: Text(
           isAr ? 'الشروط والأحكام' : 'Terms of Service',
           style: isAr
-              ? GoogleFonts.cairo(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 18)
-              : GoogleFonts.nunito(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 18),
+              ? GoogleFonts.cairo(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                )
+              : GoogleFonts.nunito(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
         ),
         centerTitle: true,
         backgroundColor: Colors.grey.shade50,
@@ -433,7 +470,12 @@ class TermsOfServicePage extends StatelessWidget {
             // Header Graphic
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.only(top: 32, bottom: 24, left: 24, right: 24),
+              padding: const EdgeInsets.only(
+                top: 32,
+                bottom: 24,
+                left: 24,
+                right: 24,
+              ),
               child: Column(
                 children: [
                   Container(
@@ -442,28 +484,48 @@ class TermsOfServicePage extends StatelessWidget {
                       color: AppColors.teal.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.description_outlined, size: 48, color: AppColors.teal),
+                    child: Icon(
+                      Icons.description_outlined,
+                      size: 48,
+                      color: AppColors.teal,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     isAr ? 'شروط استخدام تطبيقنا' : 'Our Terms of Service',
                     textAlign: TextAlign.center,
-                    style: isAr 
-                      ? GoogleFonts.cairo(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)
-                      : GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                    style: isAr
+                        ? GoogleFonts.cairo(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          )
+                        : GoogleFonts.nunito(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    isAr ? 'يرجى قراءة الشروط بعناية قبل استخدام التطبيق' : 'Please read these terms carefully before using the app',
+                    isAr
+                        ? 'يرجى قراءة الشروط بعناية قبل استخدام التطبيق'
+                        : 'Please read these terms carefully before using the app',
                     textAlign: TextAlign.center,
-                    style: isAr 
-                      ? GoogleFonts.cairo(fontSize: 14, color: Colors.grey.shade600)
-                      : GoogleFonts.nunito(fontSize: 14, color: Colors.grey.shade600),
+                    style: isAr
+                        ? GoogleFonts.cairo(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
+                          )
+                        : GoogleFonts.nunito(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
+                          ),
                   ),
                 ],
               ),
             ),
-            
+
             // Content
             Container(
               margin: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 32.0),
@@ -500,4 +562,3 @@ class TermsOfServicePage extends StatelessWidget {
     );
   }
 }
-

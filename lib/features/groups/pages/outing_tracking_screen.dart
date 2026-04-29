@@ -31,7 +31,7 @@ class OutingTrackingScreen extends StatefulWidget {
 class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
   final OutingService _outingService = OutingService();
   final Completer<GoogleMapController> _controller = Completer();
-  
+
   Set<Marker> _markers = {};
   bool _isDisposed = false;
   final Map<String, BitmapDescriptor> _customMarkers = {};
@@ -111,15 +111,21 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
     return descriptor;
   }
 
-  String _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+  String _calculateDistance(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
     const p = 0.017453292519943295;
-    final a = 0.5 -
+    final a =
+        0.5 -
         math.cos((lat2 - lat1) * p) / 2 +
         math.cos(lat1 * p) *
             math.cos(lat2 * p) *
             (1 - math.cos((lon2 - lon1) * p)) /
             2;
-    final double dist = 12742 * math.asin(math.sqrt(a)); 
+    final double dist = 12742 * math.asin(math.sqrt(a));
     return dist.toStringAsFixed(1);
   }
 
@@ -134,15 +140,20 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
 
     final Set<Marker> newMarkers = {};
     final winner = session.winner;
-    
+
     // 1. Destination Marker
     if (winner != null && winner['location'] != null) {
       final loc = winner['location'];
       newMarkers.add(
         Marker(
           markerId: const MarkerId('v_winner'),
-          position: LatLng((loc['latitude'] as num).toDouble(), (loc['longitude'] as num).toDouble()),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+          position: LatLng(
+            (loc['latitude'] as num).toDouble(),
+            (loc['longitude'] as num).toDouble(),
+          ),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueOrange,
+          ),
           infoWindow: InfoWindow(title: winner['name'] ?? "Destination"),
         ),
       );
@@ -169,7 +180,8 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
     if (_isDisposed || !mounted) return;
 
     // Trigger update if hardware coordinates changed for anyone
-    if (newMarkers.length != _markers.length || !_markers.containsAll(newMarkers)) {
+    if (newMarkers.length != _markers.length ||
+        !_markers.containsAll(newMarkers)) {
       setState(() => _markers = newMarkers);
       // Only auto-fit once or if 'follow' is enabled
       if (!_hasInitialFit || _shouldFollow) {
@@ -181,20 +193,32 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
     // 3. Detect First Arrival
     if (session.firstArrivedUid == null) {
       final myUid = FirebaseAuth.instance.currentUser?.uid;
-      final me = session.participants.firstWhere((p) => p.uid == myUid, 
-          orElse: () => session.participants.first); // Fallback to avoid error
-      
+      final me = session.participants.firstWhere(
+        (p) => p.uid == myUid,
+        orElse: () => session.participants.first,
+      ); // Fallback to avoid error
+
       if (me.location != null && winner != null && winner['location'] != null) {
         final loc = winner['location'];
         final vLat = (loc['latitude'] as num).toDouble();
         final vLng = (loc['longitude'] as num).toDouble();
-        
-        final dist = double.parse(_calculateDistance(
-          me.location!.latitude, me.location!.longitude, vLat, vLng
-        ));
-        
-        if (dist <= 0.1) { // 100 meters
-          _outingService.recordFirstArrival(widget.groupId, session.id, myUid ?? '');
+
+        final dist = double.parse(
+          _calculateDistance(
+            me.location!.latitude,
+            me.location!.longitude,
+            vLat,
+            vLng,
+          ),
+        );
+
+        if (dist <= 0.1) {
+          // 100 meters
+          _outingService.recordFirstArrival(
+            widget.groupId,
+            session.id,
+            myUid ?? '',
+          );
         }
       }
     }
@@ -203,7 +227,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
   Future<void> _fitBounds() async {
     if (_markers.isEmpty || !_controller.isCompleted) return;
     final controller = await _controller.future;
-    
+
     double? minLat, maxLat, minLng, maxLng;
     for (var m in _markers) {
       final pos = m.position;
@@ -231,12 +255,14 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
         stream: _outingService.streamSession(widget.groupId, widget.sessionId),
         builder: (context, snapshot) {
           if (!snapshot.hasData || snapshot.data == null) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.teal));
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.teal),
+            );
           }
 
           final session = snapshot.data!;
           final winner = session.winner;
-          
+
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _updateMarkers(session);
             _syncLiveActivity(session, winner);
@@ -256,7 +282,8 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                 mapToolbarEnabled: false,
                 markers: _markers,
                 onMapCreated: (controller) {
-                  if (!_controller.isCompleted) _controller.complete(controller);
+                  if (!_controller.isCompleted)
+                    _controller.complete(controller);
                 },
               ),
 
@@ -274,19 +301,30 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                           color: AppColors.darkSlate.withValues(alpha: 0.9),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+                        child: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
                       ),
                       onPressed: () => Navigator.pop(context),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.darkSlate.withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
-                            BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 5)),
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
                           ],
                         ),
                         child: Column(
@@ -296,16 +334,29 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                               children: [
                                 Text(
                                   "LIVE TRACKING",
-                                  style: GoogleFonts.inter(fontSize: 10, color: AppColors.teal, fontWeight: FontWeight.bold, letterSpacing: 1.5),
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    color: AppColors.teal,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.5,
+                                  ),
                                 ),
                                 const Spacer(),
                                 if (_shouldFollow)
-                                  const Icon(Icons.auto_fix_high_rounded, color: AppColors.teal, size: 12),
+                                  const Icon(
+                                    Icons.auto_fix_high_rounded,
+                                    color: AppColors.teal,
+                                    size: 12,
+                                  ),
                               ],
                             ),
                             Text(
                               winner?['name'] ?? "Destination",
-                              style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                              style: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -324,8 +375,12 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                 child: Column(
                   children: [
                     _buildMapControl(
-                      icon: _shouldFollow ? Icons.gps_fixed_rounded : Icons.gps_not_fixed_rounded,
-                      color: _shouldFollow ? AppColors.teal : AppColors.darkSlate,
+                      icon: _shouldFollow
+                          ? Icons.gps_fixed_rounded
+                          : Icons.gps_not_fixed_rounded,
+                      color: _shouldFollow
+                          ? AppColors.teal
+                          : AppColors.darkSlate,
                       onTap: () {
                         setState(() => _shouldFollow = !_shouldFollow);
                         if (_shouldFollow) _fitBounds();
@@ -355,8 +410,12 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
     );
   }
 
-  Widget _buildETASheet(OutingSessionModel session, Map<String, dynamic>? winner) {
-    if (winner == null || winner['location'] == null) return const SizedBox.shrink();
+  Widget _buildETASheet(
+    OutingSessionModel session,
+    Map<String, dynamic>? winner,
+  ) {
+    if (winner == null || winner['location'] == null)
+      return const SizedBox.shrink();
     final vLat = winner['location']['latitude'] as double;
     final vLng = winner['location']['longitude'] as double;
 
@@ -366,106 +425,214 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
       if (a.location == null && b.location != null) return 1;
       if (a.location != null && b.location == null) return -1;
       if (a.location == null && b.location == null) return 0;
-      final distA = double.parse(_calculateDistance(a.location!.latitude, a.location!.longitude, vLat, vLng));
-      final distB = double.parse(_calculateDistance(b.location!.latitude, b.location!.longitude, vLat, vLng));
+      final distA = double.parse(
+        _calculateDistance(
+          a.location!.latitude,
+          a.location!.longitude,
+          vLat,
+          vLng,
+        ),
+      );
+      final distB = double.parse(
+        _calculateDistance(
+          b.location!.latitude,
+          b.location!.longitude,
+          vLat,
+          vLng,
+        ),
+      );
       return distA.compareTo(distB);
     });
 
     return Align(
       alignment: Alignment.bottomCenter,
-      child: Container(
-        padding: const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 40),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 30, offset: const Offset(0, -10)),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 5,
-                decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(10)),
-              ),
+      child:
+          Container(
+            padding: const EdgeInsets.only(
+              top: 24,
+              left: 24,
+              right: 24,
+              bottom: 40,
             ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                const Icon(Icons.people_alt_rounded, color: AppColors.darkSlate, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  "Friends Arrival Times",
-                  style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.darkSlate),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(32),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 30,
+                  offset: const Offset(0, -10),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-            ListView.separated(
-              shrinkWrap: true,
-              padding: EdgeInsets.zero,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: sortedP.length,
-              separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey.shade100),
-              itemBuilder: (context, i) {
-                final p = sortedP[i];
-                if (p.location == null) return const SizedBox.shrink();
-
-                final dist = double.parse(_calculateDistance(p.location!.latitude, p.location!.longitude, vLat, vLng));
-                final time = _estimateTime(dist);
-                final bool isArrived = dist <= 0.1; // Less than 100 meters
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor: isArrived ? AppColors.teal : Colors.grey.shade200,
-                        radius: 18,
-                        child: isArrived 
-                          ? const Icon(Icons.check_rounded, color: Colors.white, size: 20)
-                          : Text("${i + 1}", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.grey.shade700)),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(p.name, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.darkSlate)),
-                            Text("$dist km away", style: GoogleFonts.inter(color: Colors.grey, fontSize: 12)),
-                          ],
-                        ),
-                      ),
-                      if (isArrived)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(color: AppColors.teal.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-                          child: Text("ARRIVED", style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11, color: AppColors.teal, letterSpacing: 1)),
-                        )
-                      else
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(color: Colors.amber.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
-                          child: Row(
-                            children: [
-                              Text(time, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.amber.shade700)),
-                              const SizedBox(width: 4),
-                              Text("min", style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 11, color: Colors.amber.shade700)),
-                            ],
-                          ),
-                        ),
-                    ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                );
-              },
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.people_alt_rounded,
+                      color: AppColors.darkSlate,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      "Friends Arrival Times",
+                      style: GoogleFonts.outfit(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.darkSlate,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                ListView.separated(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: sortedP.length,
+                  separatorBuilder: (_, __) =>
+                      Divider(height: 1, color: Colors.grey.shade100),
+                  itemBuilder: (context, i) {
+                    final p = sortedP[i];
+                    if (p.location == null) return const SizedBox.shrink();
+
+                    final dist = double.parse(
+                      _calculateDistance(
+                        p.location!.latitude,
+                        p.location!.longitude,
+                        vLat,
+                        vLng,
+                      ),
+                    );
+                    final time = _estimateTime(dist);
+                    final bool isArrived = dist <= 0.1; // Less than 100 meters
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: isArrived
+                                ? AppColors.teal
+                                : Colors.grey.shade200,
+                            radius: 18,
+                            child: isArrived
+                                ? const Icon(
+                                    Icons.check_rounded,
+                                    color: Colors.white,
+                                    size: 20,
+                                  )
+                                : Text(
+                                    "${i + 1}",
+                                    style: GoogleFonts.outfit(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.grey.shade700,
+                                    ),
+                                  ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  p.name,
+                                  style: GoogleFonts.outfit(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: AppColors.darkSlate,
+                                  ),
+                                ),
+                                Text(
+                                  "$dist km away",
+                                  style: GoogleFonts.inter(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (isArrived)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.teal.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                "ARRIVED",
+                                style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11,
+                                  color: AppColors.teal,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                            )
+                          else
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    time,
+                                    style: GoogleFonts.outfit(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                      color: Colors.amber.shade700,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    "min",
+                                    style: GoogleFonts.inter(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 11,
+                                      color: Colors.amber.shade700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
-          ],
-        ),
-      ).animate().slideY(begin: 1, duration: 600.ms, curve: Curves.easeOutQuart),
+          ).animate().slideY(
+            begin: 1,
+            duration: 600.ms,
+            curve: Curves.easeOutQuart,
+          ),
     );
   }
 
@@ -474,10 +641,13 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
     if (uid == null) return const SizedBox();
 
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const SizedBox();
-        
+
         final data = snapshot.data!.data() as Map<String, dynamic>?;
         final isGhost = data?['isGhostMode'] ?? true;
         final isActive = data?['isTrackingActive'] ?? false;
@@ -492,7 +662,9 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: isGhost ? AppColors.darkSlate.withValues(alpha: 0.8) : AppColors.teal.withValues(alpha: 0.9),
+                color: isGhost
+                    ? AppColors.darkSlate.withValues(alpha: 0.8)
+                    : AppColors.teal.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
@@ -502,14 +674,18 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                   ),
                 ],
                 border: Border.all(
-                  color: isGhost ? Colors.white.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.3),
+                  color: isGhost
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.white.withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    isGhost ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                    isGhost
+                        ? Icons.visibility_off_rounded
+                        : Icons.visibility_rounded,
                     color: Colors.white,
                     size: 16,
                   ),
@@ -532,11 +708,18 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
     );
   }
 
-  void _syncLiveActivity(OutingSessionModel session, Map<String, dynamic>? winner) async {
+  void _syncLiveActivity(
+    OutingSessionModel session,
+    Map<String, dynamic>? winner,
+  ) async {
     _outingService.syncLiveActivity(session);
   }
 
-  Widget _buildMapControl({required IconData icon, Color color = AppColors.darkSlate, required VoidCallback onTap}) {
+  Widget _buildMapControl({
+    required IconData icon,
+    Color color = AppColors.darkSlate,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -546,7 +729,11 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
           color: Colors.white,
           shape: BoxShape.circle,
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 10, offset: const Offset(0, 5)),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
           ],
         ),
         child: Icon(icon, color: color, size: 24),

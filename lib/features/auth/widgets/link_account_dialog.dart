@@ -29,7 +29,10 @@ class _LinkAccountDialogState extends State<LinkAccountDialog> {
     });
 
     try {
-      final result = await _authService.linkGoogleAccount(widget.email, _passwordController.text);
+      final result = await _authService.linkGoogleAccount(
+        widget.email,
+        _passwordController.text,
+      );
       if (mounted) {
         Navigator.pop(context, result == null);
       }
@@ -37,7 +40,10 @@ class _LinkAccountDialogState extends State<LinkAccountDialog> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = AppLocalizations.of(context, listen: false)!.invalidPassword;
+          _errorMessage = AppLocalizations.of(
+            context,
+            listen: false,
+          )!.invalidPassword;
         });
       }
     }
@@ -72,10 +78,7 @@ class _LinkAccountDialogState extends State<LinkAccountDialog> {
               Text(
                 l10n.linkAccountMessage,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.white70,
-                ),
+                style: const TextStyle(fontSize: 14, color: AppColors.white70),
               ),
               const SizedBox(height: 24),
               TextField(
@@ -95,10 +98,13 @@ class _LinkAccountDialogState extends State<LinkAccountDialog> {
                   errorStyle: const TextStyle(color: Colors.redAccent),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
                       color: AppColors.white70,
                     ),
-                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
                   ),
                 ),
               ),
@@ -118,7 +124,10 @@ class _LinkAccountDialogState extends State<LinkAccountDialog> {
                   onPressed: _handleLink,
                   child: Text(
                     l10n.linkAccountButton,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               const SizedBox(height: 12),

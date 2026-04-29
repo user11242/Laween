@@ -43,16 +43,14 @@ class EmailService {
 """;
 
       final body = jsonEncode({
-        "sender": {
-          "name": "Laween Team",
-          "email": "no-reply@laween.xyz", 
-        },
+        "sender": {"name": "Laween Team", "email": "no-reply@laween.xyz"},
         "to": [
           {"email": email},
         ],
         "subject": "Verify your Laween account",
         "htmlContent": htmlTemplate,
-        "textContent": "Your Laween Verification Code is: $otp. This code will expire in 10 minutes.", 
+        "textContent":
+            "Your Laween Verification Code is: $otp. This code will expire in 10 minutes.",
       });
 
       final response = await http.post(

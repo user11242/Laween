@@ -23,21 +23,21 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
   final AuthService _authService = AuthService();
   final phoneController = TextEditingController();
   final _phoneUtil = lib_phone.PhoneNumberUtil();
-  
+
   String _localizeError(String error, AppLocalizations l10n) {
-    if (error.contains("Not signed in")) return l10n.isAr ? "لم يتم تسجيل الدخول" : "Not signed in";
+    if (error.contains("Not signed in"))
+      return l10n.isAr ? "لم يتم تسجيل الدخول" : "Not signed in";
     return error;
   }
 
   final _otpKey = GlobalKey<UniversalOtpStepState>();
-  
+
   int _step = 0;
   bool isLoading = false;
   bool _acceptedTerms = false;
   String fullPhoneNumber = "";
   String _initialCountryCode = "JO";
   bool _isStepsInitialized = false;
-
 
   @override
   void initState() {
@@ -95,7 +95,11 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
         const SizedBox(height: 16),
         Text(
           l10n.termsAndConditions,
-          style: const TextStyle(color: AppColors.teal, fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: AppColors.teal,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 24),
         Container(
@@ -126,7 +130,13 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
                         ),
                         recognizer: TapGestureRecognizer()
                           ..onTap = () {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => const TermsAndConditionsPage()));
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const TermsAndConditionsPage(),
+                              ),
+                            );
                           },
                       ),
                     ],
@@ -147,7 +157,11 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
       children: [
         Text(
           l10n.verifyIdentity,
-          style: const TextStyle(color: AppColors.teal, fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: AppColors.teal,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 20),
         IntlPhoneField(
@@ -157,12 +171,18 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
           style: const TextStyle(color: AppColors.teal),
           inputFormatters: [NumericUtils.digitFormatter],
           textAlign: TextAlign.start,
-          dropdownIcon: const Icon(Icons.arrow_drop_down, color: AppColors.teal),
+          dropdownIcon: const Icon(
+            Icons.arrow_drop_down,
+            color: AppColors.teal,
+          ),
           dropdownTextStyle: const TextStyle(color: AppColors.teal),
           onChanged: (phone) {
             setState(() {
               // Normalize digits AND clean spaces/dashes for the backend
-              fullPhoneNumber = NumericUtils.normalize(phone.completeNumber, clean: true);
+              fullPhoneNumber = NumericUtils.normalize(
+                phone.completeNumber,
+                clean: true,
+              );
             });
           },
           decoration: InputDecoration(
@@ -172,11 +192,15 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
             fillColor: AppColors.teal.withValues(alpha: 0.05),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.teal.withValues(alpha: 0.3)),
+              borderSide: BorderSide(
+                color: AppColors.teal.withValues(alpha: 0.3),
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.teal.withValues(alpha: 0.3)),
+              borderSide: BorderSide(
+                color: AppColors.teal.withValues(alpha: 0.3),
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -192,15 +216,19 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
     final l10n = AppLocalizations.of(context, listen: false)!;
     if (isLoading) return;
 
-    if (_step == 0) { // Phone Step
+    if (_step == 0) {
+      // Phone Step
       if (phoneController.text.length < 5) return;
 
       setState(() => isLoading = true);
-      
+
       // 1. Format Check
       bool isValidFormat = false;
       try {
-        isValidFormat = await _phoneUtil.validate(fullPhoneNumber, regionCode: _initialCountryCode);
+        isValidFormat = await _phoneUtil.validate(
+          fullPhoneNumber,
+          regionCode: _initialCountryCode,
+        );
       } catch (_) {
         isValidFormat = false;
       }
@@ -209,7 +237,12 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
 
       if (!isValidFormat) {
         setState(() => isLoading = false);
-        AppMessenger.showSnackBar(context, title: l10n.error, message: l10n.invalidMobileNumber, type: MessengerType.error);
+        AppMessenger.showSnackBar(
+          context,
+          title: l10n.error,
+          message: l10n.invalidMobileNumber,
+          type: MessengerType.error,
+        );
         return;
       }
 
@@ -219,7 +252,12 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
 
       if (isTaken) {
         if (mounted) {
-          AppMessenger.showSnackBar(context, title: l10n.unavailable, message: l10n.phoneNumberInUse, type: MessengerType.error);
+          AppMessenger.showSnackBar(
+            context,
+            title: l10n.unavailable,
+            message: l10n.phoneNumberInUse,
+            type: MessengerType.error,
+          );
         }
         return;
       }
@@ -238,7 +276,6 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
     }
   }
 
-
   Future<void> _handleCancel() async {
     setState(() => isLoading = true);
     await _authService.cleanupGhostAccount();
@@ -253,11 +290,21 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
   Future<bool> _validateCurrentStepInput() async {
     final l10n = AppLocalizations.of(context, listen: false)!;
     if (_step == 0 && phoneController.text.isEmpty) {
-      AppMessenger.showSnackBar(context, title: l10n.required, message: l10n.enterPhone, type: MessengerType.error);
+      AppMessenger.showSnackBar(
+        context,
+        title: l10n.required,
+        message: l10n.enterPhone,
+        type: MessengerType.error,
+      );
       return false;
     }
     if (_isFinalStep() && !_acceptedTerms) {
-      AppMessenger.showSnackBar(context, title: l10n.termsRequired, message: l10n.acceptTermsToFinish, type: MessengerType.error);
+      AppMessenger.showSnackBar(
+        context,
+        title: l10n.termsRequired,
+        message: l10n.acceptTermsToFinish,
+        type: MessengerType.error,
+      );
       return false;
     }
     return true;
@@ -267,7 +314,7 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
     final l10n = AppLocalizations.of(context, listen: false)!;
     final navigator = Navigator.of(context);
     setState(() => isLoading = true);
-    
+
     final result = await _authService.createGoogleUserWithRole(
       phone: fullPhoneNumber,
       portfolio: '',
@@ -282,7 +329,12 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
       // Direct to Home Dashboard
       navigator.pushNamedAndRemoveUntil('/home', (route) => false);
     } else {
-      AppMessenger.showSnackBar(context, title: l10n.error, message: _localizeError(result, l10n), type: MessengerType.error);
+      AppMessenger.showSnackBar(
+        context,
+        title: l10n.error,
+        message: _localizeError(result, l10n),
+        type: MessengerType.error,
+      );
     }
   }
 
@@ -293,10 +345,10 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
       canPop: !isLoading, // Prevent pop if we are currently cleaning up
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return; // If already popped by something else
-        
+
         // 👻 Cleanup if system back or swipe exits the wizard
         await _authService.cleanupGhostAccount();
-        
+
         if (context.mounted) {
           Navigator.pop(context);
         }
@@ -312,109 +364,142 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
             AnimatedPadding(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeOut,
-              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-            child: Center(
-              child: Container(
-                width: MediaQuery.of(context).size.width * 0.85,
-                constraints: BoxConstraints(
-                  maxWidth: 450,
-                  maxHeight: MediaQuery.of(context).size.height * 0.85 - MediaQuery.of(context).viewInsets.bottom,
-                ),
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.95), 
-                  borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: AppColors.teal.withValues(alpha: 0.1), width: 1.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 30,
-                      spreadRadius: 10,
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Center(
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.85,
+                  constraints: BoxConstraints(
+                    maxWidth: 450,
+                    maxHeight:
+                        MediaQuery.of(context).size.height * 0.85 -
+                        MediaQuery.of(context).viewInsets.bottom,
+                  ),
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.95),
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(
+                      color: AppColors.teal.withValues(alpha: 0.1),
+                      width: 1.5,
                     ),
-                  ],
-                ),
-                child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Stack(
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 30,
+                        spreadRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Align(
-                          alignment: AlignmentDirectional.topEnd,
-                          child: IconButton(
-                            icon: const Icon(Icons.close, color: AppColors.teal),
-                            onPressed: _handleCancel,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
+                        Stack(
+                          children: [
+                            Align(
+                              alignment: AlignmentDirectional.topEnd,
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: AppColors.teal,
+                                ),
+                                onPressed: _handleCancel,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 300),
+                          layoutBuilder: (child, list) => Stack(
+                            alignment: Alignment.center,
+                            children: [...list, if (child != null) child],
+                          ),
+                          child: Container(
+                            key: ValueKey<int>(_step),
+                            child: !_isStepsInitialized
+                                ? const CircularProgressIndicator(
+                                    color: AppColors.teal,
+                                  )
+                                : _buildStepContent(),
                           ),
                         ),
+                        const SizedBox(height: 20),
+                        if (_isFinalStep()) const SizedBox(height: 10),
+                        _isFinalStep()
+                            ? SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.teal,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                  onPressed: isLoading ? null : _nextStep,
+                                  child: isLoading
+                                      ? const SizedBox(
+                                          height: 24,
+                                          width: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : Text(
+                                          l10n.finish,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                ),
+                              )
+                            : Row(
+                                children: [
+                                  const Spacer(),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.teal,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    onPressed: isLoading ? null : _nextStep,
+                                    child: isLoading
+                                        ? const SizedBox(
+                                            height: 20,
+                                            width: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : Text(
+                                            l10n.next,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                  ),
+                                ],
+                              ),
                       ],
                     ),
-                    const SizedBox(height: 10),
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      layoutBuilder: (child, list) => Stack(alignment: Alignment.center, children: [...list, if (child != null) child]),
-                      child: Container(
-                        key: ValueKey<int>(_step),
-                        child: !_isStepsInitialized ? const CircularProgressIndicator(color: AppColors.teal) : _buildStepContent(),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    if (_isFinalStep())
-                       const SizedBox(height: 10),
-                    _isFinalStep()
-                        ? SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.teal,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                elevation: 0,
-                              ),
-                              onPressed: isLoading ? null : _nextStep,
-                              child: isLoading
-                                  ? const SizedBox(
-                                      height: 24,
-                                      width: 24,
-                                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                    )
-                                  : Text(
-                                      l10n.finish,
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                    ),
-                            ),
-                          )
-                        : Row(
-                            children: [
-                              const Spacer(),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.teal,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                ),
-                                onPressed: isLoading ? null : _nextStep,
-                                child: isLoading
-                                    ? const SizedBox(
-                                        height: 20,
-                                        width: 20,
-                                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                      )
-                                    : Text(
-                                        l10n.next,
-                                        style: const TextStyle(fontWeight: FontWeight.bold),
-                                      ),
-                              ),
-                            ],
-                          ),
-                    ],
                   ),
                 ),
               ),
             ),
-          ),
           ],
         ),
       ),

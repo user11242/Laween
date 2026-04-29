@@ -50,7 +50,10 @@ class GoogleHintDialog extends StatelessWidget {
                 ),
                 label: Text(
                   AppLocalizations.of(context)!.continueWithGoogle,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 onPressed: onContinue, // ✅ no Navigator.pop here
               ),

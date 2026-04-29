@@ -27,7 +27,7 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
   void _createPassword() {
     final l10n = AppLocalizations.of(context, listen: false)!;
     if (!has8Chars || !hasNumber || !hasUppercase) {
-       AppMessenger.showSnackBar(
+      AppMessenger.showSnackBar(
         context,
         title: l10n.error,
         message: l10n.weakPassword,
@@ -36,7 +36,7 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
       return;
     }
     if (_passwordController.text != _confirmController.text) {
-       AppMessenger.showSnackBar(
+      AppMessenger.showSnackBar(
         context,
         title: l10n.error,
         message: l10n.passwordsDoNotMatch,
@@ -95,7 +95,11 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
                             child: IconButton(
                               icon: Transform.flip(
                                 flipX: l10n.isAr,
-                                child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
+                                child: const Icon(
+                                  Icons.arrow_back_ios_new,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
                               ),
                               onPressed: () => Navigator.pop(context),
                             ),
@@ -122,7 +126,7 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
               child: Column(
                 children: [
                   const SizedBox(height: 10),
-                   // Decorative dots top left
+                  // Decorative dots top left
                   Align(
                     alignment: Alignment.centerLeft,
                     child: _buildDecorativeDots(AppColors.teal),
@@ -147,12 +151,24 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
                           color: AppColors.teal.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Icon(Icons.lock_open_outlined, size: 50, color: AppColors.teal),
+                        child: const Icon(
+                          Icons.lock_open_outlined,
+                          size: 50,
+                          color: AppColors.teal,
+                        ),
                       ),
                       // Dot pattern around
                       Positioned(
-                        bottom: 40, right: 10,
-                        child: Container(width: 6, height: 6, decoration: const BoxDecoration(color: AppColors.teal, shape: BoxShape.circle)),
+                        bottom: 40,
+                        right: 10,
+                        child: Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(
+                            color: AppColors.teal,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -179,29 +195,33 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
                   ),
 
                   const SizedBox(height: 32),
-                  
+
                   // New Password Input
                   _buildPasswordField(
                     controller: _passwordController,
                     label: l10n.newPassword,
                     obscured: _isPasswordObscured,
-                    onToggle: () => setState(() => _isPasswordObscured = !_isPasswordObscured),
+                    onToggle: () => setState(
+                      () => _isPasswordObscured = !_isPasswordObscured,
+                    ),
                     onChanged: (val) => setState(() {}),
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Confirm Password Input
                   _buildPasswordField(
                     controller: _confirmController,
                     label: l10n.confirmPassword,
                     obscured: _isConfirmObscured,
-                    onToggle: () => setState(() => _isConfirmObscured = !_isConfirmObscured),
+                    onToggle: () => setState(
+                      () => _isConfirmObscured = !_isConfirmObscured,
+                    ),
                     onChanged: (val) => setState(() {}),
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Requirements Checklist
                   _buildRequirement(l10n.atLeast8Chars, has8Chars),
                   _buildRequirement(l10n.oneNumber, hasNumber),
@@ -226,7 +246,10 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
                           ? const SizedBox(
                               width: 24,
                               height: 24,
-                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
                             )
                           : Text(
                               l10n.continueText,
@@ -238,11 +261,15 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
                             ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   TextButton(
-                    onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false),
+                    onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/login',
+                      (route) => false,
+                    ),
                     child: Text(
                       l10n.backToLogin,
                       style: GoogleFonts.inter(
@@ -277,11 +304,20 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
       style: GoogleFonts.inter(fontSize: 15),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: GoogleFonts.inter(color: Colors.grey.shade400, fontSize: 14),
-        prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey, size: 20),
+        labelStyle: GoogleFonts.inter(
+          color: Colors.grey.shade400,
+          fontSize: 14,
+        ),
+        prefixIcon: const Icon(
+          Icons.lock_outline,
+          color: Colors.grey,
+          size: 20,
+        ),
         suffixIcon: IconButton(
           icon: Icon(
-            obscured ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+            obscured
+                ? Icons.visibility_off_outlined
+                : Icons.visibility_outlined,
             color: Colors.grey.shade400,
             size: 20,
           ),
@@ -289,7 +325,10 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
         ),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
           borderSide: BorderSide(color: Colors.grey.shade200),
@@ -336,13 +375,25 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
             const SizedBox(width: 8),
-            Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
           ],
         ),
         const SizedBox(height: 8),
-        Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
       ],
     );
   }

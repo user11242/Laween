@@ -10,10 +10,7 @@ import '../../groups/pages/chat_page.dart';
 class RecentGroupCard extends StatelessWidget {
   final GroupModel group;
 
-  const RecentGroupCard({
-    super.key,
-    required this.group,
-  });
+  const RecentGroupCard({super.key, required this.group});
 
   @override
   Widget build(BuildContext context) {
@@ -21,9 +18,7 @@ class RecentGroupCard extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => ChatPage(group: group),
-          ),
+          MaterialPageRoute(builder: (context) => ChatPage(group: group)),
         );
       },
       child: Container(
@@ -32,7 +27,10 @@ class RecentGroupCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.slate.withValues(alpha: 0.1), width: 1),
+          border: Border.all(
+            color: AppColors.slate.withValues(alpha: 0.1),
+            width: 1,
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.03),

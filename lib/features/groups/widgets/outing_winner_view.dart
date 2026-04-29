@@ -26,7 +26,7 @@ class OutingWinnerView extends StatelessWidget {
 
     final apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'];
     final photoRef = winner['photoReference'];
-    final imageUrl = photoRef != null 
+    final imageUrl = photoRef != null
         ? "https://places.googleapis.com/v1/$photoRef/media?key=$apiKey&maxHeightPx=600"
         : null;
 
@@ -54,11 +54,19 @@ class OutingWinnerView extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.people_alt_rounded, color: Colors.amber, size: 14),
+                  const Icon(
+                    Icons.people_alt_rounded,
+                    color: Colors.amber,
+                    size: 14,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     "${(winner['votes'] as List?)?.length ?? 0} Votes",
-                    style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.amber),
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.amber,
+                    ),
                   ),
                 ],
               ),
@@ -66,14 +74,16 @@ class OutingWinnerView extends StatelessWidget {
           ],
         ).animate().fadeIn().slideY(begin: -0.2),
         const SizedBox(height: 16),
-        
+
         // Winner Card
         Container(
           decoration: BoxDecoration(
             color: isMe ? Colors.white.withValues(alpha: 0.15) : Colors.white,
             borderRadius: BorderRadius.circular(28),
             border: Border.all(
-              color: isMe ? Colors.white.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.05),
+              color: isMe
+                  ? Colors.white.withValues(alpha: 0.2)
+                  : Colors.black.withValues(alpha: 0.05),
               width: 1.5,
             ),
             boxShadow: [
@@ -90,7 +100,9 @@ class OutingWinnerView extends StatelessWidget {
                 Stack(
                   children: [
                     ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(26),
+                      ),
                       child: CachedNetworkImage(
                         imageUrl: imageUrl,
                         height: 160,
@@ -102,18 +114,29 @@ class OutingWinnerView extends StatelessWidget {
                       top: 12,
                       right: 12,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.6),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
+                            const Icon(
+                              Icons.star_rounded,
+                              color: Colors.amber,
+                              size: 16,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               "${winner['rating'] ?? 'N/A'}",
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
                             ),
                           ],
                         ),
@@ -150,13 +173,18 @@ class OutingWinnerView extends StatelessWidget {
                         Expanded(
                           child: ElevatedButton.icon(
                             onPressed: () => _openInMaps(winner['location']),
-                            icon: const Icon(Icons.directions_rounded, size: 18),
+                            icon: const Icon(
+                              Icons.directions_rounded,
+                              size: 18,
+                            ),
                             label: const Text("Get Directions"),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.teal,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
                               elevation: 0,
                             ),
                           ),
@@ -176,7 +204,9 @@ class OutingWinnerView extends StatelessWidget {
   Future<void> _openInMaps(Map<String, dynamic> location) async {
     final lat = location['latitude'];
     final lng = location['longitude'];
-    final url = Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lng');
+    final url = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$lat,$lng',
+    );
     if (await canLaunchUrl(url)) {
       await launchUrl(url);
     }

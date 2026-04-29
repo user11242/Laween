@@ -44,13 +44,19 @@ class OutingVotingView extends StatelessWidget {
         ...venues.asMap().entries.map((entry) {
           final index = entry.key;
           final venue = entry.value;
-          return _buildVenueCard(venue, index).animate().fadeIn(delay: (index * 150).milliseconds).slideX(begin: 0.1);
+          return _buildVenueCard(venue, index)
+              .animate()
+              .fadeIn(delay: (index * 150).milliseconds)
+              .slideX(begin: 0.1);
         }),
         const SizedBox(height: 12),
         Center(
           child: Text(
             "Voting closes in ${_formatDuration(session.expiresAt.difference(DateTime.now()))}",
-            style: GoogleFonts.inter(fontSize: 11, color: isMe ? Colors.white60 : Colors.grey),
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: isMe ? Colors.white60 : Colors.grey,
+            ),
           ),
         ),
       ],
@@ -66,7 +72,7 @@ class OutingVotingView extends StatelessWidget {
   Widget _buildVenueCard(Map<String, dynamic> venue, int index) {
     final apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'];
     final photoRef = venue['photoReference'];
-    final imageUrl = photoRef != null 
+    final imageUrl = photoRef != null
         ? "https://places.googleapis.com/v1/$photoRef/media?key=$apiKey&maxHeightPx=400"
         : null;
 
@@ -75,7 +81,11 @@ class OutingVotingView extends StatelessWidget {
       decoration: BoxDecoration(
         color: isMe ? Colors.white.withValues(alpha: 0.1) : Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: isMe ? Colors.white.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.05)),
+        border: Border.all(
+          color: isMe
+              ? Colors.white.withValues(alpha: 0.2)
+              : Colors.black.withValues(alpha: 0.05),
+        ),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
@@ -87,8 +97,12 @@ class OutingVotingView extends StatelessWidget {
                 height: 120,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                placeholder: (context, url) => Container(color: Colors.grey.shade100),
-                errorWidget: (context, url, error) => Container(color: Colors.grey.shade100, child: const Icon(Icons.error)),
+                placeholder: (context, url) =>
+                    Container(color: Colors.grey.shade100),
+                errorWidget: (context, url, error) => Container(
+                  color: Colors.grey.shade100,
+                  child: const Icon(Icons.error),
+                ),
               ),
             Padding(
               padding: const EdgeInsets.all(16),
@@ -111,13 +125,19 @@ class OutingVotingView extends StatelessWidget {
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            const Icon(Icons.star_rounded, color: Colors.amber, size: 14),
+                            const Icon(
+                              Icons.star_rounded,
+                              color: Colors.amber,
+                              size: 14,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               "${venue['rating'] ?? 'N/A'} (${venue['userRatingCount'] ?? 0})",
                               style: GoogleFonts.inter(
                                 fontSize: 12,
-                                color: isMe ? Colors.white70 : Colors.grey.shade600,
+                                color: isMe
+                                    ? Colors.white70
+                                    : Colors.grey.shade600,
                               ),
                             ),
                           ],
@@ -136,11 +156,16 @@ class OutingVotingView extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.teal,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                     ),
-                    child: const Text("Vote", style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      "Vote",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ],
               ),

@@ -15,9 +15,13 @@ class TrackingControlCard extends StatelessWidget {
     if (user == null) return const SizedBox.shrink();
 
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .snapshots(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData || !snapshot.data!.exists) return const SizedBox.shrink();
+        if (!snapshot.hasData || !snapshot.data!.exists)
+          return const SizedBox.shrink();
 
         final data = snapshot.data!.data() as Map<String, dynamic>;
         final bool isTrackingActive = data['isTrackingActive'] ?? false;
@@ -28,7 +32,10 @@ class TrackingControlCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.1),
+              width: 1.5,
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.2),
@@ -45,19 +52,28 @@ class TrackingControlCard extends StatelessWidget {
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: (isTrackingActive ? const Color(0xFF10B981) : Colors.grey).withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        isTrackingActive ? Icons.radar : Icons.radar_outlined,
-                        color: isTrackingActive ? const Color(0xFF10B981) : Colors.grey,
-                        size: 20,
-                      ),
-                    ).animate(target: isTrackingActive ? 1 : 0)
-                     .shimmer(duration: 2.seconds, color: Colors.white24)
-                     .scale(begin: const Offset(0.9, 0.9)),
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color:
+                                (isTrackingActive
+                                        ? const Color(0xFF10B981)
+                                        : Colors.grey)
+                                    .withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            isTrackingActive
+                                ? Icons.radar
+                                : Icons.radar_outlined,
+                            color: isTrackingActive
+                                ? const Color(0xFF10B981)
+                                : Colors.grey,
+                            size: 20,
+                          ),
+                        )
+                        .animate(target: isTrackingActive ? 1 : 0)
+                        .shimmer(duration: 2.seconds, color: Colors.white24)
+                        .scale(begin: const Offset(0.9, 0.9)),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -73,7 +89,9 @@ class TrackingControlCard extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            isTrackingActive ? "Signal Active" : "Signal Offline",
+                            isTrackingActive
+                                ? "Signal Active"
+                                : "Signal Offline",
                             style: GoogleFonts.outfit(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -91,7 +109,11 @@ class TrackingControlCard extends StatelessWidget {
               // --- Main Toggle Button ---
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-                child: _buildMainActionButton(context, user.uid, isTrackingActive),
+                child: _buildMainActionButton(
+                  context,
+                  user.uid,
+                  isTrackingActive,
+                ),
               ),
             ],
           ),
@@ -107,10 +129,14 @@ class TrackingControlCard extends StatelessWidget {
         duration: const Duration(milliseconds: 300),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isGhostMode ? const Color(0xFF6366F1).withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.05),
+          color: isGhostMode
+              ? const Color(0xFF6366F1).withValues(alpha: 0.2)
+              : Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isGhostMode ? const Color(0xFF6366F1).withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.1),
+            color: isGhostMode
+                ? const Color(0xFF6366F1).withValues(alpha: 0.3)
+                : Colors.white.withValues(alpha: 0.1),
           ),
         ),
         child: Row(
@@ -136,7 +162,11 @@ class TrackingControlCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMainActionButton(BuildContext context, String userId, bool isActive) {
+  Widget _buildMainActionButton(
+    BuildContext context,
+    String userId,
+    bool isActive,
+  ) {
     return GestureDetector(
       onTap: () {
         if (isActive) {
@@ -151,11 +181,19 @@ class TrackingControlCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(18),
           gradient: isActive
-              ? const LinearGradient(colors: [Color(0xFFEF4444), Color(0xFFB91C1C)])
-              : LinearGradient(colors: [AppColors.teal, AppColors.teal.withValues(alpha: 0.7)]),
+              ? const LinearGradient(
+                  colors: [Color(0xFFEF4444), Color(0xFFB91C1C)],
+                )
+              : LinearGradient(
+                  colors: [
+                    AppColors.teal,
+                    AppColors.teal.withValues(alpha: 0.7),
+                  ],
+                ),
           boxShadow: [
             BoxShadow(
-              color: (isActive ? const Color(0xFFEF4444) : AppColors.teal).withValues(alpha: 0.3),
+              color: (isActive ? const Color(0xFFEF4444) : AppColors.teal)
+                  .withValues(alpha: 0.3),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -165,7 +203,10 @@ class TrackingControlCard extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(isActive ? Icons.stop_rounded : Icons.play_arrow_rounded, color: Colors.white),
+              Icon(
+                isActive ? Icons.stop_rounded : Icons.play_arrow_rounded,
+                color: Colors.white,
+              ),
               const SizedBox(width: 10),
               Text(
                 isActive ? "Stop Tracking" : "Start Live Tracking",

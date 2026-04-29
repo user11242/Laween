@@ -32,10 +32,13 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _loadSettings() async {
     final available = await _biometricService.isBiometricAvailable();
     final enabled = await _biometricService.isBiometricEnabled();
-    
+
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
         if (mounted) {
@@ -63,14 +66,16 @@ class _SettingsPageState extends State<SettingsPage> {
     final l10n = AppLocalizations.of(context, listen: false)!;
     if (value) {
       final authenticated = await _biometricService.authenticate(
-        reason: AppLocalizations.of(context)!.isAr 
-            ? "قم بتأكيد هويتك لتفعيل الدخول بالبصمة" 
+        reason: AppLocalizations.of(context)!.isAr
+            ? "قم بتأكيد هويتك لتفعيل الدخول بالبصمة"
             : "Confirm your identity to enable biometric login",
       );
-      
+
       if (authenticated) {
         final user = FirebaseAuth.instance.currentUser;
-        final isGoogleUser = user?.providerData.any((p) => p.providerId == 'google.com') ?? false;
+        final isGoogleUser =
+            user?.providerData.any((p) => p.providerId == 'google.com') ??
+            false;
 
         if (isGoogleUser) {
           await _biometricService.enableForSocialLogin();
@@ -79,7 +84,9 @@ class _SettingsPageState extends State<SettingsPage> {
             AppMessenger.showSnackBar(
               context,
               title: l10n.success,
-              message: l10n.isAr ? "تم تفعيل البصمة بنجاح" : "Biometrics enabled successfully",
+              message: l10n.isAr
+                  ? "تم تفعيل البصمة بنجاح"
+                  : "Biometrics enabled successfully",
               type: MessengerType.success,
             );
           }
@@ -95,7 +102,7 @@ class _SettingsPageState extends State<SettingsPage> {
               barrierDismissible: false,
               builder: (context) => const BiometricAuthDialog(),
             );
-            
+
             if (password != null && mounted) {
               if (user != null && user.email != null) {
                 await _biometricService.saveCredentials(user.email!, password);
@@ -104,14 +111,19 @@ class _SettingsPageState extends State<SettingsPage> {
                 AppMessenger.showSnackBar(
                   context,
                   title: l10n.success,
-                  message: l10n.isAr ? "تم تفعيل البصمة بنجاح" : "Biometrics enabled successfully",
+                  message: l10n.isAr
+                      ? "تم تفعيل البصمة بنجاح"
+                      : "Biometrics enabled successfully",
                   type: MessengerType.success,
                 );
               }
             }
           }
         } else {
-          await _biometricService.saveCredentials(credentials['email']!, credentials['password']!);
+          await _biometricService.saveCredentials(
+            credentials['email']!,
+            credentials['password']!,
+          );
           if (mounted) setState(() => _biometricEnabled = true);
         }
       }
@@ -125,9 +137,9 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() => _notificationsEnabled = value);
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-        'notificationsEnabled': value,
-      });
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update(
+        {'notificationsEnabled': value},
+      );
     }
   }
 
@@ -135,9 +147,9 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() => _darkModeEnabled = value);
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-        'darkModeEnabled': value,
-      });
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update(
+        {'darkModeEnabled': value},
+      );
     }
   }
 
@@ -165,7 +177,9 @@ class _SettingsPageState extends State<SettingsPage> {
         centerTitle: true,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.teal))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.teal),
+            )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
               child: Column(
@@ -183,7 +197,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   if (_isBiometricAvailable)
                     _buildSettingTile(
                       icon: Icons.fingerprint,
-                      title: l10n.isAr ? "تسجيل الدخول بالبصمة" : "Biometric Login",
+                      title: l10n.isAr
+                          ? "تسجيل الدخول بالبصمة"
+                          : "Biometric Login",
                       value: _biometricEnabled,
                       onChanged: _toggleBiometric,
                     ),

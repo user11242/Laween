@@ -39,7 +39,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
       openAppSettings();
       return;
     }
-    
+
     if (status.isGranted) {
       final contacts = await FlutterContacts.getContacts(withProperties: true);
       if (!mounted) return;
@@ -77,7 +77,9 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
       AppMessenger.showSnackBar(
         context,
         title: AppLocalizations.of(context)!.isAr ? "خطأ" : "Error",
-        message: AppLocalizations.of(context)!.isAr ? "يرجى إدخال اسم المجموعة" : "Please enter a group name",
+        message: AppLocalizations.of(context)!.isAr
+            ? "يرجى إدخال اسم المجموعة"
+            : "Please enter a group name",
         type: MessengerType.error,
       );
       return;
@@ -101,7 +103,9 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
       AppMessenger.showSnackBar(
         context,
         title: AppLocalizations.of(context)!.isAr ? "نجاح" : "Success",
-        message: AppLocalizations.of(context)!.isAr ? "تم إنشاء المجموعة بنجاح" : "Group created successfully",
+        message: AppLocalizations.of(context)!.isAr
+            ? "تم إنشاء المجموعة بنجاح"
+            : "Group created successfully",
         type: MessengerType.success,
       );
       Navigator.pop(context);
@@ -141,7 +145,10 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
               ),
               child: SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -156,7 +163,11 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                           ),
                           child: Transform.flip(
                             flipX: l10n.isAr,
-                            child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
+                            child: const Icon(
+                              Icons.arrow_back_ios_new,
+                              color: Colors.white,
+                              size: 18,
+                            ),
                           ),
                         ),
                       ),
@@ -213,11 +224,18 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                                 width: 2,
                               ),
                               image: _image != null
-                                  ? DecorationImage(image: FileImage(_image!), fit: BoxFit.cover)
+                                  ? DecorationImage(
+                                      image: FileImage(_image!),
+                                      fit: BoxFit.cover,
+                                    )
                                   : null,
                             ),
                             child: _image == null
-                                ? const Icon(Icons.camera_alt_outlined, size: 38, color: AppColors.teal)
+                                ? const Icon(
+                                    Icons.camera_alt_outlined,
+                                    size: 38,
+                                    color: AppColors.teal,
+                                  )
                                 : null,
                           ),
                           Container(
@@ -226,7 +244,11 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                               color: AppColors.teal,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.edit, size: 14, color: Colors.white),
+                            child: const Icon(
+                              Icons.edit,
+                              size: 14,
+                              color: Colors.white,
+                            ),
                           ),
                         ],
                       ),
@@ -284,13 +306,28 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                     ),
                     child: TextField(
                       controller: _nameController,
-                      style: GoogleFonts.inter(fontSize: 15, color: AppColors.darkSlate),
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        color: AppColors.darkSlate,
+                      ),
                       decoration: InputDecoration(
-                        hintText: l10n.isAr ? "مثال: فريق التطوير" : "e.g. Design Team",
-                        hintStyle: GoogleFonts.inter(color: Colors.grey.shade400, fontSize: 14),
-                        prefixIcon: const Icon(Icons.group_rounded, color: AppColors.teal, size: 22),
+                        hintText: l10n.isAr
+                            ? "مثال: فريق التطوير"
+                            : "e.g. Design Team",
+                        hintStyle: GoogleFonts.inter(
+                          color: Colors.grey.shade400,
+                          fontSize: 14,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.group_rounded,
+                          color: AppColors.teal,
+                          size: 22,
+                        ),
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                          horizontal: 16,
+                        ),
                       ),
                     ),
                   ),
@@ -313,7 +350,11 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                       if (_selectedContacts.isNotEmpty)
                         Text(
                           "${_selectedContacts.length} ${l10n.isAr ? 'مختار' : 'selected'}",
-                          style: GoogleFonts.inter(fontSize: 12, color: AppColors.teal, fontWeight: FontWeight.w600),
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: AppColors.teal,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                     ],
                   ),
@@ -328,7 +369,10 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.teal.withValues(alpha: 0.4), width: 1.5),
+                        border: Border.all(
+                          color: AppColors.teal.withValues(alpha: 0.4),
+                          width: 1.5,
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.02),
@@ -346,7 +390,11 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                               color: AppColors.teal.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.person_add_rounded, color: AppColors.teal, size: 18),
+                            child: const Icon(
+                              Icons.person_add_rounded,
+                              color: AppColors.teal,
+                              size: 18,
+                            ),
                           ),
                           const SizedBox(width: 10),
                           Text(
@@ -372,11 +420,16 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                         final contact = entry.value;
                         final idx = entry.key;
                         return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 7,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.teal.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: AppColors.teal.withValues(alpha: 0.2)),
+                            border: Border.all(
+                              color: AppColors.teal.withValues(alpha: 0.2),
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -385,19 +438,35 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                                 radius: 10,
                                 backgroundColor: AppColors.teal,
                                 child: Text(
-                                  contact.displayName.isNotEmpty ? contact.displayName[0].toUpperCase() : '?',
-                                  style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold),
+                                  contact.displayName.isNotEmpty
+                                      ? contact.displayName[0].toUpperCase()
+                                      : '?',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 6),
                               Text(
                                 contact.displayName,
-                                style: GoogleFonts.inter(fontSize: 13, color: AppColors.darkSlate, fontWeight: FontWeight.w500),
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  color: AppColors.darkSlate,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                               const SizedBox(width: 6),
                               GestureDetector(
-                                onTap: () => setState(() => _selectedContacts.removeAt(idx)),
-                                child: Icon(Icons.close_rounded, size: 15, color: Colors.grey.shade500),
+                                onTap: () => setState(
+                                  () => _selectedContacts.removeAt(idx),
+                                ),
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  size: 15,
+                                  color: Colors.grey.shade500,
+                                ),
                               ),
                             ],
                           ),
@@ -418,7 +487,9 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
                         padding: EdgeInsets.zero,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
                       ),
                       child: Ink(
                         decoration: BoxDecoration(
@@ -445,7 +516,10 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                               ? const SizedBox(
                                   width: 22,
                                   height: 22,
-                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.5,
+                                  ),
                                 )
                               : Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -462,7 +536,11 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                                     const SizedBox(width: 8),
                                     Transform.flip(
                                       flipX: l10n.isAr,
-                                      child: const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+                                      child: const Icon(
+                                        Icons.arrow_forward_rounded,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -486,7 +564,10 @@ class _ContactPickerSheet extends StatefulWidget {
   final List<Contact> contacts;
   final List<Contact> initiallySelected;
 
-  const _ContactPickerSheet({required this.contacts, required this.initiallySelected});
+  const _ContactPickerSheet({
+    required this.contacts,
+    required this.initiallySelected,
+  });
 
   @override
   State<_ContactPickerSheet> createState() => _ContactPickerSheetState();
@@ -522,15 +603,19 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
       // Chunked lookup
       const int chunkSize = 30;
       for (var i = 0; i < phones.length; i += chunkSize) {
-        final end = (i + chunkSize < phones.length) ? i + chunkSize : phones.length;
+        final end = (i + chunkSize < phones.length)
+            ? i + chunkSize
+            : phones.length;
         final chunk = phones.sublist(i, end);
-        
+
         final query = await FirebaseFirestore.instance
             .collection('users')
             .where('phone', whereIn: chunk)
             .get();
-            
-        final foundPhones = query.docs.map((d) => d.data()['phone'] as String).toList();
+
+        final foundPhones = query.docs
+            .map((d) => d.data()['phone'] as String)
+            .toList();
         for (var p in chunk) {
           _appUserStatus[p] = foundPhones.contains(p);
         }
@@ -547,7 +632,10 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
   @override
   Widget build(BuildContext context) {
     final filteredContacts = widget.contacts
-        .where((c) => c.displayName.toLowerCase().contains(_searchQuery.toLowerCase()))
+        .where(
+          (c) =>
+              c.displayName.toLowerCase().contains(_searchQuery.toLowerCase()),
+        )
         .toList();
 
     return Container(
@@ -570,22 +658,49 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                   children: [
                     Text(
                       AppLocalizations.of(context)!.addMembers,
-                      style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold),
+                      style: GoogleFonts.outfit(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     if (_isCheckingUsers)
-                      Text("Finding friends...", style: GoogleFonts.inter(fontSize: 12, color: Colors.grey))
+                      Text(
+                        "Finding friends...",
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      )
                     else
-                      Text("${_tempSelected.length} chosen", style: GoogleFonts.inter(fontSize: 12, color: AppColors.teal, fontWeight: FontWeight.w600)),
+                      Text(
+                        "${_tempSelected.length} chosen",
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: AppColors.teal,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                   ],
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(context, _tempSelected),
                   style: TextButton.styleFrom(
                     backgroundColor: AppColors.teal.withValues(alpha: 0.1),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child: Text(AppLocalizations.of(context)!.continueText, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.teal)),
+                  child: Text(
+                    AppLocalizations.of(context)!.continueText,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.teal,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -603,7 +718,10 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                 onChanged: (val) => setState(() => _searchQuery = val),
                 decoration: InputDecoration(
                   hintText: "Search name or phone...",
-                  hintStyle: GoogleFonts.inter(color: Colors.grey, fontSize: 14),
+                  hintStyle: GoogleFonts.inter(
+                    color: Colors.grey,
+                    fontSize: 14,
+                  ),
                   prefixIcon: const Icon(Icons.search, color: Colors.grey),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 15),
@@ -620,7 +738,9 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
               itemBuilder: (context, index) {
                 final contact = filteredContacts[index];
                 final isSelected = _tempSelected.any((c) => c.id == contact.id);
-                final phone = contact.phones.isNotEmpty ? contact.phones.first.number : '';
+                final phone = contact.phones.isNotEmpty
+                    ? contact.phones.first.number
+                    : '';
                 final cleanPhone = NumericUtils.normalize(phone, clean: true);
                 final isOnApp = _appUserStatus[cleanPhone] == true;
 
@@ -635,7 +755,10 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                     });
                   },
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                     child: Row(
                       children: [
                         Stack(
@@ -643,11 +766,17 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                           children: [
                             CircleAvatar(
                               radius: 24,
-                              backgroundColor: isOnApp ? AppColors.teal.withValues(alpha: 0.1) : Colors.grey.shade100,
+                              backgroundColor: isOnApp
+                                  ? AppColors.teal.withValues(alpha: 0.1)
+                                  : Colors.grey.shade100,
                               child: Text(
-                                contact.displayName.isNotEmpty ? contact.displayName[0].toUpperCase() : '?',
+                                contact.displayName.isNotEmpty
+                                    ? contact.displayName[0].toUpperCase()
+                                    : '?',
                                 style: GoogleFonts.outfit(
-                                  color: isOnApp ? AppColors.teal : Colors.grey.shade600,
+                                  color: isOnApp
+                                      ? AppColors.teal
+                                      : Colors.grey.shade600,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 18,
                                 ),
@@ -656,8 +785,15 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                             if (isOnApp)
                               Container(
                                 padding: const EdgeInsets.all(2),
-                                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                                child: const Icon(Icons.check_circle, size: 16, color: AppColors.teal),
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.check_circle,
+                                  size: 16,
+                                  color: AppColors.teal,
+                                ),
                               ),
                           ],
                         ),
@@ -676,31 +812,48 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                               ),
                               Text(
                                 phone,
-                                style: GoogleFonts.inter(fontSize: 12, color: Colors.grey.shade500),
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade500,
+                                ),
                               ),
                             ],
                           ),
                         ),
                         if (!isOnApp && !_isCheckingUsers)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.blue.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Text("INVITE", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blue)),
+                            child: const Text(
+                              "INVITE",
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue,
+                              ),
+                            ),
                           ),
                         const SizedBox(width: 12),
                         Checkbox(
                           value: isSelected,
                           activeColor: AppColors.teal,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                           onChanged: (val) {
                             setState(() {
                               if (val == true) {
                                 _tempSelected.add(contact);
                               } else {
-                                _tempSelected.removeWhere((c) => c.id == contact.id);
+                                _tempSelected.removeWhere(
+                                  (c) => c.id == contact.id,
+                                );
                               }
                             });
                           },
@@ -723,7 +876,12 @@ class CreateGroupHeaderClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     Path path = Path();
     path.lineTo(0, size.height);
-    path.quadraticBezierTo(size.width * 0.7, size.height, size.width, size.height - 60);
+    path.quadraticBezierTo(
+      size.width * 0.7,
+      size.height,
+      size.width,
+      size.height - 60,
+    );
     path.lineTo(size.width, 0);
     path.close();
     return path;

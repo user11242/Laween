@@ -49,7 +49,7 @@ class GroupShareSheet extends StatelessWidget {
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                
+
                 Text(
                   "Invite Members",
                   style: GoogleFonts.outfit(
@@ -64,9 +64,9 @@ class GroupShareSheet extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(color: Colors.grey.shade600),
                 ),
-                
+
                 const SizedBox(height: 30),
-                
+
                 // QR Code Container
                 Container(
                   padding: const EdgeInsets.all(20),
@@ -95,16 +95,21 @@ class GroupShareSheet extends StatelessWidget {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 30),
-                
+
                 // 6-Digit Code Box
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.teal.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.teal.withValues(alpha: 0.1)),
+                    border: Border.all(
+                      color: AppColors.teal.withValues(alpha: 0.1),
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -120,21 +125,28 @@ class GroupShareSheet extends StatelessWidget {
                       ),
                       const SizedBox(width: 16),
                       IconButton(
-                        icon: const Icon(Icons.copy_rounded, color: AppColors.teal),
+                        icon: const Icon(
+                          Icons.copy_rounded,
+                          color: AppColors.teal,
+                        ),
                         onPressed: () {
-                          Clipboard.setData(ClipboardData(text: group.groupCode!));
+                          Clipboard.setData(
+                            ClipboardData(text: group.groupCode!),
+                          );
                           HapticFeedback.mediumImpact();
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Code copied to clipboard!")),
+                            const SnackBar(
+                              content: Text("Code copied to clipboard!"),
+                            ),
                           );
                         },
                       ),
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 30),
-                
+
                 // Share Link Button
                 SizedBox(
                   width: double.infinity,
@@ -144,7 +156,9 @@ class GroupShareSheet extends StatelessWidget {
                       Clipboard.setData(ClipboardData(text: shareLink));
                       HapticFeedback.mediumImpact();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Link copied to clipboard!")),
+                        const SnackBar(
+                          content: Text("Link copied to clipboard!"),
+                        ),
                       );
                     },
                     icon: const Icon(Icons.link_rounded, color: Colors.white),
@@ -158,7 +172,9 @@ class GroupShareSheet extends StatelessWidget {
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.teal,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                       elevation: 0,
                     ),
                   ),

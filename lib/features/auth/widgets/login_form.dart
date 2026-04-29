@@ -21,7 +21,7 @@ class _LoginFormState extends State<LoginForm> {
   final _emailFocusNode = FocusNode();
   final _authService = AuthService();
   final _biometricService = BiometricService();
-  
+
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _isBiometricAvailable = false;
@@ -71,7 +71,11 @@ class _LoginFormState extends State<LoginForm> {
                     alignment: Alignment.topRight,
                     child: GestureDetector(
                       onTap: () => Navigator.pop(context),
-                      child: const Icon(Icons.close, color: Colors.grey, size: 24),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.grey,
+                        size: 24,
+                      ),
                     ),
                   ),
                   Center(
@@ -83,7 +87,11 @@ class _LoginFormState extends State<LoginForm> {
                         shape: BoxShape.circle,
                       ),
                       child: const Center(
-                        child: Icon(Icons.error_outline, color: Colors.red, size: 40),
+                        child: Icon(
+                          Icons.error_outline,
+                          color: Colors.red,
+                          size: 40,
+                        ),
                       ),
                     ),
                   ),
@@ -153,7 +161,7 @@ class _LoginFormState extends State<LoginForm> {
 
     try {
       final result = await _authService.loginWithGoogle(silent: silent);
-      
+
       if (silent && result == "SILENT_SIGN_IN_FAILED") {
         await _performGoogleLogin(silent: false);
         return;
@@ -171,9 +179,13 @@ class _LoginFormState extends State<LoginForm> {
             barrierDismissible: false,
             builder: (context) => LinkAccountDialog(email: email),
           );
-          
+
           if (linked == true && mounted) {
-            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/home',
+              (route) => false,
+            );
           }
         }
       } else if (result != "NEEDS_PROFILE") {
@@ -210,7 +222,9 @@ class _LoginFormState extends State<LoginForm> {
     }
 
     final authenticated = await _biometricService.authenticate(
-      reason: l10n.isAr ? "قم بتسجيل الدخول باستخدام البصمة" : "Authenticate to log in to Laween",
+      reason: l10n.isAr
+          ? "قم بتسجيل الدخول باستخدام البصمة"
+          : "Authenticate to log in to Laween",
     );
 
     if (!authenticated) return;
@@ -223,14 +237,17 @@ class _LoginFormState extends State<LoginForm> {
       if (!mounted) return;
 
       if (result == null) {
-        if (mounted) Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+        if (mounted)
+          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
       } else if (result == "SOCIAL_LOGIN_REQUIRED") {
         await _performGoogleLogin(silent: true);
       } else if (result == "NO_SAVED_CREDENTIALS") {
         AppMessenger.showSnackBar(
           context,
           title: l10n.error,
-          message: l10n.isAr ? "لم يتم العثور على بيانات مسجلة. يرجى تسجيل الدخول يدوياً أولاً." : "No saved credentials found. Please log in manually first.",
+          message: l10n.isAr
+              ? "لم يتم العثور على بيانات مسجلة. يرجى تسجيل الدخول يدوياً أولاً."
+              : "No saved credentials found. Please log in manually first.",
           type: MessengerType.error,
         );
       } else {
@@ -279,12 +296,18 @@ class _LoginFormState extends State<LoginForm> {
                   shape: BoxShape.circle,
                 ),
                 child: const Center(
-                  child: Icon(Icons.fingerprint, color: AppColors.teal, size: 40),
+                  child: Icon(
+                    Icons.fingerprint,
+                    color: AppColors.teal,
+                    size: 40,
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
               Text(
-                l10n.isAr ? "تفعيل تسجيل الدخول بالبصمة؟" : "Enable Biometric Login?",
+                l10n.isAr
+                    ? "تفعيل تسجيل الدخول بالبصمة؟"
+                    : "Enable Biometric Login?",
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   fontSize: 22,
@@ -294,9 +317,9 @@ class _LoginFormState extends State<LoginForm> {
               ),
               const SizedBox(height: 16),
               Text(
-                l10n.isAr 
-                  ? "هل تريد استخدام بصمة الإصبع أو الوجه لتسجيل الدخول في المرات القادمة؟" 
-                  : "Would you like to use Face ID or Fingerprint for faster login next time?",
+                l10n.isAr
+                    ? "هل تريد استخدام بصمة الإصبع أو الوجه لتسجيل الدخول في المرات القادمة؟"
+                    : "Would you like to use Face ID or Fingerprint for faster login next time?",
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   fontSize: 14,
@@ -327,13 +350,18 @@ class _LoginFormState extends State<LoginForm> {
                       height: 52,
                       child: ElevatedButton(
                         onPressed: () async {
-                          await _biometricService.saveCredentials(email, password);
+                          await _biometricService.saveCredentials(
+                            email,
+                            password,
+                          );
                           if (!context.mounted) return;
                           Navigator.pop(context);
                           AppMessenger.showSnackBar(
                             context,
                             title: l10n.isAr ? "تم التفعيل" : "Enabled",
-                            message: l10n.isAr ? "تم تفعيل تسجيل الدخول بالبصمة بنجاح" : "Biometric login enabled successfully",
+                            message: l10n.isAr
+                                ? "تم تفعيل تسجيل الدخول بالبصمة بنجاح"
+                                : "Biometric login enabled successfully",
                             type: MessengerType.success,
                           );
                         },
@@ -392,7 +420,7 @@ class _LoginFormState extends State<LoginForm> {
       if (result == null) {
         final biometricEnabled = await _biometricService.isBiometricEnabled();
         if (!mounted) return;
-        
+
         if (!biometricEnabled && _isBiometricAvailable) {
           _showEnableBiometricDialog(email, password);
         } else {
@@ -440,14 +468,28 @@ class _LoginFormState extends State<LoginForm> {
         focusNode: focusNode,
         obscureText: obscureText,
         keyboardType: keyboardType,
-        style: GoogleFonts.outfit(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w400),
+        style: GoogleFonts.outfit(
+          fontSize: 16,
+          color: Colors.white,
+          fontWeight: FontWeight.w400,
+        ),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.3), fontSize: 13),
-          prefixIcon: Icon(icon, color: Colors.white.withValues(alpha: 0.4), size: 20),
+          labelStyle: GoogleFonts.outfit(
+            color: Colors.white.withValues(alpha: 0.3),
+            fontSize: 13,
+          ),
+          prefixIcon: Icon(
+            icon,
+            color: Colors.white.withValues(alpha: 0.4),
+            size: 20,
+          ),
           suffixIcon: suffixIcon,
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 12,
+            horizontal: 16,
+          ),
         ),
       ),
     );
@@ -467,9 +509,9 @@ class _LoginFormState extends State<LoginForm> {
           icon: Icons.email_outlined,
           keyboardType: TextInputType.emailAddress,
         ),
-        
+
         const SizedBox(height: 8),
-        
+
         // 2. Password Input
         _buildGlassInput(
           controller: _passwordController,
@@ -482,12 +524,13 @@ class _LoginFormState extends State<LoginForm> {
               color: Colors.white.withValues(alpha: 0.2),
               size: 20,
             ),
-            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+            onPressed: () =>
+                setState(() => _obscurePassword = !_obscurePassword),
           ),
         ),
-        
+
         const SizedBox(height: 8),
-        
+
         // 3. Forgot Password
         Align(
           alignment: l10n.isAr ? Alignment.bottomLeft : Alignment.centerRight,
@@ -503,19 +546,16 @@ class _LoginFormState extends State<LoginForm> {
             ),
           ),
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         // 4. Continue Button (Solid Premium)
         Container(
           height: 60,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(30),
             gradient: const LinearGradient(
-              colors: [
-                Color(0xFF00BFA5),
-                Color(0xFF00897B),
-              ],
+              colors: [Color(0xFF00BFA5), Color(0xFF00897B)],
             ),
             boxShadow: [
               BoxShadow(
@@ -530,34 +570,41 @@ class _LoginFormState extends State<LoginForm> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.transparent,
               shadowColor: Colors.transparent,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
             ),
-            child: _isLoading 
-              ? const SizedBox(
-                  width: 24, 
-                  height: 24, 
-                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                )
-              : Text(
-                  l10n.continueText, 
-                  style: GoogleFonts.outfit(
-                    fontSize: 17, 
-                    fontWeight: FontWeight.w700, 
-                    color: Colors.white,
-                    letterSpacing: 0.5,
+            child: _isLoading
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
                   )
-                ),
+                : Text(
+                    l10n.continueText,
+                    style: GoogleFonts.outfit(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
           ),
         ),
-        
+
         const SizedBox(height: 24),
-        
+
         Center(
           child: Text(
             l10n.isAr ? "أو عبر" : "OR CONTINUE WITH",
             style: GoogleFonts.outfit(
-              color: Colors.white.withValues(alpha: 0.5), // Prominent white as requested
-              fontSize: 10, 
+              color: Colors.white.withValues(
+                alpha: 0.5,
+              ), // Prominent white as requested
+              fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.5,
             ),
@@ -565,25 +612,29 @@ class _LoginFormState extends State<LoginForm> {
         ),
 
         const SizedBox(height: 16),
-        
+
         // 5. Social Login Pill Row
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _buildMinimalSocialItem(
               onPressed: _handleBiometricLogin,
-              child: Platform.isIOS 
-                ? CustomPaint(
-                    size: const Size(22, 22),
-                    painter: FaceIdPainter(
-                      color: _isBiometricAvailable ? Colors.white : Colors.white.withValues(alpha: 0.1),
+              child: Platform.isIOS
+                  ? CustomPaint(
+                      size: const Size(22, 22),
+                      painter: FaceIdPainter(
+                        color: _isBiometricAvailable
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.1),
+                      ),
+                    )
+                  : Icon(
+                      Icons.fingerprint_rounded,
+                      size: 24,
+                      color: _isBiometricAvailable
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.1),
                     ),
-                  )
-                : Icon(
-                    Icons.fingerprint_rounded, 
-                    size: 24, 
-                    color: _isBiometricAvailable ? Colors.white : Colors.white.withValues(alpha: 0.1),
-                  ),
             ),
             const SizedBox(width: 40),
             _buildMinimalSocialItem(
@@ -604,7 +655,11 @@ class _LoginFormState extends State<LoginForm> {
     );
   }
 
-  Widget _buildMinimalSocialItem({required VoidCallback onPressed, required Widget child, EdgeInsets? padding}) {
+  Widget _buildMinimalSocialItem({
+    required VoidCallback onPressed,
+    required Widget child,
+    EdgeInsets? padding,
+  }) {
     return InkWell(
       onTap: onPressed,
       borderRadius: BorderRadius.circular(27),
@@ -637,34 +692,57 @@ class FaceIdPainter extends CustomPainter {
     final h = size.height;
     final cornerSize = w * 0.25;
 
-    canvas.drawPath(Path()
-      ..moveTo(cornerSize, 0)
-      ..lineTo(0, 0)
-      ..lineTo(0, cornerSize), paint);
-    
-    canvas.drawPath(Path()
-      ..moveTo(w - cornerSize, 0)
-      ..lineTo(w, 0)
-      ..lineTo(w, cornerSize), paint);
-    
-    canvas.drawPath(Path()
-      ..moveTo(0, h - cornerSize)
-      ..lineTo(0, h)
-      ..lineTo(cornerSize, h), paint);
-    
-    canvas.drawPath(Path()
-      ..moveTo(w - cornerSize, h)
-      ..lineTo(w, h)
-      ..lineTo(w, h - cornerSize), paint);
+    canvas.drawPath(
+      Path()
+        ..moveTo(cornerSize, 0)
+        ..lineTo(0, 0)
+        ..lineTo(0, cornerSize),
+      paint,
+    );
 
-    canvas.drawCircle(Offset(w * 0.35, h * 0.4), 1.5, paint..style = PaintingStyle.fill);
-    canvas.drawCircle(Offset(w * 0.65, h * 0.4), 1.5, paint..style = PaintingStyle.fill);
-    
+    canvas.drawPath(
+      Path()
+        ..moveTo(w - cornerSize, 0)
+        ..lineTo(w, 0)
+        ..lineTo(w, cornerSize),
+      paint,
+    );
+
+    canvas.drawPath(
+      Path()
+        ..moveTo(0, h - cornerSize)
+        ..lineTo(0, h)
+        ..lineTo(cornerSize, h),
+      paint,
+    );
+
+    canvas.drawPath(
+      Path()
+        ..moveTo(w - cornerSize, h)
+        ..lineTo(w, h)
+        ..lineTo(w, h - cornerSize),
+      paint,
+    );
+
+    canvas.drawCircle(
+      Offset(w * 0.35, h * 0.4),
+      1.5,
+      paint..style = PaintingStyle.fill,
+    );
+    canvas.drawCircle(
+      Offset(w * 0.65, h * 0.4),
+      1.5,
+      paint..style = PaintingStyle.fill,
+    );
+
     paint.style = PaintingStyle.stroke;
-    canvas.drawPath(Path()
-      ..moveTo(w * 0.5, h * 0.45)
-      ..lineTo(w * 0.5, h * 0.6)
-      ..lineTo(w * 0.45, h * 0.65), paint);
+    canvas.drawPath(
+      Path()
+        ..moveTo(w * 0.5, h * 0.45)
+        ..lineTo(w * 0.5, h * 0.6)
+        ..lineTo(w * 0.45, h * 0.65),
+      paint,
+    );
 
     final rect = Rect.fromLTWH(w * 0.3, h * 0.55, w * 0.4, h * 0.2);
     canvas.drawArc(rect, 0.2, 2.7, false, paint);

@@ -70,12 +70,16 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     try {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
         if (mounted) {
           setState(() {
-            _cachedUserName = data['name'] ?? data['fullName'] ?? user.displayName;
+            _cachedUserName =
+                data['name'] ?? data['fullName'] ?? user.displayName;
           });
         }
       }
@@ -93,9 +97,11 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
     super.dispose();
   }
 
-
-  void _joinAndShowRoom(BuildContext context, OutingSessionModel session,
-      bool hasJoined) async {
+  void _joinAndShowRoom(
+    BuildContext context,
+    OutingSessionModel session,
+    bool hasJoined,
+  ) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
@@ -118,9 +124,9 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
         );
       } catch (e) {
         if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error joining: $e")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error joining: $e")));
         return;
       }
     }
@@ -141,10 +147,8 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => OutingMapScreen(
-            groupId: widget.groupId,
-            sessionId: session.id,
-          ),
+          builder: (_) =>
+              OutingMapScreen(groupId: widget.groupId, sessionId: session.id),
         ),
       );
     }
@@ -154,7 +158,9 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
   Widget build(BuildContext context) {
     return StreamBuilder<OutingSessionModel?>(
       stream: _outingService.streamSession(
-          widget.groupId, widget.message.outingSessionId ?? ''),
+        widget.groupId,
+        widget.message.outingSessionId ?? '',
+      ),
       builder: (context, snapshot) {
         if (!snapshot.hasData || snapshot.data == null) {
           return const SizedBox(
@@ -167,45 +173,65 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
         _remaining = session.expiresAt.difference(DateTime.now());
         final isWaiting = session.status == OutingStatus.waiting;
         final isCompleted = session.status == OutingStatus.completed;
-        final hasJoined = session.participants
-            .any((p) => p.uid == FirebaseAuth.instance.currentUser?.uid);
+        final hasJoined = session.participants.any(
+          (p) => p.uid == FirebaseAuth.instance.currentUser?.uid,
+        );
 
         return _buildCompactBubble(session, isWaiting, isCompleted, hasJoined);
       },
     );
   }
 
-  Widget _buildCompactBubble(OutingSessionModel session, bool isWaiting, bool isCompleted, bool hasJoined) {
+  Widget _buildCompactBubble(
+    OutingSessionModel session,
+    bool isWaiting,
+    bool isCompleted,
+    bool hasJoined,
+  ) {
     final bool canAccess = !isCompleted || hasJoined;
     final bool isCelebration = session.firstArrivedUid != null;
-    
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
         // Pulsing Golden Glow for Celebration
         if (isCelebration)
           Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(32),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFFFD700).withValues(alpha: 0.3),
-                    blurRadius: 30,
-                    spreadRadius: 5,
-                  ),
-                ],
-              ),
-            ).animate(onPlay: (controller) => controller.repeat(reverse: true))
-             .scale(begin: const Offset(1, 1), end: const Offset(1.05, 1.05), duration: 1500.ms)
-             .fadeIn(duration: 1500.ms),
+            child:
+                Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(32),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(
+                              0xFFFFD700,
+                            ).withValues(alpha: 0.3),
+                            blurRadius: 30,
+                            spreadRadius: 5,
+                          ),
+                        ],
+                      ),
+                    )
+                    .animate(
+                      onPlay: (controller) => controller.repeat(reverse: true),
+                    )
+                    .scale(
+                      begin: const Offset(1, 1),
+                      end: const Offset(1.05, 1.05),
+                      duration: 1500.ms,
+                    )
+                    .fadeIn(duration: 1500.ms),
           ),
 
         GestureDetector(
           onTap: () {
             if (!canAccess) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Session closed. Only participants can view details.")),
+                const SnackBar(
+                  content: Text(
+                    "Session closed. Only participants can view details.",
+                  ),
+                ),
               );
               return;
             }
@@ -218,7 +244,9 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(28),
-              border: isCelebration ? Border.all(color: const Color(0xFFFFD700), width: 2) : null,
+              border: isCelebration
+                  ? Border.all(color: const Color(0xFFFFD700), width: 2)
+                  : null,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.1),
@@ -272,7 +300,10 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
                       ),
                       Text(
                         "  •  ",
-                        style: TextStyle(color: Colors.grey.shade400, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Text(
                         "${_remaining.inMinutes}:${(_remaining.inSeconds % 60).toString().padLeft(2, '0')} min remaining",
@@ -283,17 +314,21 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
                         ),
                       ),
                     ] else if (isCompleted) ...[
-                       Text(
-                        "Destination Locked",
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.teal,
-                        ),
-                      ).animate(onPlay: (c) => c.repeat())
-                       .shimmer(duration: 2000.ms, color: Colors.white.withValues(alpha: 0.5)),
+                      Text(
+                            "Destination Locked",
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.teal,
+                            ),
+                          )
+                          .animate(onPlay: (c) => c.repeat())
+                          .shimmer(
+                            duration: 2000.ms,
+                            color: Colors.white.withValues(alpha: 0.5),
+                          ),
                     ] else ...[
-                       Text(
+                      Text(
                         "Expired",
                         style: GoogleFonts.inter(
                           fontSize: 14,
@@ -310,33 +345,47 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
                 SizedBox(
                   width: double.infinity,
                   height: 48,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (!canAccess) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Only participants can view details.")),
-                        );
-                        return;
-                      }
-                      _joinAndShowRoom(context, session, hasJoined);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.teal,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                    ),
-                    child: Text(
-                      isCelebration ? "Celebrate!" : (isCompleted ? "Winner" : "Join"),
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ).animate(onPlay: (c) => isCelebration ? c.repeat() : c.stop())
-                   .shimmer(duration: isCelebration ? 1500.ms : 0.ms, color: Colors.white.withValues(alpha: 0.3)),
+                  child:
+                      ElevatedButton(
+                            onPressed: () {
+                              if (!canAccess) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      "Only participants can view details.",
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+                              _joinAndShowRoom(context, session, hasJoined);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.teal,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                            ),
+                            child: Text(
+                              isCelebration
+                                  ? "Celebrate!"
+                                  : (isCompleted ? "Winner" : "Join"),
+                              style: GoogleFonts.inter(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          )
+                          .animate(
+                            onPlay: (c) =>
+                                isCelebration ? c.repeat() : c.stop(),
+                          )
+                          .shimmer(
+                            duration: isCelebration ? 1500.ms : 0.ms,
+                            color: Colors.white.withValues(alpha: 0.3),
+                          ),
                 ),
               ],
             ),
@@ -348,18 +397,27 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
           Positioned(
             top: -5,
             right: -5,
-            child: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFD700),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 8),
-                ],
-              ),
-              child: const Text("👑", style: TextStyle(fontSize: 18)),
-            ).animate(onPlay: (c) => c.repeat(reverse: true))
-             .scale(begin: const Offset(0.9, 0.9), end: const Offset(1.2, 1.2), duration: 800.ms),
+            child:
+                Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFD700),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
+                      child: const Text("👑", style: TextStyle(fontSize: 18)),
+                    )
+                    .animate(onPlay: (c) => c.repeat(reverse: true))
+                    .scale(
+                      begin: const Offset(0.9, 0.9),
+                      end: const Offset(1.2, 1.2),
+                      duration: 800.ms,
+                    ),
           ),
       ],
     );

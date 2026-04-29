@@ -19,7 +19,10 @@ class GroupLocationsPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           'Shared Locations',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: AppColors.darkSlate),
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.bold,
+            color: AppColors.darkSlate,
+          ),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -29,16 +32,22 @@ class GroupLocationsPage extends StatelessWidget {
         stream: _groupService.getGroupLocations(groupId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.teal));
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.teal),
+            );
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                   Icon(Icons.location_off_outlined, size: 64, color: Colors.grey.shade300),
-                   const SizedBox(height: 16),
-                   Text(
+                  Icon(
+                    Icons.location_off_outlined,
+                    size: 64,
+                    color: Colors.grey.shade300,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
                     'No locations shared yet',
                     style: GoogleFonts.inter(color: Colors.grey, fontSize: 16),
                   ),
@@ -54,7 +63,10 @@ class GroupLocationsPage extends StatelessWidget {
             itemCount: locations.length,
             itemBuilder: (context, index) {
               final msg = locations[index];
-              final geo = msg['text'].toString().replaceFirst('geo:', '').split(',');
+              final geo = msg['text']
+                  .toString()
+                  .replaceFirst('geo:', '')
+                  .split(',');
               final lat = geo[0];
               final long = geo[1];
               final date = (msg['timestamp'] as Timestamp).toDate();
@@ -80,11 +92,17 @@ class GroupLocationsPage extends StatelessWidget {
                       color: AppColors.teal.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.location_on_rounded, color: AppColors.teal),
+                    child: const Icon(
+                      Icons.location_on_rounded,
+                      color: AppColors.teal,
+                    ),
                   ),
                   title: Text(
                     'Shared by ${msg['senderName'] ?? 'Unknown'}',
-                    style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: AppColors.darkSlate),
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.darkSlate,
+                    ),
                   ),
                   subtitle: Text(
                     DateFormat('MMM dd, hh:mm a').format(date),
@@ -93,9 +111,13 @@ class GroupLocationsPage extends StatelessWidget {
                   trailing: IconButton(
                     icon: const Icon(Icons.map_rounded, color: AppColors.teal),
                     onPressed: () async {
-                      final url = 'https://www.google.com/maps/search/?api=1&query=$lat,$long';
+                      final url =
+                          'https://www.google.com/maps/search/?api=1&query=$lat,$long';
                       if (await canLaunchUrl(Uri.parse(url))) {
-                        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                        await launchUrl(
+                          Uri.parse(url),
+                          mode: LaunchMode.externalApplication,
+                        );
                       }
                     },
                   ),

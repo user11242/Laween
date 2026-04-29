@@ -35,7 +35,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
   final OutingService _outingService = OutingService();
   final Completer<GoogleMapController> _controller = Completer();
   final PageController _pageController = PageController(viewportFraction: 0.85);
-  
+
   Set<Marker> _markers = {};
   int _currentVenueIndex = 0;
   bool _isDisposed = false;
@@ -214,9 +214,15 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     return descriptor;
   }
 
-  String _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+  String _calculateDistance(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
     const p = 0.017453292519943295;
-    final a = 0.5 -
+    final a =
+        0.5 -
         math.cos((lat2 - lat1) * p) / 2 +
         math.cos(lat1 * p) *
             math.cos(lat2 * p) *
@@ -271,15 +277,18 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
             position: LatLng(loc['latitude'], loc['longitude']),
             onTap: () {
               if (mounted) {
-                _pageController.animateToPage(i,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut);
+                _pageController.animateToPage(
+                  i,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                );
               }
             },
             icon: BitmapDescriptor.defaultMarkerWithHue(
-                i == _currentVenueIndex
-                    ? BitmapDescriptor.hueRose
-                    : BitmapDescriptor.hueRed),
+              i == _currentVenueIndex
+                  ? BitmapDescriptor.hueRose
+                  : BitmapDescriptor.hueRed,
+            ),
           ),
         );
       }
@@ -287,11 +296,12 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
 
     if (_isDisposed || !mounted) return;
 
-    if (!_markers.containsAll(newMarkers) || _markers.length != newMarkers.length) {
+    if (!_markers.containsAll(newMarkers) ||
+        _markers.length != newMarkers.length) {
       setState(() {
         _markers = newMarkers;
       });
-      
+
       // Only fit bounds on first load or when participants change significantly
       if (_markers.isNotEmpty) {
         _fitBounds();
@@ -301,10 +311,10 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
 
   Future<void> _fitBounds() async {
     if (_isDisposed || !mounted || !_controller.isCompleted) return;
-    
+
     final controller = await _controller.future;
     if (_isDisposed || !mounted) return;
-    
+
     if (_markers.isEmpty) return;
 
     double? minLat, maxLat, minLng, maxLng;
@@ -322,7 +332,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
         southwest: LatLng(minLat, minLng),
         northeast: LatLng(maxLat, maxLng),
       );
-      
+
       // If tracking mode is on, be more aggressive with the zoom/padding
       final padding = _isTrackingMode ? 120.0 : 100.0;
       controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, padding));
@@ -333,15 +343,12 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     if (_isDisposed || !mounted || !_controller.isCompleted) return;
     final controller = await _controller.future;
     if (_isDisposed || !mounted) return;
-    
-    controller.animateCamera(CameraUpdate.newCameraPosition(
-      CameraPosition(
-        target: position,
-        zoom: 16.5,
-        tilt: 45,
-        bearing: 30,
+
+    controller.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(target: position, zoom: 16.5, tilt: 45, bearing: 30),
       ),
-    ));
+    );
   }
 
   @override
@@ -352,12 +359,14 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
         if (!snapshot.hasData || snapshot.data == null) {
           return Scaffold(
             backgroundColor: AppColors.darkSlate,
-            body: const Center(child: CircularProgressIndicator(color: AppColors.teal)),
+            body: const Center(
+              child: CircularProgressIndicator(color: AppColors.teal),
+            ),
           );
         }
 
         final session = snapshot.data!;
-        
+
         // Auto-start tracking if session is completed (winner declared)
         if (session.status == OutingStatus.completed) {
           _startLiveTracking();
@@ -370,13 +379,15 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
             body: Builder(
               builder: (context) {
                 final venues = session.finalLocation?['topVenues'] ?? [];
-                
+
                 // Initial camera position (Midpoint)
                 final midLat = session.finalLocation?['center']?['lat'] ?? 0.0;
                 final midLng = session.finalLocation?['center']?['lng'] ?? 0.0;
 
                 // Side effect: update markers
-                WidgetsBinding.instance.addPostFrameCallback((_) => _updateMarkers(session));
+                WidgetsBinding.instance.addPostFrameCallback(
+                  (_) => _updateMarkers(session),
+                );
 
                 return Stack(
                   children: [
@@ -396,7 +407,10 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                       onMapCreated: (controller) {
                         if (!_controller.isCompleted) {
                           _controller.complete(controller);
-                          Future.delayed(const Duration(milliseconds: 500), () => _fitBounds());
+                          Future.delayed(
+                            const Duration(milliseconds: 500),
+                            () => _fitBounds(),
+                          );
                         }
                       },
                       zoomControlsEnabled: false,
@@ -445,7 +459,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                 color: Colors.black.withValues(alpha: 0.15),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
-              )
+              ),
             ],
           ),
           child: Row(
@@ -456,7 +470,11 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                   color: AppColors.teal.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.celebration_rounded, color: AppColors.teal, size: 20),
+                child: const Icon(
+                  Icons.celebration_rounded,
+                  color: AppColors.teal,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -474,7 +492,10 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                     ),
                     Text(
                       "Everyone is on the road!",
-                      style: GoogleFonts.inter(fontSize: 11, color: Colors.grey),
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: Colors.grey,
+                      ),
                     ),
                   ],
                 ),
@@ -512,7 +533,11 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                     color: AppColors.teal.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.emoji_events_rounded, color: Colors.amber, size: 24),
+                  child: const Icon(
+                    Icons.emoji_events_rounded,
+                    color: Colors.amber,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -551,7 +576,10 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                             height: 240,
                             width: double.infinity,
                             color: Colors.grey.shade100,
-                            child: const Icon(Icons.image_not_supported_outlined, color: Colors.grey),
+                            child: const Icon(
+                              Icons.image_not_supported_outlined,
+                              color: Colors.grey,
+                            ),
                           ),
                         Positioned.fill(
                           child: Container(
@@ -619,11 +647,17 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                     itemBuilder: (context, index) {
                       final p = session.participants[index];
                       if (p.location == null) return const SizedBox();
-                      
+
                       final vLat = winner['location']['latitude'] as double;
                       final vLng = winner['location']['longitude'] as double;
-                      final dist = double.parse(_calculateDistance(
-                          p.location!.latitude, p.location!.longitude, vLat, vLng));
+                      final dist = double.parse(
+                        _calculateDistance(
+                          p.location!.latitude,
+                          p.location!.longitude,
+                          vLat,
+                          vLng,
+                        ),
+                      );
                       final time = _estimateTime(dist);
 
                       return Container(
@@ -647,7 +681,9 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                               width: 32,
                               height: 32,
                               decoration: BoxDecoration(
-                                color: index == 0 ? Colors.amber : Colors.grey.shade200,
+                                color: index == 0
+                                    ? Colors.amber
+                                    : Colors.grey.shade200,
                                 shape: BoxShape.circle,
                               ),
                               child: Center(
@@ -655,7 +691,9 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                   "${index + 1}",
                                   style: GoogleFonts.outfit(
                                     fontWeight: FontWeight.bold,
-                                    color: index == 0 ? Colors.white : Colors.grey.shade600,
+                                    color: index == 0
+                                        ? Colors.white
+                                        : Colors.grey.shade600,
                                   ),
                                 ),
                               ),
@@ -674,18 +712,32 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                   ),
                                   Row(
                                     children: [
-                                      const Icon(Icons.near_me_rounded, color: AppColors.teal, size: 12),
+                                      const Icon(
+                                        Icons.near_me_rounded,
+                                        color: AppColors.teal,
+                                        size: 12,
+                                      ),
                                       const SizedBox(width: 4),
                                       Text(
                                         "$dist km",
-                                        style: GoogleFonts.inter(fontSize: 11, color: Colors.grey),
+                                        style: GoogleFonts.inter(
+                                          fontSize: 11,
+                                          color: Colors.grey,
+                                        ),
                                       ),
                                       const SizedBox(width: 12),
-                                      const Icon(Icons.access_time_filled_rounded, color: Colors.amber, size: 12),
+                                      const Icon(
+                                        Icons.access_time_filled_rounded,
+                                        color: Colors.amber,
+                                        size: 12,
+                                      ),
                                       const SizedBox(width: 4),
                                       Text(
                                         "$time min",
-                                        style: GoogleFonts.inter(fontSize: 11, color: Colors.grey),
+                                        style: GoogleFonts.inter(
+                                          fontSize: 11,
+                                          color: Colors.grey,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -743,7 +795,9 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                       foregroundColor: AppColors.teal,
                       side: const BorderSide(color: AppColors.teal, width: 2),
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                   ),
                 ),
@@ -756,7 +810,9 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                       final lat = winner['location']?['latitude'];
                       final lng = winner['location']?['longitude'];
                       if (lat != null && lng != null) {
-                        final url = Uri.parse("https://www.google.com/maps/search/?api=1&query=$lat,$lng");
+                        final url = Uri.parse(
+                          "https://www.google.com/maps/search/?api=1&query=$lat,$lng",
+                        );
                         if (await canLaunchUrl(url)) {
                           await launchUrl(url);
                         }
@@ -766,7 +822,9 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                       backgroundColor: AppColors.teal,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                       elevation: 0,
                     ),
                     label: Text(
@@ -779,7 +837,10 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                   onPressed: () => Navigator.pop(context),
                   child: Text(
                     "EXIT DISCOVERY",
-                    style: GoogleFonts.inter(color: Colors.grey, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.inter(
+                      color: Colors.grey,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -804,7 +865,11 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
         ),
         child: Row(
           children: [
-            Icon(isFixed ? Icons.lock_rounded : Icons.radar_rounded, color: AppColors.teal, size: 18),
+            Icon(
+              isFixed ? Icons.lock_rounded : Icons.radar_rounded,
+              color: AppColors.teal,
+              size: 18,
+            ),
             const SizedBox(width: 8),
             Text(
               isFixed ? "Locked Journey" : "Discovery Room",
@@ -845,7 +910,9 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
   }
 
   Widget _buildVenueCard(
-      Map<String, dynamic> venue, OutingSessionModel session) {
+    Map<String, dynamic> venue,
+    OutingSessionModel session,
+  ) {
     final apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'];
     final photoRef = venue['photoReference'];
     final imageUrl = photoRef != null
@@ -890,8 +957,10 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                     Container(
                       width: 130,
                       color: Colors.grey.shade100,
-                      child: const Icon(Icons.image_not_supported_outlined,
-                          color: Colors.grey),
+                      child: const Icon(
+                        Icons.image_not_supported_outlined,
+                        color: Colors.grey,
+                      ),
                     ),
 
                   // Details
@@ -929,15 +998,19 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              const Icon(Icons.star_rounded,
-                                  color: Colors.amber, size: 16),
+                              const Icon(
+                                Icons.star_rounded,
+                                color: Colors.amber,
+                                size: 16,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 "${venue['rating'] ?? 'N/A'} (${venue['userRatingCount'] ?? 0})",
                                 style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade600,
-                                    fontWeight: FontWeight.bold),
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ],
                           ),
@@ -960,22 +1033,28 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                               itemBuilder: (context, i) {
                                 final p = session.participants[i];
                                 if (p.location == null) return const SizedBox();
-                                final dist = double.parse(_calculateDistance(
+                                final dist = double.parse(
+                                  _calculateDistance(
                                     p.location!.latitude,
                                     p.location!.longitude,
                                     vLat,
-                                    vLng));
+                                    vLng,
+                                  ),
+                                );
                                 final time = _estimateTime(dist);
                                 return Padding(
                                   padding: const EdgeInsets.only(bottom: 2),
                                   child: Row(
                                     children: [
                                       Text(
-                                        p.name.isNotEmpty ? p.name.split(' ')[0] : 'User',
+                                        p.name.isNotEmpty
+                                            ? p.name.split(' ')[0]
+                                            : 'User',
                                         style: GoogleFonts.inter(
-                                            fontSize: 11,
-                                            color: AppColors.darkSlate,
-                                            fontWeight: FontWeight.w600),
+                                          fontSize: 11,
+                                          color: AppColors.darkSlate,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                       ),
                                       const Spacer(),
                                       Text(
@@ -1027,7 +1106,10 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     );
   }
 
-  Widget _buildVoteButton(Map<String, dynamic> venue, OutingSessionModel session) {
+  Widget _buildVoteButton(
+    Map<String, dynamic> venue,
+    OutingSessionModel session,
+  ) {
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
     final hasVoted = (venue['votes'] as List?)?.contains(uid) ?? false;
 
@@ -1041,7 +1123,9 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: hasVoted ? AppColors.teal.withValues(alpha: 0.1) : AppColors.teal,
+          color: hasVoted
+              ? AppColors.teal.withValues(alpha: 0.1)
+              : AppColors.teal,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.teal),
         ),

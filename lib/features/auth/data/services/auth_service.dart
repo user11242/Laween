@@ -134,11 +134,8 @@ class AuthService {
       if (isSocial) return "SOCIAL_LOGIN_REQUIRED";
       return "NO_SAVED_CREDENTIALS";
     }
-    
-    return loginWithEmail(
-      credentials['email']!,
-      credentials['password']!,
-    );
+
+    return loginWithEmail(credentials['email']!, credentials['password']!);
   }
 
   Future<String?> createGoogleUserWithRole({
@@ -178,7 +175,7 @@ class AuthService {
 
   Future<void> signOut() async {
     final isBiometricEnabled = await _biometricService.isBiometricEnabled();
-    
+
     if (isBiometricEnabled) {
       // PRESERVE ZERO-TAP BIOMETRICS: Just lock the app.
       await _biometricService.setAppLocked(true);
@@ -202,38 +199,44 @@ class AuthService {
     }
 
     try {
-      debugPrint("👻 Ghost Check: Checking if ${user.uid} (${user.email ?? user.phoneNumber ?? 'Unknown'}) is a ghost...");
-      
+      debugPrint(
+        "👻 Ghost Check: Checking if ${user.uid} (${user.email ?? user.phoneNumber ?? 'Unknown'}) is a ghost...",
+      );
+
       // Check if document exists in 'users' collection
       final userDoc = await _firestore.collection('users').doc(user.uid).get();
-      
+
       if (!userDoc.exists) {
-        debugPrint("👻 Ghost Detected: No Firestore doc for ${user.uid}. Deleting Auth account...");
-        
+        debugPrint(
+          "👻 Ghost Detected: No Firestore doc for ${user.uid}. Deleting Auth account...",
+        );
+
         // Delete from Auth to free up email/phone
         try {
           await user.delete();
           debugPrint("👻 Ghost Cleaned: Auth account deleted successfully.");
         } catch (e) {
-          debugPrint("⚠️ Ghost Delete Failed (likely requires recent login): $e");
+          debugPrint(
+            "⚠️ Ghost Delete Failed (likely requires recent login): $e",
+          );
           // If we can't delete (e.g. requires recent login), we MUST at least sign out
           // so the app doesn't think they are logged in on next start.
         }
-        
+
         // ALWAYS ensure we are signed out locally if it's a ghost
+        await signOut();
+        return true;
+      } else {
+        debugPrint("✅ Not a Ghost: Firestore doc exists for ${user.uid}.");
+        return false;
+      }
+    } catch (e) {
+      debugPrint("⚠️ Ghost Cleanup Error: $e");
+      // Safety sign out
       await signOut();
-      return true;
-    } else {
-      debugPrint("✅ Not a Ghost: Firestore doc exists for ${user.uid}.");
-      return false;
+      return true; // Treat as ghost for safety to return to onboarding
     }
-  } catch (e) {
-    debugPrint("⚠️ Ghost Cleanup Error: $e");
-    // Safety sign out
-    await signOut();
-    return true; // Treat as ghost for safety to return to onboarding
   }
-}
 
   /// 📱 UNLINK PHONE
   /// Removes the phone provider from the current user.
@@ -245,8 +248,10 @@ class AuthService {
     try {
       debugPrint("📱 Unlinking phone for ${user.uid}...");
       // Check for phone provider
-      bool hasPhone = user.providerData.any((info) => info.providerId == 'phone');
-      
+      bool hasPhone = user.providerData.any(
+        (info) => info.providerId == 'phone',
+      );
+
       if (hasPhone) {
         await user.unlink('phone');
         debugPrint("✅ Phone unlinked successfully.");
@@ -266,7 +271,7 @@ class AuthService {
 
     final uid = user.uid;
     final userDoc = await _firestore.collection('users').doc(uid).get();
-    
+
     if (!userDoc.exists) {
       // If no doc exists, just try to delete auth.
       await user.delete();
@@ -282,7 +287,8 @@ class AuthService {
 
     // 1. Anonymize User Document
     final anonymizeUpdates = {
-      'name': 'حساب محذوف', // User deleted in Arabic (could localize, hardcoded for DB consistency)
+      'name':
+          'حساب محذوف', // User deleted in Arabic (could localize, hardcoded for DB consistency)
       'name_lower': 'deleted user',
       'photoUrl': null,
       'status': 'deleted',
@@ -296,7 +302,9 @@ class AuthService {
 
     // 2. Release Locks (Allow these credentials to be used by new users)
     if (email != null && email.isNotEmpty) {
-      batch.delete(_firestore.collection('locked_emails').doc(email.trim().toLowerCase()));
+      batch.delete(
+        _firestore.collection('locked_emails').doc(email.trim().toLowerCase()),
+      );
     }
     if (phone != null && phone.isNotEmpty) {
       final cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
@@ -311,8 +319,12 @@ class AuthService {
     // Attempt to delete photo from storage (fire and forget, don't block if fails)
     try {
       if (data['photoUrl'] != null) {
-        final storageRef = FirebaseStorage.instance.refFromURL(data['photoUrl']);
-        storageRef.delete().catchError((e) => debugPrint("Failed to delete photo: $e"));
+        final storageRef = FirebaseStorage.instance.refFromURL(
+          data['photoUrl'],
+        );
+        storageRef.delete().catchError(
+          (e) => debugPrint("Failed to delete photo: $e"),
+        );
       }
     } catch (e) {
       debugPrint("Storage deletion omitted or failed: $e");
@@ -322,7 +334,7 @@ class AuthService {
     await batch.commit();
 
     // 4. Finally, securely delete the Firebase Auth user.
-    // This MUST happen last. If it fails due to "requires recent login", the DB won't be corrupted 
+    // This MUST happen last. If it fails due to "requires recent login", the DB won't be corrupted
     // because we should prompt re-auth BEFORE calling this function.
     await user.delete();
   }
@@ -347,14 +359,18 @@ class AuthService {
   /// Returns list like ['password'], ['google.com'], or ['password', 'google.com']
   Future<List<String>> getUserSignInMethods(String email) async {
     try {
-      final callable = FirebaseFunctions.instance.httpsCallable('getUserProviders');
+      final callable = FirebaseFunctions.instance.httpsCallable(
+        'getUserProviders',
+      );
       final result = await callable.call({'email': email});
       final providers = List<String>.from(result.data['providers'] ?? []);
       return providers;
     } on FirebaseFunctionsException catch (e) {
       // If the function doesn't exist yet, don't crash the whole login flow
       if (e.code == 'not-found') {
-        debugPrint("ℹ️ Cloud Function 'getUserProviders' not found. This is expected if it wasn't deployed yet.");
+        debugPrint(
+          "ℹ️ Cloud Function 'getUserProviders' not found. This is expected if it wasn't deployed yet.",
+        );
         return [];
       }
       debugPrint("Error fetching user providers: ${e.code} - ${e.message}");
@@ -369,14 +385,14 @@ class AuthService {
   /// This works for both email/password users and Google users who want to add a password
   Future<void> resetPasswordWithOtp(String email, String newPassword) async {
     final user = FirebaseAuth.instance.currentUser;
-    
+
     // If user is not logged in, we need to use a different approach
     // Since we can't directly set password without being authenticated,
     // we'll use the password reset email token approach
     if (user == null || user.email != email) {
       throw Exception('User must be authenticated to reset password');
     }
-    
+
     // Update the password for the current user
     await user.updatePassword(newPassword);
   }
@@ -389,30 +405,29 @@ class AuthService {
       // 1. Re-authenticate
       // We need a signed-in user to link. But the user isn't signed in yet.
       // So first we sign in with email.
-      UserCredential userCred = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email.trim(), 
-        password: password
-      );
-      
+      UserCredential userCred = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email.trim(), password: password);
+
       // 2. Get pending credential
       final googleCred = _googleAuth.pendingGoogleCredential;
-      if (googleCred == null) throw Exception("No pending Google credential found");
-      
+      if (googleCred == null)
+        throw Exception("No pending Google credential found");
+
       // 3. Link
       await userCred.user!.linkWithCredential(googleCred);
 
       // 4. Update Firestore authProvider to 'google'
       final uid = userCred.user!.uid;
       final updates = {'authProvider': 'google'};
-      
+
       final batch = _firestore.batch();
       batch.update(_firestore.collection("users").doc(uid), updates);
-      
+
       await batch.commit();
-      
+
       // 5. Cleanup
       _googleAuth.clearPendingCredential();
-      
+
       return null; // Return successfully
     } catch (e) {
       debugPrint("Error linking account: $e");

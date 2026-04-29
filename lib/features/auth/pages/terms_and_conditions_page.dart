@@ -11,7 +11,10 @@ class TermsAndConditionsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.primary,
       appBar: AppBar(
-        title: Text(l10n.termsAndConditions, style: const TextStyle(color: Colors.white)),
+        title: Text(
+          l10n.termsAndConditions,
+          style: const TextStyle(color: Colors.white),
+        ),
         backgroundColor: AppColors.primary,
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
@@ -29,4 +32,4 @@ class TermsAndConditionsPage extends StatelessWidget {
       ),
     );
   }
-}    
+}

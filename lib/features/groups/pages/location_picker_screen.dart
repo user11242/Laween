@@ -47,7 +47,10 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       if (mounted) {
         // Default to a fallback if permission denied to let them manually drag
         setState(() {
-          _currentCenter = const LatLng(25.2048, 55.2708); // Default coordinates
+          _currentCenter = const LatLng(
+            25.2048,
+            55.2708,
+          ); // Default coordinates
           _isLoading = false;
         });
       }
@@ -75,31 +78,38 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       if (mounted) setState(() => _searchResults = []);
       return;
     }
-    
+
     if (mounted) setState(() => _isSearching = true);
-    
+
     try {
       final apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'];
-      final url = Uri.parse('https://places.googleapis.com/v1/places:searchText');
-      
+      final url = Uri.parse(
+        'https://places.googleapis.com/v1/places:searchText',
+      );
+
       final response = await http.post(
         url,
         headers: {
           'Content-Type': 'application/json',
           'X-Goog-Api-Key': apiKey!,
-          'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.location',
+          'X-Goog-FieldMask':
+              'places.displayName,places.formattedAddress,places.location',
         },
         body: jsonEncode({
           'textQuery': query,
-          if (_currentCenter != null) 'locationBias': {
-            'circle': {
-              'center': {'latitude': _currentCenter!.latitude, 'longitude': _currentCenter!.longitude},
-              'radius': 50000.0 // 50km radius bias
-            }
-          }
+          if (_currentCenter != null)
+            'locationBias': {
+              'circle': {
+                'center': {
+                  'latitude': _currentCenter!.latitude,
+                  'longitude': _currentCenter!.longitude,
+                },
+                'radius': 50000.0, // 50km radius bias
+              },
+            },
         }),
       );
-      
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (mounted) {
@@ -137,7 +147,11 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                 color: AppColors.darkSlate.withValues(alpha: 0.7),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
             ),
             onPressed: () => Navigator.pop(context),
           ),
@@ -146,7 +160,10 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       body: Stack(
         children: [
           GoogleMap(
-            initialCameraPosition: CameraPosition(target: _currentCenter!, zoom: 16),
+            initialCameraPosition: CameraPosition(
+              target: _currentCenter!,
+              zoom: 16,
+            ),
             myLocationEnabled: false, // We use a custom button
             myLocationButtonEnabled: false,
             zoomControlsEnabled: false,
@@ -157,11 +174,13 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
               _currentCenter = position.target;
             },
           ),
-          
+
           // Center Pin Image
           const Center(
             child: Padding(
-              padding: EdgeInsets.only(bottom: 40), // Offset so the pointy bit is at exact center
+              padding: EdgeInsets.only(
+                bottom: 40,
+              ), // Offset so the pointy bit is at exact center
               child: Icon(
                 Icons.location_on_rounded,
                 size: 50,
@@ -181,7 +200,13 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 5))],
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 10,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
                   ),
                   child: TextField(
                     controller: _searchController,
@@ -194,11 +219,21 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                     },
                     decoration: InputDecoration(
                       hintText: "Search for a neighborhood or place...",
-                      hintStyle: GoogleFonts.inter(color: Colors.grey.shade400, fontSize: 14),
-                      prefixIcon: const Icon(Icons.search, color: AppColors.teal),
+                      hintStyle: GoogleFonts.inter(
+                        color: Colors.grey.shade400,
+                        fontSize: 14,
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: AppColors.teal,
+                      ),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
-                              icon: const Icon(Icons.clear, color: Colors.grey, size: 20),
+                              icon: const Icon(
+                                Icons.clear,
+                                color: Colors.grey,
+                                size: 20,
+                              ),
                               onPressed: () {
                                 _searchController.clear();
                                 setState(() => _searchResults = []);
@@ -206,7 +241,10 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                             )
                           : null,
                       border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
                     ),
                   ),
                 ),
@@ -217,26 +255,53 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 5))],
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 10,
+                          offset: Offset(0, 5),
+                        ),
+                      ],
                     ),
                     child: ListView.separated(
                       shrinkWrap: true,
                       padding: EdgeInsets.zero,
                       itemCount: _searchResults.length,
-                      separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey.shade100),
+                      separatorBuilder: (_, __) =>
+                          Divider(height: 1, color: Colors.grey.shade100),
                       itemBuilder: (context, index) {
                         final place = _searchResults[index];
-                        final name = place['displayName']?['text'] ?? "Unknown Place";
+                        final name =
+                            place['displayName']?['text'] ?? "Unknown Place";
                         final address = place['formattedAddress'] ?? "";
                         return ListTile(
-                          leading: const Icon(Icons.location_on_rounded, color: AppColors.teal),
-                          title: Text(name, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 14)),
-                          subtitle: Text(address, style: GoogleFonts.inter(fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
+                          leading: const Icon(
+                            Icons.location_on_rounded,
+                            color: AppColors.teal,
+                          ),
+                          title: Text(
+                            name,
+                            style: GoogleFonts.inter(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          subtitle: Text(
+                            address,
+                            style: GoogleFonts.inter(fontSize: 12),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           onTap: () {
                             final loc = place['location'];
                             if (loc != null) {
-                              final latLng = LatLng(loc['latitude'], loc['longitude']);
-                              _mapController?.animateCamera(CameraUpdate.newLatLngZoom(latLng, 16));
+                              final latLng = LatLng(
+                                loc['latitude'],
+                                loc['longitude'],
+                              );
+                              _mapController?.animateCamera(
+                                CameraUpdate.newLatLngZoom(latLng, 16),
+                              );
                               setState(() {
                                 _currentCenter = latLng;
                                 _searchResults = [];
@@ -264,7 +329,10 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                 FloatingActionButton(
                   backgroundColor: AppColors.darkSlate,
                   onPressed: _onMyLocationPressed,
-                  child: const Icon(Icons.my_location_rounded, color: AppColors.teal),
+                  child: const Icon(
+                    Icons.my_location_rounded,
+                    color: AppColors.teal,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 SizedBox(
@@ -276,12 +344,18 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.teal,
                       padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                       elevation: 5,
                     ),
                     child: Text(
                       "Confirm Start Location",
-                      style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),

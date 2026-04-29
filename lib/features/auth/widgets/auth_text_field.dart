@@ -21,8 +21,8 @@ class AuthTextField extends StatelessWidget {
   // 🔹 VALIDATION PROPS
   final Function(String)? onChanged;
   final String? errorText;
-  final bool isSuccess; 
-  final bool isLoading; 
+  final bool isSuccess;
+  final bool isLoading;
   final VoidCallback? onPaste;
 
   const AuthTextField({
@@ -101,15 +101,17 @@ class AuthTextField extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide(color: borderColor),
               ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: errorText != null
-                        ? Colors.redAccent
-                        : (isSuccess ? Colors.greenAccent : AppColors.accentGold), // ✅ Gold Focus
-                    width: 2,
-                  ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(
+                  color: errorText != null
+                      ? Colors.redAccent
+                      : (isSuccess
+                            ? Colors.greenAccent
+                            : AppColors.accentGold), // ✅ Gold Focus
+                  width: 2,
                 ),
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide.none,
@@ -139,15 +141,22 @@ class AuthTextField extends StatelessWidget {
                         if (showToggle)
                           IconButton(
                             icon: Icon(
-                              isObscured ? Icons.visibility_off : Icons.visibility,
-                              color: isSuccess ? Colors.greenAccent : AppColors.textColor,
+                              isObscured
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: isSuccess
+                                  ? Colors.greenAccent
+                                  : AppColors.textColor,
                             ),
                             onPressed: onToggle,
                           )
                         else if (isSuccess)
                           const Padding(
                             padding: EdgeInsets.only(right: 12),
-                            child: Icon(Icons.check_circle, color: Colors.greenAccent),
+                            child: Icon(
+                              Icons.check_circle,
+                              color: Colors.greenAccent,
+                            ),
                           ),
                       ],
                     ),

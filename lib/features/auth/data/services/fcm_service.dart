@@ -18,14 +18,15 @@ class FcmService {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
-  final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
-  
+  final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
+
   /// Tracks the group currently being viewed to suppress noisy foreground alerts
   String? activeGroupId;
 
   // Android Notification Channel
   static const AndroidNotificationChannel _channel = AndroidNotificationChannel(
-    'chat_messages', 
+    'chat_messages',
     'Chat Messages',
     description: 'Notifications for new group chat messages',
     importance: Importance.max,
@@ -45,7 +46,9 @@ class FcmService {
       sound: true,
     );
 
-    debugPrint('🔔 User notification permission status: ${settings.authorizationStatus}');
+    debugPrint(
+      '🔔 User notification permission status: ${settings.authorizationStatus}',
+    );
 
     if (settings.authorizationStatus == AuthorizationStatus.denied) {
       debugPrint("❌ User denied notification permissions");
@@ -58,19 +61,22 @@ class FcmService {
     await _messaging.setForegroundNotificationPresentationOptions(
       alert: false,
       badge: true,
-      sound: true, // Restored sound so you hear "Ding" for other groups while inside the app
+      sound:
+          true, // Restored sound so you hear "Ding" for other groups while inside the app
     );
 
     debugPrint("✅ Notification permissions granted");
 
     // 2. Initialize Local Notifications (For Foreground Popups)
-    const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const DarwinInitializationSettings iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
-    
+    const AndroidInitializationSettings androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const DarwinInitializationSettings iosSettings =
+        DarwinInitializationSettings(
+          requestAlertPermission: true,
+          requestBadgePermission: true,
+          requestSoundPermission: true,
+        );
+
     await _localNotifications.initialize(
       const InitializationSettings(android: androidSettings, iOS: iosSettings),
       onDidReceiveNotificationResponse: (details) {
@@ -81,13 +87,17 @@ class FcmService {
 
     if (Platform.isAndroid) {
       await _localNotifications
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
           ?.createNotificationChannel(_channel);
     }
 
     // 3. Set up foreground message listener
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint('📩 Received Foreground Message: ${message.notification?.title}');
+      debugPrint(
+        '📩 Received Foreground Message: ${message.notification?.title}',
+      );
       _showLocalNotification(message);
     });
 
@@ -116,20 +126,25 @@ class FcmService {
       if (Platform.isIOS) {
         String? apnsToken = await _messaging.getAPNSToken();
         int retries = 0;
-        
-        while (apnsToken == null && retries < 10) { // Try for up to 20 seconds
-          debugPrint("⚠️ APNS token not set yet. Waiting 2 seconds... (Attempt \${retries + 1}/10)");
+
+        while (apnsToken == null && retries < 10) {
+          // Try for up to 20 seconds
+          debugPrint(
+            "⚠️ APNS token not set yet. Waiting 2 seconds... (Attempt \${retries + 1}/10)",
+          );
           await Future.delayed(const Duration(seconds: 2));
           apnsToken = await _messaging.getAPNSToken();
           retries++;
         }
-        
+
         if (apnsToken == null) {
-          debugPrint("❌ APNS token still null after 20 seconds. Cannot generate iOS FCM token.");
-          
+          debugPrint(
+            "❌ APNS token still null after 20 seconds. Cannot generate iOS FCM token.",
+          );
+
           // Fallback: If it's a simulator, sometimes it fails, but we should still let them use the app
           // In production, Firebase requires the APNs token.
-          if (!kDebugMode) return; 
+          if (!kDebugMode) return;
         } else {
           debugPrint("✅ APNS Token retrieved (Apple Bridge Active)");
         }
@@ -138,7 +153,6 @@ class FcmService {
       // Generate the universal FCM token
       token = await _messaging.getToken();
       debugPrint("✅ FCM Token retrieved: $token");
-      
     } catch (e) {
       debugPrint("❌ FCM Token Generation Error: $e");
       return;
@@ -157,11 +171,13 @@ class FcmService {
       "tokenDiagnostics": {
         "platform": Platform.operatingSystem,
         "lastUpdate": DateTime.now().toIso8601String(),
-        "apnsTokenPresent": Platform.isIOS ? (await _messaging.getAPNSToken() != null) : true,
+        "apnsTokenPresent": Platform.isIOS
+            ? (await _messaging.getAPNSToken() != null)
+            : true,
         "swizzlingDisabled": true,
         "manualForwarding": true,
         "fcmToken": token,
-      }
+      },
     }, SetOptions(merge: true));
 
     debugPrint("✅ FCM TOKEN DIAGNOSTICS SYNCED TO FIRESTORE");
@@ -173,11 +189,13 @@ class FcmService {
 
     // ✅ Subscribe to personal topic for "Exclude Sender" logic in Cloud Functions
     await subscribeToTopic('user_$uid');
-    
+
     // ✅ NEW: Sync all group memberships to topics for background delivery
     await syncAllUserGroups(uid);
-    
-    debugPrint("💾 FCM Token successfully synced and topics balanced for user_$uid");
+
+    debugPrint(
+      "💾 FCM Token successfully synced and topics balanced for user_$uid",
+    );
   }
 
   /// Fetches all groups a user belongs to and ensures they are subscribed to their FCM topics
@@ -191,7 +209,9 @@ class FcmService {
       for (var doc in groupsSnap.docs) {
         await subscribeToTopic('group_${doc.id}');
       }
-      debugPrint("✅ Synced \${groupsSnap.docs.length} group topics for background delivery.");
+      debugPrint(
+        "✅ Synced \${groupsSnap.docs.length} group topics for background delivery.",
+      );
     } catch (e) {
       debugPrint("❌ Error syncing group topics: $e");
     }
@@ -207,11 +227,9 @@ class FcmService {
         final data = doc.data()!;
         data['id'] = doc.id; // Map constructor expects id field
         final group = GroupModel.fromMap(data);
-        
+
         navigatorKey.currentState?.push(
-          MaterialPageRoute(
-            builder: (context) => ChatPage(group: group),
-          ),
+          MaterialPageRoute(builder: (context) => ChatPage(group: group)),
         );
       }
     } catch (e) {
@@ -251,7 +269,7 @@ class FcmService {
     final senderId = message.data['senderId'];
     final groupId = message.data['groupId'];
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-    
+
     // 🛡️ Filter out self-notifications in the foreground
     if (senderId != null && senderId == currentUserId) {
       debugPrint("🛡️ Suppressing self-notification in foreground");
@@ -260,7 +278,9 @@ class FcmService {
 
     // 🛡️ Suppress notification if user is already looking at this group
     if (groupId != null && groupId == activeGroupId) {
-      debugPrint("🛡️ Suppressing foreground notification for active group: $groupId");
+      debugPrint(
+        "🛡️ Suppressing foreground notification for active group: $groupId",
+      );
       return;
     }
 

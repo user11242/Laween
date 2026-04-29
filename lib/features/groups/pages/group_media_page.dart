@@ -19,26 +19,37 @@ class GroupMediaPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           'Media',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: AppColors.darkSlate),
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.bold,
+            color: AppColors.darkSlate,
+          ),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.darkSlate),
       ),
       body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: _groupService.getGroupMedia(groupId), // I should probably add an 'all' version without limit
+        stream: _groupService.getGroupMedia(
+          groupId,
+        ), // I should probably add an 'all' version without limit
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.teal));
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.teal),
+            );
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                   Icon(Icons.photo_library_outlined, size: 64, color: Colors.grey.shade300),
-                   const SizedBox(height: 16),
-                   Text(
+                  Icon(
+                    Icons.photo_library_outlined,
+                    size: 64,
+                    color: Colors.grey.shade300,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
                     'No media shared yet',
                     style: GoogleFonts.inter(color: Colors.grey, fontSize: 16),
                   ),
@@ -51,9 +62,10 @@ class GroupMediaPage extends StatelessWidget {
           // Flatten mediaUrls from all messages
           final List<String> imageList = [];
           final List<Map<String, dynamic>> imageMeta = [];
-          
+
           for (var msg in media) {
-            final List<String> urls = (msg['mediaUrls'] as List?)?.cast<String>() ?? [msg['text']];
+            final List<String> urls =
+                (msg['mediaUrls'] as List?)?.cast<String>() ?? [msg['text']];
             for (var url in urls) {
               imageList.add(url);
               imageMeta.add(msg);
@@ -91,7 +103,8 @@ class GroupMediaPage extends StatelessWidget {
                 child: CachedNetworkImage(
                   imageUrl: url,
                   fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(color: Colors.grey.shade100),
+                  placeholder: (context, url) =>
+                      Container(color: Colors.grey.shade100),
                   errorWidget: (context, url, error) => const Icon(Icons.error),
                 ),
               );

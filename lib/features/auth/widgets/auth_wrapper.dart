@@ -35,7 +35,7 @@ class AuthWrapper extends StatelessWidget {
             }
 
             final isLocked = lockedSnapshot.data ?? false;
-            
+
             // If the app is locked, force them to the login/onboarding screen
             if (isLocked) {
               return const OnboardingPage();
@@ -43,7 +43,10 @@ class AuthWrapper extends StatelessWidget {
 
             // 4. Not Locked -> Listen to Firestore Profile Real-time
             return StreamBuilder<DocumentSnapshot>(
-              stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
+              stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(user.uid)
+                  .snapshots(),
               builder: (context, docSnapshot) {
                 // Profile Check connection
                 if (docSnapshot.connectionState == ConnectionState.waiting) {
@@ -69,9 +72,7 @@ class AuthWrapper extends StatelessWidget {
   Widget _buildLoadingScreen() {
     return const Scaffold(
       backgroundColor: Colors.white,
-      body: Center(
-        child: CircularProgressIndicator(color: AppColors.teal),
-      ),
+      body: Center(child: CircularProgressIndicator(color: AppColors.teal)),
     );
   }
 }

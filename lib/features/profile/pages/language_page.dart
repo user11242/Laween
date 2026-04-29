@@ -70,7 +70,9 @@ class LanguagePage extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.teal.withValues(alpha: 0.05) : Colors.grey.shade50,
+          color: isSelected
+              ? AppColors.teal.withValues(alpha: 0.05)
+              : Colors.grey.shade50,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? AppColors.teal : Colors.grey.shade200,
@@ -103,11 +105,7 @@ class LanguagePage extends StatelessWidget {
               ),
             ),
             if (isSelected)
-              const Icon(
-                Icons.check_circle,
-                color: AppColors.teal,
-                size: 28,
-              )
+              const Icon(Icons.check_circle, color: AppColors.teal, size: 28)
             else
               Icon(
                 Icons.circle_outlined,

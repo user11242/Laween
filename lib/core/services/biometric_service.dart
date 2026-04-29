@@ -17,7 +17,8 @@ class BiometricService {
   Future<bool> isBiometricAvailable() async {
     try {
       final bool canAuthenticateWithBiometrics = await _auth.canCheckBiometrics;
-      final bool canAuthenticate = canAuthenticateWithBiometrics || await _auth.isDeviceSupported();
+      final bool canAuthenticate =
+          canAuthenticateWithBiometrics || await _auth.isDeviceSupported();
       return canAuthenticate;
     } on PlatformException catch (_) {
       return false;
@@ -34,7 +35,9 @@ class BiometricService {
   }
 
   /// Perform biometric authentication
-  Future<bool> authenticate({String reason = 'Please authenticate to log in'}) async {
+  Future<bool> authenticate({
+    String reason = 'Please authenticate to log in',
+  }) async {
     try {
       return await _auth.authenticate(
         localizedReason: reason,
@@ -50,10 +53,7 @@ class BiometricService {
 
   /// Save credentials securely
   Future<void> saveCredentials(String email, String password) async {
-    final credentials = {
-      'email': email,
-      'password': password,
-    };
+    final credentials = {'email': email, 'password': password};
     await _storage.write(key: _credentialsKey, value: jsonEncode(credentials));
     await _storage.write(key: _biometricEnabledKey, value: 'true');
     await _storage.write(key: _isSocialLoginKey, value: 'false');
@@ -75,7 +75,7 @@ class BiometricService {
   Future<Map<String, String>?> getSavedCredentials() async {
     final String? credentialsJson = await _storage.read(key: _credentialsKey);
     if (credentialsJson == null) return null;
-    
+
     try {
       final Map<String, dynamic> decoded = jsonDecode(credentialsJson);
       return {
@@ -108,7 +108,7 @@ class BiometricService {
   }
 
   // APP LOCK MECHANISM FOR ZERO-TAP LOGIN
-  
+
   /// Sets whether the app is currently locked behind biometrics
   Future<void> setAppLocked(bool locked) async {
     await _storage.write(key: _appLockedKey, value: locked.toString());

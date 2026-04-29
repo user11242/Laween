@@ -21,7 +21,8 @@ class RegisterForm extends StatefulWidget {
   State<RegisterForm> createState() => _RegisterFormState();
 }
 
-class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMixin {
+class _RegisterFormState extends State<RegisterForm>
+    with TickerProviderStateMixin {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -31,13 +32,13 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
 
   String _currentCountryCode = 'JO';
   final lib_phone.PhoneNumberUtil _phoneUtil = lib_phone.PhoneNumberUtil();
-  
+
   final _nameFocusNode = FocusNode();
   final _emailFocusNode = FocusNode();
   final _phoneFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
   final _confirmFocusNode = FocusNode();
-  
+
   bool _acceptedTerms = false;
   bool _isPasswordObscured = true;
   bool _isConfirmObscured = true;
@@ -83,10 +84,22 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
   void initState() {
     super.initState();
     _nameControllerAnimate = AnimationController(vsync: this, duration: 400.ms);
-    _emailControllerAnimate = AnimationController(vsync: this, duration: 400.ms);
-    _phoneControllerAnimate = AnimationController(vsync: this, duration: 400.ms);
-    _passwordControllerAnimate = AnimationController(vsync: this, duration: 400.ms);
-    _confirmControllerAnimate = AnimationController(vsync: this, duration: 400.ms);
+    _emailControllerAnimate = AnimationController(
+      vsync: this,
+      duration: 400.ms,
+    );
+    _phoneControllerAnimate = AnimationController(
+      vsync: this,
+      duration: 400.ms,
+    );
+    _passwordControllerAnimate = AnimationController(
+      vsync: this,
+      duration: 400.ms,
+    );
+    _confirmControllerAnimate = AnimationController(
+      vsync: this,
+      duration: 400.ms,
+    );
 
     _nameFocusNode.addListener(() {
       if (!_nameFocusNode.hasFocus && _nameController.text.isNotEmpty) {
@@ -113,7 +126,8 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
       }
     });
     _confirmFocusNode.addListener(() {
-      if (!_confirmFocusNode.hasFocus && _confirmPasswordController.text.isNotEmpty) {
+      if (!_confirmFocusNode.hasFocus &&
+          _confirmPasswordController.text.isNotEmpty) {
         _confirmShakeTimer?.cancel();
         _validateConfirmPassword();
       }
@@ -151,24 +165,40 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
     final value = _nameController.text;
     if (value.isEmpty || !mounted) return;
     final l10n = AppLocalizations.of(context, listen: false)!;
-    setState(() { _isNameChecking = true; _nameError = null; _isNameValid = false; });
-    if (value.length < 3 || value.length > 30 || !RegExp(r'[a-zA-Z\u0600-\u06FF]').hasMatch(value)) {
-      if (mounted) setState(() { _isNameChecking = false; _nameError = l10n.invalidUsername; });
+    setState(() {
+      _isNameChecking = true;
+      _nameError = null;
+      _isNameValid = false;
+    });
+    if (value.length < 3 ||
+        value.length > 30 ||
+        !RegExp(r'[a-zA-Z\u0600-\u06FF]').hasMatch(value)) {
+      if (mounted)
+        setState(() {
+          _isNameChecking = false;
+          _nameError = l10n.invalidUsername;
+        });
       return;
     }
     final isTaken = await _authService.isNameTaken(value);
     if (mounted) {
-      setState(() { _isNameChecking = false; if (isTaken) {
-        _nameError = l10n.nameTaken;
-      } else {
-        _isNameValid = true;
-      } });
+      setState(() {
+        _isNameChecking = false;
+        if (isTaken) {
+          _nameError = l10n.nameTaken;
+        } else {
+          _isNameValid = true;
+        }
+      });
     }
   }
 
   void _onNameChanged(String value) {
     _nameTimer?.cancel();
-    setState(() { _nameError = null; _isNameValid = false; });
+    setState(() {
+      _nameError = null;
+      _isNameValid = false;
+    });
     _nameTimer = Timer(const Duration(seconds: 2), _validateName);
   }
 
@@ -176,54 +206,93 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
     final value = _emailController.text;
     if (value.isEmpty || !mounted) return;
     final l10n = AppLocalizations.of(context, listen: false)!;
-    setState(() { _isEmailChecking = true; _emailError = null; _isEmailValid = false; });
+    setState(() {
+      _isEmailChecking = true;
+      _emailError = null;
+      _isEmailValid = false;
+    });
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(value)) {
-      if (mounted) setState(() { _isEmailChecking = false; _emailError = l10n.invalidEmail; });
+      if (mounted)
+        setState(() {
+          _isEmailChecking = false;
+          _emailError = l10n.invalidEmail;
+        });
       return;
     }
     final isTaken = await _authService.isEmailTaken(value);
     if (mounted) {
-      setState(() { _isEmailChecking = false; if (isTaken) {
-        _emailError = l10n.emailTaken;
-      } else {
-        _isEmailValid = true;
-      } });
+      setState(() {
+        _isEmailChecking = false;
+        if (isTaken) {
+          _emailError = l10n.emailTaken;
+        } else {
+          _isEmailValid = true;
+        }
+      });
     }
   }
 
   void _onEmailChanged(String value) {
     _emailTimer?.cancel();
-    setState(() { _emailError = null; _isEmailValid = false; });
+    setState(() {
+      _emailError = null;
+      _isEmailValid = false;
+    });
     _emailTimer = Timer(const Duration(seconds: 2), _validateEmail);
   }
 
   Future<void> _validatePhone() async {
     if (_fullPhoneNumber.isEmpty || !mounted) return;
     final l10n = AppLocalizations.of(context, listen: false)!;
-    setState(() { _isPhoneChecking = true; _phoneError = null; _isPhoneValid = false; });
+    setState(() {
+      _isPhoneChecking = true;
+      _phoneError = null;
+      _isPhoneValid = false;
+    });
     try {
       if (_fullPhoneNumber.length < 8) {
-        if (mounted) setState(() { _isPhoneChecking = false; _phoneError = l10n.invalidMobileNumber; });
+        if (mounted)
+          setState(() {
+            _isPhoneChecking = false;
+            _phoneError = l10n.invalidMobileNumber;
+          });
         return;
       }
       bool isValidFormat = false;
-      try { isValidFormat = await _phoneUtil.validate(_fullPhoneNumber, regionCode: _currentCountryCode); } catch (_) { isValidFormat = false; }
+      try {
+        isValidFormat = await _phoneUtil.validate(
+          _fullPhoneNumber,
+          regionCode: _currentCountryCode,
+        );
+      } catch (_) {
+        isValidFormat = false;
+      }
       if (!mounted) return;
       if (!isValidFormat) {
-        setState(() { _isPhoneChecking = false; _phoneError = l10n.invalidMobileNumber; });
+        setState(() {
+          _isPhoneChecking = false;
+          _phoneError = l10n.invalidMobileNumber;
+        });
         return;
       }
       final isTaken = await _authService.isPhoneTaken(_fullPhoneNumber);
       if (mounted) {
-        setState(() { _isPhoneChecking = false; if (isTaken) {
-          _phoneError = l10n.phoneTaken;
-        } else {
-          _isPhoneValid = true;
-        } });
+        setState(() {
+          _isPhoneChecking = false;
+          if (isTaken) {
+            _phoneError = l10n.phoneTaken;
+          } else {
+            _isPhoneValid = true;
+          }
+        });
       }
     } catch (e) {
-      if (mounted) setState(() { _isPhoneChecking = false; _phoneError = null; });
+      if (mounted)
+        setState(() {
+          _isPhoneChecking = false;
+          _phoneError = null;
+        });
     }
   }
 
@@ -232,11 +301,21 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
     final value = phone.number as String;
     final normalized = NumericUtils.normalizeDigits(value);
     if (normalized != value) {
-       _phoneController.value = _phoneController.value.copyWith(text: normalized, selection: TextSelection.collapsed(offset: normalized.length));
+      _phoneController.value = _phoneController.value.copyWith(
+        text: normalized,
+        selection: TextSelection.collapsed(offset: normalized.length),
+      );
     }
-    try { _fullPhoneNumber = phone.completeNumber as String; } catch (e) { _fullPhoneNumber = ''; }
+    try {
+      _fullPhoneNumber = phone.completeNumber as String;
+    } catch (e) {
+      _fullPhoneNumber = '';
+    }
     _phoneTimer?.cancel();
-    setState(() { _phoneError = null; _isPhoneValid = false; });
+    setState(() {
+      _phoneError = null;
+      _isPhoneValid = false;
+    });
     _phoneTimer = Timer(const Duration(seconds: 2), _validatePhone);
   }
 
@@ -255,15 +334,22 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
         _isPasswordValid = false;
         _passwordError = l10n.weakPassword;
       }
-      if (_confirmPasswordController.text.isNotEmpty) _validateConfirmPassword();
+      if (_confirmPasswordController.text.isNotEmpty)
+        _validateConfirmPassword();
     });
   }
 
   void _onPasswordChanged(String value) {
     _passwordShakeTimer?.cancel();
-    setState(() { _passwordError = null; _isPasswordValid = false; });
+    setState(() {
+      _passwordError = null;
+      _isPasswordValid = false;
+    });
     if (value.isNotEmpty) {
-      _passwordShakeTimer = Timer(const Duration(seconds: 2), _validatePassword);
+      _passwordShakeTimer = Timer(
+        const Duration(seconds: 2),
+        _validatePassword,
+      );
     }
   }
 
@@ -284,16 +370,23 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
 
   void _onConfirmPasswordChanged(String value) {
     _confirmShakeTimer?.cancel();
-    setState(() { _confirmError = null; _isConfirmValid = false; });
+    setState(() {
+      _confirmError = null;
+      _isConfirmValid = false;
+    });
     if (value.isNotEmpty) {
-      _confirmShakeTimer = Timer(const Duration(seconds: 2), _validateConfirmPassword);
+      _confirmShakeTimer = Timer(
+        const Duration(seconds: 2),
+        _validateConfirmPassword,
+      );
     }
   }
 
   String _localizeError(String error, AppLocalizations l10n) {
     if (error.contains("Username is already taken")) return l10n.nameTaken;
     if (error.contains("Email is already registered")) return l10n.emailTaken;
-    if (error.contains("Phone number is already in use")) return l10n.phoneTaken;
+    if (error.contains("Phone number is already in use"))
+      return l10n.phoneTaken;
     if (error.contains("weak-password")) return l10n.weakPassword;
     if (error.contains("email-already-in-use")) return l10n.emailTaken;
     return error;
@@ -301,23 +394,48 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
 
   Future<void> _handleContinue() async {
     final l10n = AppLocalizations.of(context, listen: false)!;
-    
+
     // 1. Check UX elements (terms, name, email, etc.)
     bool hasError = false;
-    
+
     if (!_acceptedTerms) {
-      AppMessenger.showSnackBar(context, title: l10n.termsRequired, message: l10n.acceptTermsToFinish, type: MessengerType.error);
-      return; 
+      AppMessenger.showSnackBar(
+        context,
+        title: l10n.termsRequired,
+        message: l10n.acceptTermsToFinish,
+        type: MessengerType.error,
+      );
+      return;
     }
 
-    if (!_isNameValid) { _nameControllerAnimate.forward(from: 0); hasError = true; }
-    if (!_isEmailValid) { _emailControllerAnimate.forward(from: 0); hasError = true; }
-    if (!_isPhoneValid) { _phoneControllerAnimate.forward(from: 0); hasError = true; }
-    if (!_isPasswordValid) { _passwordControllerAnimate.forward(from: 0); hasError = true; }
-    if (!_isConfirmValid) { _confirmControllerAnimate.forward(from: 0); hasError = true; }
+    if (!_isNameValid) {
+      _nameControllerAnimate.forward(from: 0);
+      hasError = true;
+    }
+    if (!_isEmailValid) {
+      _emailControllerAnimate.forward(from: 0);
+      hasError = true;
+    }
+    if (!_isPhoneValid) {
+      _phoneControllerAnimate.forward(from: 0);
+      hasError = true;
+    }
+    if (!_isPasswordValid) {
+      _passwordControllerAnimate.forward(from: 0);
+      hasError = true;
+    }
+    if (!_isConfirmValid) {
+      _confirmControllerAnimate.forward(from: 0);
+      hasError = true;
+    }
 
     if (hasError) {
-      AppMessenger.showSnackBar(context, title: l10n.error, message: l10n.pleaseTryAgain, type: MessengerType.error);
+      AppMessenger.showSnackBar(
+        context,
+        title: l10n.error,
+        message: l10n.pleaseTryAgain,
+        type: MessengerType.error,
+      );
       return;
     }
 
@@ -332,7 +450,12 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
     if (preCheckError != null) {
       if (mounted) {
         setState(() => _isLoading = false);
-        AppMessenger.showSnackBar(context, title: l10n.error, message: _localizeError(preCheckError, l10n), type: MessengerType.error);
+        AppMessenger.showSnackBar(
+          context,
+          title: l10n.error,
+          message: _localizeError(preCheckError, l10n),
+          type: MessengerType.error,
+        );
       }
       return;
     }
@@ -340,7 +463,7 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
     // 3. Move to Verification Step (Popup Wizard)
     if (mounted) {
       setState(() => _isLoading = false);
-      
+
       final result = await showDialog<bool>(
         context: context,
         barrierDismissible: false,
@@ -358,7 +481,6 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
       }
     }
   }
-
 
   Widget _buildTextField({
     required TextEditingController controller,
@@ -386,8 +508,8 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: errorText != null 
-                  ? Colors.red.withOpacity(0.08) 
+              color: errorText != null
+                  ? Colors.red.withOpacity(0.08)
                   : Colors.black.withOpacity(0.03),
               blurRadius: 16,
               spreadRadius: 0,
@@ -402,30 +524,78 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
           onChanged: onChanged,
           keyboardType: keyboardType,
           style: isAr
-              ? GoogleFonts.cairo(fontSize: 16, color: errorText != null ? Colors.red : Colors.black87)
-              : GoogleFonts.nunito(fontSize: 16, color: errorText != null ? Colors.red : Colors.black87),
+              ? GoogleFonts.cairo(
+                  fontSize: 16,
+                  color: errorText != null ? Colors.red : Colors.black87,
+                )
+              : GoogleFonts.nunito(
+                  fontSize: 16,
+                  color: errorText != null ? Colors.red : Colors.black87,
+                ),
           decoration: InputDecoration(
             labelText: label,
             labelStyle: isAr
-                ? GoogleFonts.cairo(color: errorText != null ? Colors.red : Colors.grey.shade500, fontSize: 14)
-                : GoogleFonts.nunito(color: errorText != null ? Colors.red : Colors.grey.shade500, fontSize: 14),
+                ? GoogleFonts.cairo(
+                    color: errorText != null
+                        ? Colors.red
+                        : Colors.grey.shade500,
+                    fontSize: 14,
+                  )
+                : GoogleFonts.nunito(
+                    color: errorText != null
+                        ? Colors.red
+                        : Colors.grey.shade500,
+                    fontSize: 14,
+                  ),
             hintStyle: isAr
                 ? GoogleFonts.cairo(color: Colors.grey.shade400, fontSize: 14)
                 : GoogleFonts.nunito(color: Colors.grey.shade400, fontSize: 14),
-            prefixIcon: Icon(icon, color: errorText != null ? Colors.red : AppColors.teal, size: 20),
-            suffixIcon: isLoading 
-              ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.teal)))
-              : (isSuccess ? const Icon(Icons.check_circle, color: Colors.green, size: 20) : suffixIcon),
+            prefixIcon: Icon(
+              icon,
+              color: errorText != null ? Colors.red : AppColors.teal,
+              size: 20,
+            ),
+            suffixIcon: isLoading
+                ? const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.teal,
+                      ),
+                    ),
+                  )
+                : (isSuccess
+                      ? const Icon(
+                          Icons.check_circle,
+                          color: Colors.green,
+                          size: 20,
+                        )
+                      : suffixIcon),
             filled: true,
             fillColor: Colors.transparent, // Background now handled by wrapper
-            contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+            contentPadding: const EdgeInsets.symmetric(
+              vertical: 20,
+              horizontal: 20,
+            ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: errorText != null ? Colors.red.withOpacity(0.5) : Colors.transparent),
+              borderSide: BorderSide(
+                color: errorText != null
+                    ? Colors.red.withOpacity(0.5)
+                    : Colors.transparent,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: errorText != null ? Colors.red : AppColors.teal.withOpacity(0.4), width: 1.5),
+              borderSide: BorderSide(
+                color: errorText != null
+                    ? Colors.red
+                    : AppColors.teal.withOpacity(0.4),
+                width: 1.5,
+              ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -436,7 +606,9 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
               borderSide: const BorderSide(color: Colors.red, width: 2),
             ),
             errorText: errorText,
-            errorStyle: isAr ? const TextStyle(color: Colors.red, fontSize: 12) : const TextStyle(color: Colors.red, fontSize: 12),
+            errorStyle: isAr
+                ? const TextStyle(color: Colors.red, fontSize: 12)
+                : const TextStyle(color: Colors.red, fontSize: 12),
             errorMaxLines: 3,
           ),
         ),
@@ -446,7 +618,6 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
-
     final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -495,8 +666,8 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: _phoneError != null 
-                          ? Colors.red.withOpacity(0.08) 
+                      color: _phoneError != null
+                          ? Colors.red.withOpacity(0.08)
                           : Colors.black.withOpacity(0.03),
                       blurRadius: 16,
                       spreadRadius: 0,
@@ -519,44 +690,104 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
                   }),
                   decoration: InputDecoration(
                     labelText: l10n.phoneNumber,
-                    labelStyle: l10n.isAr 
-                        ? GoogleFonts.cairo(color: _phoneError != null ? Colors.red : Colors.grey.shade500, fontSize: 14)
-                        : GoogleFonts.nunito(color: _phoneError != null ? Colors.red : Colors.grey.shade500, fontSize: 14),
-                    prefixIcon: Icon(Icons.phone_outlined, color: _phoneError != null ? Colors.red : AppColors.teal, size: 20),
-                    suffixIcon: _isPhoneChecking 
-                      ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.teal)))
-                      : (_isPhoneValid ? const Icon(Icons.check_circle, color: Colors.green, size: 20) : null),
+                    labelStyle: l10n.isAr
+                        ? GoogleFonts.cairo(
+                            color: _phoneError != null
+                                ? Colors.red
+                                : Colors.grey.shade500,
+                            fontSize: 14,
+                          )
+                        : GoogleFonts.nunito(
+                            color: _phoneError != null
+                                ? Colors.red
+                                : Colors.grey.shade500,
+                            fontSize: 14,
+                          ),
+                    prefixIcon: Icon(
+                      Icons.phone_outlined,
+                      color: _phoneError != null ? Colors.red : AppColors.teal,
+                      size: 20,
+                    ),
+                    suffixIcon: _isPhoneChecking
+                        ? const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.teal,
+                              ),
+                            ),
+                          )
+                        : (_isPhoneValid
+                              ? const Icon(
+                                  Icons.check_circle,
+                                  color: Colors.green,
+                                  size: 20,
+                                )
+                              : null),
                     filled: true,
                     fillColor: Colors.transparent, // Inherit white container
-                    contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 20,
+                      horizontal: 20,
+                    ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: _phoneError != null ? Colors.red.withOpacity(0.5) : Colors.transparent),
+                      borderSide: BorderSide(
+                        color: _phoneError != null
+                            ? Colors.red.withOpacity(0.5)
+                            : Colors.transparent,
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: _phoneError != null ? Colors.red : AppColors.teal.withOpacity(0.4), width: 1.5),
+                      borderSide: BorderSide(
+                        color: _phoneError != null
+                            ? Colors.red
+                            : AppColors.teal.withOpacity(0.4),
+                        width: 1.5,
+                      ),
                     ),
                     errorBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(color: Colors.red, width: 1.5),
+                      borderSide: const BorderSide(
+                        color: Colors.red,
+                        width: 1.5,
+                      ),
                     ),
                     focusedErrorBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: const BorderSide(color: Colors.red, width: 2),
                     ),
                     errorText: _phoneError,
-                    errorStyle: const TextStyle(color: Colors.red, fontSize: 12),
+                    errorStyle: const TextStyle(
+                      color: Colors.red,
+                      fontSize: 12,
+                    ),
                     errorMaxLines: 3,
                     counterText: '',
                   ),
                   style: l10n.isAr
-                      ? GoogleFonts.cairo(fontSize: 16, color: _phoneError != null ? Colors.red : Colors.black87)
-                      : GoogleFonts.nunito(fontSize: 16, color: _phoneError != null ? Colors.red : Colors.black87),
+                      ? GoogleFonts.cairo(
+                          fontSize: 16,
+                          color: _phoneError != null
+                              ? Colors.red
+                              : Colors.black87,
+                        )
+                      : GoogleFonts.nunito(
+                          fontSize: 16,
+                          color: _phoneError != null
+                              ? Colors.red
+                              : Colors.black87,
+                        ),
                 ),
               ),
               Align(
-                alignment: l10n.isAr ? Alignment.centerLeft : Alignment.centerRight,
+                alignment: l10n.isAr
+                    ? Alignment.centerLeft
+                    : Alignment.centerRight,
                 child: Padding(
                   padding: const EdgeInsets.only(top: 4, right: 12, left: 12),
                   child: ValueListenableBuilder<TextEditingValue>(
@@ -566,7 +797,7 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
                       return Text(
                         '${value.text.length}/$maxLen',
                         style: TextStyle(
-                          fontSize: 12, 
+                          fontSize: 12,
                           color: Colors.grey.shade500,
                           fontFamily: GoogleFonts.nunito().fontFamily,
                         ),
@@ -579,7 +810,7 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
           ),
         ),
         const SizedBox(height: 16),
-        
+
         // Password Input
         _buildTextField(
           controller: _passwordController,
@@ -592,12 +823,17 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
           isSuccess: _isPasswordValid,
           controllerAnimate: _passwordControllerAnimate,
           suffixIcon: IconButton(
-            icon: Icon(_isPasswordObscured ? Icons.visibility_off : Icons.visibility, color: Colors.grey, size: 20),
-            onPressed: () => setState(() => _isPasswordObscured = !_isPasswordObscured),
+            icon: Icon(
+              _isPasswordObscured ? Icons.visibility_off : Icons.visibility,
+              color: Colors.grey,
+              size: 20,
+            ),
+            onPressed: () =>
+                setState(() => _isPasswordObscured = !_isPasswordObscured),
           ),
         ),
         const SizedBox(height: 16),
-        
+
         // Confirm Password Input
         _buildTextField(
           controller: _confirmPasswordController,
@@ -610,12 +846,17 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
           isSuccess: _isConfirmValid,
           controllerAnimate: _confirmControllerAnimate,
           suffixIcon: IconButton(
-            icon: Icon(_isConfirmObscured ? Icons.visibility_off : Icons.visibility, color: Colors.grey, size: 20),
-            onPressed: () => setState(() => _isConfirmObscured = !_isConfirmObscured),
+            icon: Icon(
+              _isConfirmObscured ? Icons.visibility_off : Icons.visibility,
+              color: Colors.grey,
+              size: 20,
+            ),
+            onPressed: () =>
+                setState(() => _isConfirmObscured = !_isConfirmObscured),
           ),
         ),
         const SizedBox(height: 24),
-        
+
         // Terms & Conditions
         Row(
           children: [
@@ -626,16 +867,23 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
                 value: _acceptedTerms,
                 activeColor: AppColors.teal,
                 side: BorderSide(color: Colors.grey.shade400),
-                onChanged: (val) => setState(() => _acceptedTerms = val ?? false),
+                onChanged: (val) =>
+                    setState(() => _acceptedTerms = val ?? false),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: RichText(
                 text: TextSpan(
-                  style: l10n.isAr 
-                      ? GoogleFonts.cairo(fontSize: 14, color: Colors.grey.shade700) 
-                      : GoogleFonts.nunito(fontSize: 14, color: Colors.grey.shade700),
+                  style: l10n.isAr
+                      ? GoogleFonts.cairo(
+                          fontSize: 14,
+                          color: Colors.grey.shade700,
+                        )
+                      : GoogleFonts.nunito(
+                          fontSize: 14,
+                          color: Colors.grey.shade700,
+                        ),
                   children: [
                     TextSpan(text: l10n.iAccept),
                     TextSpan(
@@ -655,9 +903,7 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
                           );
                         },
                     ),
-                    TextSpan(
-                      text: l10n.and,
-                    ),
+                    TextSpan(text: l10n.and),
                     TextSpan(
                       text: l10n.privacyPolicy,
                       style: const TextStyle(
@@ -681,9 +927,9 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
             ),
           ],
         ),
-        
+
         const SizedBox(height: 32),
-        
+
         // Continue Button
         Container(
           height: 58,
@@ -704,21 +950,46 @@ class _RegisterFormState extends State<RegisterForm> with TickerProviderStateMix
             ],
           ),
           child: ElevatedButton(
-            onPressed: (_isLoading || _isNameChecking || _isEmailChecking || _isPhoneChecking) ? null : _handleContinue,
+            onPressed:
+                (_isLoading ||
+                    _isNameChecking ||
+                    _isEmailChecking ||
+                    _isPhoneChecking)
+                ? null
+                : _handleContinue,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.transparent,
               shadowColor: Colors.transparent,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
               elevation: 0,
             ),
-            child: _isLoading 
-              ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-              : Text(
-                  l10n.continueText,
-                  style: l10n.isAr 
-                      ? GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 0.5)
-                      : GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 0.5),
-                ),
+            child: _isLoading
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : Text(
+                    l10n.continueText,
+                    style: l10n.isAr
+                        ? GoogleFonts.cairo(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          )
+                        : GoogleFonts.nunito(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                  ),
           ),
         ),
       ],

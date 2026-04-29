@@ -53,10 +53,13 @@ class GoogleAuthService {
   /// ---------------------------------------------------------------
   /// 🔹 Sign In With Google
   /// ---------------------------------------------------------------
-  Future<String?> signInWithGoogle(AuthService authService, {bool silent = false}) async {
+  Future<String?> signInWithGoogle(
+    AuthService authService, {
+    bool silent = false,
+  }) async {
     AuthCredential? credential;
     gsi.GoogleSignInAccount? googleUser;
-    
+
     try {
       if (!_isInitialized) {
         await initialize();
@@ -72,17 +75,17 @@ class GoogleAuthService {
       if (googleUser == null) {
         return silent ? "SILENT_SIGN_IN_FAILED" : null;
       }
-      
+
       final googleAuth = googleUser.authentication;
-      
-      credential = GoogleAuthProvider.credential(
-        idToken: googleAuth.idToken,
-      );
+
+      credential = GoogleAuthProvider.credential(idToken: googleAuth.idToken);
 
       // 🛑 INTERCEPT: Prevent Firebase from silently deleting the password provider.
       if (googleUser.email.isNotEmpty) {
         try {
-          final methods = await authService.getUserSignInMethods(googleUser.email);
+          final methods = await authService.getUserSignInMethods(
+            googleUser.email,
+          );
           if (methods.contains('password') && !methods.contains('google.com')) {
             _pendingGoogleCredential = credential;
             _pendingEmail = googleUser.email;
@@ -149,7 +152,11 @@ class GoogleAuthService {
         phone: phone ?? "",
         createdAt: DateTime.now(),
         authProvider: 'google', // ✅ Explicitly set provider
-        language: ui.PlatformDispatcher.instance.locale.languageCode, // ✅ Capture language
+        language: ui
+            .PlatformDispatcher
+            .instance
+            .locale
+            .languageCode, // ✅ Capture language
       );
 
       // 3. 🔹 START BATCH WRITE (The "7 Folder" Logic)
@@ -212,10 +219,10 @@ class GoogleAuthService {
 
       // 4. Commit everything at once
       await batch.commit();
-      
+
       // Sync FCM token to database
       FcmService.instance.saveUserFcmToken(user.uid);
-      
+
       debugPrint("✅ Google user document created (uid: ${user.uid})");
       return null; // null means success
     } catch (e) {

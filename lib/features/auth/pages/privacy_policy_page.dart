@@ -332,69 +332,98 @@ class PrivacyPolicyPage extends StatelessWidget {
       p = p.trim();
       if (p.isEmpty) return const SizedBox.shrink();
 
-      final isMainTitle = p.contains('Laween Privacy Policy') || p.contains('سياسة الخصوصية الخاصة بـ Laween');
-      final isHeading = RegExp(r'^\d+\.\s').hasMatch(p) || RegExp(r'^[A-Zأ-ي]\.\s').hasMatch(p);
+      final isMainTitle =
+          p.contains('Laween Privacy Policy') ||
+          p.contains('سياسة الخصوصية الخاصة بـ Laween');
+      final isHeading =
+          RegExp(r'^\d+\.\s').hasMatch(p) ||
+          RegExp(r'^[A-Zأ-ي]\.\s').hasMatch(p);
       final isEmail = p.contains('laween.support@gmail.com');
 
-      final baseStyle = isAr 
-          ? GoogleFonts.cairo(fontSize: 15, height: 1.8, color: Colors.grey.shade800)
-          : GoogleFonts.nunito(fontSize: 15, height: 1.6, color: Colors.grey.shade800);
+      final baseStyle = isAr
+          ? GoogleFonts.cairo(
+              fontSize: 15,
+              height: 1.8,
+              color: Colors.grey.shade800,
+            )
+          : GoogleFonts.nunito(
+              fontSize: 15,
+              height: 1.6,
+              color: Colors.grey.shade800,
+            );
 
       if (isMainTitle) {
-         return Padding(
-           padding: const EdgeInsets.only(bottom: 24, top: 8),
-           child: Text(
-             p,
-             style: isAr 
-                ? GoogleFonts.cairo(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.teal)
-                : GoogleFonts.nunito(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.teal),
-             textAlign: isAr ? TextAlign.right : TextAlign.left,
-             textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
-           ),
-         );
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 24, top: 8),
+          child: Text(
+            p,
+            style: isAr
+                ? GoogleFonts.cairo(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.teal,
+                  )
+                : GoogleFonts.nunito(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.teal,
+                  ),
+            textAlign: isAr ? TextAlign.right : TextAlign.left,
+            textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+          ),
+        );
       }
 
       if (isHeading) {
-         return Padding(
-           padding: const EdgeInsets.only(top: 24, bottom: 12),
-           child: Text(
-             p,
-             style: isAr 
-                ? GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.black87)
-                : GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.black87),
-             textAlign: isAr ? TextAlign.right : TextAlign.left,
-             textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
-           ),
-         );
+        return Padding(
+          padding: const EdgeInsets.only(top: 24, bottom: 12),
+          child: Text(
+            p,
+            style: isAr
+                ? GoogleFonts.cairo(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                  )
+                : GoogleFonts.nunito(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                  ),
+            textAlign: isAr ? TextAlign.right : TextAlign.left,
+            textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+          ),
+        );
       }
 
       if (isEmail) {
-         final parts = p.split('laween.support@gmail.com');
-         return Padding(
-           padding: const EdgeInsets.only(bottom: 16),
-           child: RichText(
-             textAlign: isAr ? TextAlign.right : TextAlign.left,
-             textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
-             text: TextSpan(
-               style: baseStyle,
-               children: [
-                 TextSpan(text: parts[0]),
-                 TextSpan(
-                   text: 'laween.support@gmail.com',
-                   style: baseStyle.copyWith(
-                     color: AppColors.teal, 
-                     fontWeight: FontWeight.bold, 
-                     decoration: TextDecoration.underline
-                   ),
-                   recognizer: TapGestureRecognizer()..onTap = () {
-                     launchUrl(Uri.parse('mailto:laween.support@gmail.com'));
-                   }
-                 ),
-                 if (parts.length > 1) TextSpan(text: parts[1]),
-               ]
-             )
-           )
-         );
+        final parts = p.split('laween.support@gmail.com');
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: RichText(
+            textAlign: isAr ? TextAlign.right : TextAlign.left,
+            textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+            text: TextSpan(
+              style: baseStyle,
+              children: [
+                TextSpan(text: parts[0]),
+                TextSpan(
+                  text: 'laween.support@gmail.com',
+                  style: baseStyle.copyWith(
+                    color: AppColors.teal,
+                    fontWeight: FontWeight.bold,
+                    decoration: TextDecoration.underline,
+                  ),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () {
+                      launchUrl(Uri.parse('mailto:laween.support@gmail.com'));
+                    },
+                ),
+                if (parts.length > 1) TextSpan(text: parts[1]),
+              ],
+            ),
+          ),
+        );
       }
 
       return Padding(
@@ -404,7 +433,7 @@ class PrivacyPolicyPage extends StatelessWidget {
           style: baseStyle,
           textAlign: isAr ? TextAlign.right : TextAlign.left,
           textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
-        )
+        ),
       );
     }).toList();
   }
@@ -419,8 +448,16 @@ class PrivacyPolicyPage extends StatelessWidget {
         title: Text(
           isAr ? 'سياسة الخصوصية' : 'Privacy Policy',
           style: isAr
-              ? GoogleFonts.cairo(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 18)
-              : GoogleFonts.nunito(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 18),
+              ? GoogleFonts.cairo(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                )
+              : GoogleFonts.nunito(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
         ),
         centerTitle: true,
         backgroundColor: Colors.grey.shade50,
@@ -438,7 +475,12 @@ class PrivacyPolicyPage extends StatelessWidget {
             // Header Graphic
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.only(top: 32, bottom: 24, left: 24, right: 24),
+              padding: const EdgeInsets.only(
+                top: 32,
+                bottom: 24,
+                left: 24,
+                right: 24,
+              ),
               child: Column(
                 children: [
                   Container(
@@ -447,28 +489,48 @@ class PrivacyPolicyPage extends StatelessWidget {
                       color: AppColors.teal.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.privacy_tip_outlined, size: 48, color: AppColors.teal),
+                    child: Icon(
+                      Icons.privacy_tip_outlined,
+                      size: 48,
+                      color: AppColors.teal,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     isAr ? 'سياسة الخصوصية الخاصة بنا' : 'Our Privacy Policy',
                     textAlign: TextAlign.center,
-                    style: isAr 
-                      ? GoogleFonts.cairo(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)
-                      : GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                    style: isAr
+                        ? GoogleFonts.cairo(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          )
+                        : GoogleFonts.nunito(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    isAr ? 'تعرف على كيفية حماية بياناتك' : 'Learn how we protect your data',
+                    isAr
+                        ? 'تعرف على كيفية حماية بياناتك'
+                        : 'Learn how we protect your data',
                     textAlign: TextAlign.center,
-                    style: isAr 
-                      ? GoogleFonts.cairo(fontSize: 14, color: Colors.grey.shade600)
-                      : GoogleFonts.nunito(fontSize: 14, color: Colors.grey.shade600),
+                    style: isAr
+                        ? GoogleFonts.cairo(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
+                          )
+                        : GoogleFonts.nunito(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
+                          ),
                   ),
                 ],
               ),
             ),
-            
+
             // Content
             Container(
               margin: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 32.0),
@@ -505,4 +567,3 @@ class PrivacyPolicyPage extends StatelessWidget {
     );
   }
 }
-

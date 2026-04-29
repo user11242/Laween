@@ -42,7 +42,7 @@ class ChatService {
     );
 
     await messageRef.set(message.toMap());
-    
+
     // Determine last message text for the group list
     String lastMessageText = text;
     if (type == 'image') {
@@ -55,20 +55,22 @@ class ChatService {
     final groupRef = _firestore.collection('groups').doc(groupId);
     final groupDoc = await groupRef.get();
     if (groupDoc.exists) {
-      final List<String> memberIds = List<String>.from(groupDoc.data()!['memberIds'] ?? []);
+      final List<String> memberIds = List<String>.from(
+        groupDoc.data()!['memberIds'] ?? [],
+      );
       final Map<String, dynamic> updates = {
         'lastMessage': lastMessageText,
         'lastMessageSender': senderName,
         'lastMessageTime': FieldValue.serverTimestamp(),
       };
-      
+
       // Increment unread count for everyone EXCEPT the sender
       for (final memberId in memberIds) {
         if (memberId != senderId) {
           updates['unreadCounts.$memberId'] = FieldValue.increment(1);
         }
       }
-      
+
       await groupRef.update(updates);
     }
   }
@@ -111,17 +113,30 @@ class ChatService {
   }
 
   // Reactions
-  Future<void> addReaction(String groupId, String messageId, String uid, String emoji) async {
-    final docRef = _firestore.collection('groups').doc(groupId).collection('messages').doc(messageId);
-    
+  Future<void> addReaction(
+    String groupId,
+    String messageId,
+    String uid,
+    String emoji,
+  ) async {
+    final docRef = _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('messages')
+        .doc(messageId);
+
     await _firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(docRef);
       if (!snapshot.exists) return;
-      
+
       final data = snapshot.data()!;
-      final Map<String, dynamic> reactions = Map<String, dynamic>.from(data['reactions'] ?? {});
-      final List<String> currentUids = List<String>.from(reactions[emoji] ?? []);
-      
+      final Map<String, dynamic> reactions = Map<String, dynamic>.from(
+        data['reactions'] ?? {},
+      );
+      final List<String> currentUids = List<String>.from(
+        reactions[emoji] ?? [],
+      );
+
       if (!currentUids.contains(uid)) {
         currentUids.add(uid);
         reactions[emoji] = currentUids;
@@ -130,17 +145,30 @@ class ChatService {
     });
   }
 
-  Future<void> removeReaction(String groupId, String messageId, String uid, String emoji) async {
-    final docRef = _firestore.collection('groups').doc(groupId).collection('messages').doc(messageId);
-    
+  Future<void> removeReaction(
+    String groupId,
+    String messageId,
+    String uid,
+    String emoji,
+  ) async {
+    final docRef = _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('messages')
+        .doc(messageId);
+
     await _firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(docRef);
       if (!snapshot.exists) return;
-      
+
       final data = snapshot.data()!;
-      final Map<String, dynamic> reactions = Map<String, dynamic>.from(data['reactions'] ?? {});
-      final List<String> currentUids = List<String>.from(reactions[emoji] ?? []);
-      
+      final Map<String, dynamic> reactions = Map<String, dynamic>.from(
+        data['reactions'] ?? {},
+      );
+      final List<String> currentUids = List<String>.from(
+        reactions[emoji] ?? [],
+      );
+
       if (currentUids.contains(uid)) {
         currentUids.remove(uid);
         if (currentUids.isEmpty) {
@@ -154,30 +182,48 @@ class ChatService {
   }
 
   // Edit Message
-  Future<void> editMessage(String groupId, String messageId, String newText) async {
-    await _firestore.collection('groups').doc(groupId).collection('messages').doc(messageId).update({
-      'text': newText,
-      'isEdited': true,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+  Future<void> editMessage(
+    String groupId,
+    String messageId,
+    String newText,
+  ) async {
+    await _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('messages')
+        .doc(messageId)
+        .update({
+          'text': newText,
+          'isEdited': true,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
   }
 
   // Delete Message
-  Future<void> deleteMessage(String groupId, String messageId, {required bool forEveryone, String? uid}) async {
-    final docRef = _firestore.collection('groups').doc(groupId).collection('messages').doc(messageId);
-    
+  Future<void> deleteMessage(
+    String groupId,
+    String messageId, {
+    required bool forEveryone,
+    String? uid,
+  }) async {
+    final docRef = _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('messages')
+        .doc(messageId);
+
     if (forEveryone) {
       final doc = await docRef.get();
       if (!doc.exists) return;
-      
+
       final timestamp = (doc.data()!['timestamp'] as Timestamp).toDate();
       final now = DateTime.now();
-      
+
       // WhatsApp-style: Limit "Delete for everyone" to 1 hour
       if (now.difference(timestamp).inHours >= 1) {
         throw Exception("Cannot delete for everyone after 1 hour");
       }
-      
+
       await docRef.update({
         'text': 'This message was deleted',
         'isDeleted': true,
@@ -193,19 +239,31 @@ class ChatService {
 
   // Mark as Read
   Future<void> markAsRead(String groupId, String messageId, String uid) async {
-    final docRef = _firestore.collection('groups').doc(groupId).collection('messages').doc(messageId);
+    final docRef = _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('messages')
+        .doc(messageId);
     await docRef.update({
       'readBy': FieldValue.arrayUnion([uid]),
     });
   }
 
   // Batch Mark as Read
-  Future<void> markMessagesAsRead(String groupId, List<String> messageIds, String uid) async {
+  Future<void> markMessagesAsRead(
+    String groupId,
+    List<String> messageIds,
+    String uid,
+  ) async {
     if (messageIds.isEmpty) return;
-    
+
     final batch = _firestore.batch();
     for (String msgId in messageIds) {
-      final docRef = _firestore.collection('groups').doc(groupId).collection('messages').doc(msgId);
+      final docRef = _firestore
+          .collection('groups')
+          .doc(groupId)
+          .collection('messages')
+          .doc(msgId);
       batch.update(docRef, {
         'readBy': FieldValue.arrayUnion([uid]),
       });
@@ -213,19 +271,25 @@ class ChatService {
     await batch.commit();
   }
 
-
   // setTypingStatus
-  Future<void> setTypingStatus(String groupId, String userId, bool isTyping, {String? userName}) async {
+  Future<void> setTypingStatus(
+    String groupId,
+    String userId,
+    bool isTyping, {
+    String? userName,
+  }) async {
     await _firestore.collection('groups').doc(groupId).update({
-      'typingUsers.$userId': isTyping ? {
-        'isTyping': true,
-        'userName': userName ?? 'Someone',
-        'timestamp': FieldValue.serverTimestamp(),
-      } : {
-        'isTyping': false,
-        'userName': userName ?? 'Someone',
-        'timestamp': FieldValue.serverTimestamp(),
-      },
+      'typingUsers.$userId': isTyping
+          ? {
+              'isTyping': true,
+              'userName': userName ?? 'Someone',
+              'timestamp': FieldValue.serverTimestamp(),
+            }
+          : {
+              'isTyping': false,
+              'userName': userName ?? 'Someone',
+              'timestamp': FieldValue.serverTimestamp(),
+            },
     });
   }
 
@@ -238,9 +302,9 @@ class ChatService {
         .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => MessageModel.fromMap(doc.data()))
-          .toList();
-    });
+          return snapshot.docs
+              .map((doc) => MessageModel.fromMap(doc.data()))
+              .toList();
+        });
   }
 }
