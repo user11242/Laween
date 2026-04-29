@@ -489,25 +489,16 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           border: Border.all(
-                                            color: isMe
-                                                ? AppColors.teal
-                                                : isHost
-                                                    ? Colors.orangeAccent
-                                                    : Colors.grey.shade200,
-                                            width: 2,
+                                            color: userColor,
+                                            width: 2.5,
                                           ),
-                                          boxShadow: isMe || isHost
-                                              ? [
-                                                  BoxShadow(
-                                                    color: (isMe
-                                                            ? AppColors.teal
-                                                            : Colors.orangeAccent)
-                                                        .withValues(alpha: 0.2),
-                                                    blurRadius: 10,
-                                                    spreadRadius: 2,
-                                                  ),
-                                                ]
-                                              : [],
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: userColor.withValues(alpha: 0.15),
+                                              blurRadius: 12,
+                                              spreadRadius: 2,
+                                            ),
+                                          ],
                                         ),
                                         child: CircleAvatar(
                                           radius: 28,
