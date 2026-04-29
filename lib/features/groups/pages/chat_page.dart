@@ -1367,19 +1367,20 @@ class _ChatPageState extends State<ChatPage> {
     Color backgroundColor = const Color(0xFFF0F2F5);
     DecorationImage? bgImage;
     LinearGradient? bgGradient;
+    List<Color>? themeGradientColors;
 
     if (wallpaperStr != null) {
       if (wallpaperStr.startsWith('gradient://')) {
         final colorsStr = wallpaperStr.substring(11).split(',');
         if (colorsStr.length == 2) {
+          final c1 = Color(int.parse(colorsStr[0].substring(1), radix: 16));
+          final c2 = Color(int.parse(colorsStr[1].substring(1), radix: 16));
           bgGradient = LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(int.parse(colorsStr[0].substring(1), radix: 16)),
-              Color(int.parse(colorsStr[1].substring(1), radix: 16)),
-            ],
+            colors: [c1, c2],
           );
+          themeGradientColors = [c1, c2];
         }
       } else if (wallpaperStr.startsWith('#')) {
         // Hex color
