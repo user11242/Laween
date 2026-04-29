@@ -540,7 +540,7 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
-  Widget _buildBubble(MessageModel message, List<Color>? themeColors) {
+  Widget _buildBubble(MessageModel message) {
     final isMe = message.senderId == currentUser?.uid;
     final key = _messageKeys.putIfAbsent(message.id, () => GlobalKey());
 
@@ -557,7 +557,6 @@ class _ChatPageState extends State<ChatPage> {
       activeAudioIdNotifier: _activeAudioId,
       onPlayNextVoice: _playNextVoice,
       onReactionTap: () => _showReactionDetails(message),
-      themeColors: themeColors,
     );
   }
 
@@ -1367,7 +1366,6 @@ class _ChatPageState extends State<ChatPage> {
     Color backgroundColor = const Color(0xFFF0F2F5);
     DecorationImage? bgImage;
     LinearGradient? bgGradient;
-    List<Color>? themeGradientColors;
 
     if (wallpaperStr != null) {
       if (wallpaperStr.startsWith('gradient://')) {
@@ -1380,7 +1378,6 @@ class _ChatPageState extends State<ChatPage> {
             end: Alignment.bottomRight,
             colors: [c1, c2],
           );
-          themeGradientColors = [c1, c2];
         }
       } else if (wallpaperStr.startsWith('#')) {
         // Hex color
@@ -1388,12 +1385,6 @@ class _ChatPageState extends State<ChatPage> {
         if (hexStr.length == 8) {
           final color = Color(int.parse(hexStr, radix: 16));
           backgroundColor = color;
-
-          // To differentiate the bubble slightly from a solid background,
-          // we use the color but make the background itself slightly lighter,
-          // or we just rely on the existing drop shadow of the bubble.
-          // In this case, making the bubble a solid gradient of the same color looks extremely minimal and symmetric.
-          themeGradientColors = [color, color];
         }
       } else if (wallpaperStr.startsWith('file://')) {
         // Local file image
@@ -1540,10 +1531,7 @@ class _ChatPageState extends State<ChatPage> {
                                 return const _UnreadDivider();
                               return _DateDivider(dateLabel: item);
                             }
-                            return _buildBubble(
-                              item as MessageModel,
-                              themeGradientColors,
-                            );
+                            return _buildBubble(item as MessageModel);
                           },
                         );
                       },
@@ -2175,7 +2163,6 @@ class _MessageBubble extends StatelessWidget {
   final ValueNotifier<String?> activeAudioIdNotifier;
   final Function(String) onPlayNextVoice;
   final VoidCallback onReactionTap;
-  final List<Color>? themeColors;
 
   const _MessageBubble({
     super.key,
@@ -2191,7 +2178,6 @@ class _MessageBubble extends StatelessWidget {
     required this.activeAudioIdNotifier,
     required this.onPlayNextVoice,
     required this.onReactionTap,
-    this.themeColors,
   });
 
   @override
@@ -2248,10 +2234,8 @@ class _MessageBubble extends StatelessWidget {
                                 : BoxDecoration(
                                     color: isMe ? null : Colors.white,
                                     gradient: isMe
-                                        ? LinearGradient(
-                                            colors:
-                                                themeColors ??
-                                                AppColors.tealGradient,
+                                        ? const LinearGradient(
+                                            colors: AppColors.tealGradient,
                                             begin: Alignment.topLeft,
                                             end: Alignment.bottomRight,
                                           )
