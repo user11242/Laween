@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/colors.dart';
 import '../data/services/outing_service.dart';
 import 'outing_waiting_room_sheet.dart';
@@ -46,6 +47,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
   bool _isDirectMode = false;
   String? _creatorName;
   Position? _userPosition;
+  String? _apiKey;
 
   final List<Map<String, dynamic>> _categories = [
     {
@@ -68,6 +70,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
   void initState() {
     super.initState();
     _isDirectMode = widget.initialDirectMode;
+    _apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'];
     _fetchCreatorInfo();
     _fetchUserLocation();
   }
@@ -730,10 +733,34 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                         color: AppColors.teal.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: const Icon(
-                        Icons.location_on_rounded,
-                        color: AppColors.teal,
-                        size: 22,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child:
+                            (place['photos'] != null &&
+                                    place['photos'].isNotEmpty &&
+                                    _apiKey != null)
+                                ? CachedNetworkImage(
+                                  imageUrl:
+                                      'https://places.googleapis.com/v1/${place['photos'][0]['name']}/media?key=$_apiKey&maxWidthPx=100',
+                                  fit: BoxFit.cover,
+                                  placeholder:
+                                      (context, url) => const Icon(
+                                        Icons.location_on_rounded,
+                                        color: AppColors.teal,
+                                        size: 22,
+                                      ),
+                                  errorWidget:
+                                      (context, url, error) => const Icon(
+                                        Icons.location_on_rounded,
+                                        color: AppColors.teal,
+                                        size: 22,
+                                      ),
+                                )
+                                : const Icon(
+                                  Icons.location_on_rounded,
+                                  color: AppColors.teal,
+                                  size: 22,
+                                ),
                       ),
                     ),
                     const SizedBox(width: 16),
