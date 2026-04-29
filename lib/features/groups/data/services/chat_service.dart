@@ -199,6 +199,21 @@ class ChatService {
     });
   }
 
+  // Batch Mark as Read
+  Future<void> markMessagesAsRead(String groupId, List<String> messageIds, String uid) async {
+    if (messageIds.isEmpty) return;
+    
+    final batch = _firestore.batch();
+    for (String msgId in messageIds) {
+      final docRef = _firestore.collection('groups').doc(groupId).collection('messages').doc(msgId);
+      batch.update(docRef, {
+        'readBy': FieldValue.arrayUnion([uid]),
+      });
+    }
+    await batch.commit();
+  }
+
+
   // setTypingStatus
   Future<void> setTypingStatus(String groupId, String userId, bool isTyping, {String? userName}) async {
     await _firestore.collection('groups').doc(groupId).update({

@@ -52,17 +52,13 @@ import AudioToolbox
 
   // MARK: - APNs Token Handling
   override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+    // Let Firebase Messaging auto-detect the token type (Sandbox vs. Production)
+    // This is the absolute correct standard method.
+    Messaging.messaging().apnsToken = deviceToken
     
-    // 🔥 ULTIMATE FIX: The "auto-detect" Firebase logic (Messaging.messaging().apnsToken = deviceToken) 
-    // has a known bug where it incorrectly classifies TestFlight tokens as Sandbox, causing silent failures.
-    // We now STRICTLY map the environment to ensure TestFlight is forced to the Production APNs gateway.
-    #if DEBUG
-    Messaging.messaging().setAPNSToken(deviceToken, type: .sandbox)
-    print("✅ MANUAL APNS Device Token Registered [DEBUG/SANDBOX]")
-    #else
-    Messaging.messaging().setAPNSToken(deviceToken, type: .prod)
-    print("✅ MANUAL APNS Device Token Registered [RELEASE/PROD (TestFlight)]")
-    #endif
+    // Log for debugging
+    let tokenString = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
+    print("✅ MANUAL APNS Device Token Registered: \(tokenString)")
     
     super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
   }

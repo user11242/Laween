@@ -495,11 +495,6 @@ class _ChatPageState extends State<ChatPage> {
     final isMe = message.senderId == currentUser?.uid;
     final key = _messageKeys.putIfAbsent(message.id, () => GlobalKey());
 
-    // Mark as read if not me and not already read
-    if (!isMe && !message.readBy.contains(currentUser?.uid)) {
-      _chatService.markAsRead(widget.group.id, message.id, currentUser?.uid ?? '');
-    }
-
     return _MessageBubble(
       message: message,
       groupId: widget.group.id,
@@ -1266,6 +1261,22 @@ class _ChatPageState extends State<ChatPage> {
                 
                 // Track messages for deep-scrolling
                 _allMessages = rawMessages;
+
+                // ⚡ BATCh MARK AS READ (Asynchronous)
+                // Prevents layout freezing when processing hundreds of messages
+                if (currentUser != null) {
+                  final unreadMessageIds = rawMessages
+                      .where((m) => m.senderId != currentUser!.uid && !m.readBy.contains(currentUser!.uid))
+                      .map((m) => m.id)
+                      .take(500) // Firestore batch limit safety
+                      .toList();
+                  
+                  if (unreadMessageIds.isNotEmpty) {
+                    Future.microtask(() {
+                      _chatService.markMessagesAsRead(widget.group.id, unreadMessageIds, currentUser!.uid);
+                    });
+                  }
+                }
 
                 if (rawMessages.isEmpty) {
                   return _buildEmptyChat();
