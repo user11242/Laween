@@ -319,11 +319,18 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
             ),
           ],
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        padding: EdgeInsets.only(
+          left: 28,
+          right: 28,
+          top: 24,
+          bottom: 24 + MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // Handle
             Center(
               child: Container(
@@ -432,8 +439,9 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildSectionHeader(String title) {
     return Text(
