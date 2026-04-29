@@ -14,6 +14,8 @@ import '../data/services/outing_service.dart';
 import 'outing_waiting_room_sheet.dart';
 import '../pages/location_picker_screen.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
+import '../../../core/services/location_service.dart';
 
 class CreateOutingSheet extends StatefulWidget {
   final String groupId;
@@ -43,6 +45,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
   Map<String, dynamic>? _selectedVenue;
   bool _isDirectMode = false;
   String? _creatorName;
+  Position? _userPosition;
 
   final List<Map<String, dynamic>> _categories = [
     {
@@ -66,6 +69,18 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
     super.initState();
     _isDirectMode = widget.initialDirectMode;
     _fetchCreatorInfo();
+    _fetchUserLocation();
+  }
+
+  void _fetchUserLocation() async {
+    try {
+      final pos = await LocationService().getCurrentPosition();
+      if (mounted) {
+        setState(() => _userPosition = pos);
+      }
+    } catch (e) {
+      debugPrint("Error fetching location for sorting: $e");
+    }
   }
 
   void _fetchCreatorInfo() async {
@@ -194,6 +209,19 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
         'https://places.googleapis.com/v1/places:searchText',
       );
 
+      final Map<String, dynamic> body = {'textQuery': query};
+      if (_userPosition != null) {
+        body['locationBias'] = {
+          'circle': {
+            'center': {
+              'latitude': _userPosition!.latitude,
+              'longitude': _userPosition!.longitude,
+            },
+            'radius': 5000.0, // 5km bias for relevant results
+          },
+        };
+      }
+
       final response = await http.post(
         url,
         headers: {
@@ -202,13 +230,36 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
           'X-Goog-FieldMask':
               'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.photos',
         },
-        body: jsonEncode({'textQuery': query}),
+        body: jsonEncode(body),
       );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        final List<dynamic> places = data['places'] ?? [];
+
+        if (_userPosition != null) {
+          for (var place in places) {
+            final loc = place['location'];
+            if (loc != null) {
+              final double distance = Geolocator.distanceBetween(
+                _userPosition!.latitude,
+                _userPosition!.longitude,
+                loc['latitude'],
+                loc['longitude'],
+              );
+              place['distanceMeters'] = distance;
+            }
+          }
+          // Sort by proximity
+          places.sort(
+            (a, b) => (a['distanceMeters'] ?? 999999).compareTo(
+              b['distanceMeters'] ?? 999999,
+            ),
+          );
+        }
+
         setState(() {
-          _searchResults = data['places'] ?? [];
+          _searchResults = places;
           _isSearching = false;
         });
       }
@@ -234,6 +285,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
         'location': {'latitude': lat, 'longitude': lng},
         'rating': place['rating'],
         'userRatingCount': place['userRatingCount'],
+        'distanceMeters': place['distanceMeters'],
         'photoReference':
             (place['photos'] != null && place['photos'].isNotEmpty)
             ? place['photos'][0]['name'] // V1 uses 'name' for photo reference
@@ -622,29 +674,164 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
   Widget _buildSearchResults() {
     return Container(
       margin: const EdgeInsets.only(top: 8),
-      constraints: const BoxConstraints(maxHeight: 200),
+      constraints: const BoxConstraints(maxHeight: 280),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 20),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 30,
+            offset: const Offset(0, 10),
+          ),
         ],
       ),
-      child: ListView.builder(
-        shrinkWrap: true,
-        itemCount: _searchResults.length,
-        itemBuilder: (context, index) {
-          final place = _searchResults[index];
-          final name = place['displayName']?['text'] ?? "Unknown Place";
-          return ListTile(
-            leading: const Icon(
-              Icons.location_on_outlined,
-              color: AppColors.teal,
-            ),
-            title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
-            onTap: () => _selectVenue(place),
-          );
-        },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: ListView.separated(
+          shrinkWrap: true,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          itemCount: _searchResults.length,
+          separatorBuilder: (context, index) => Divider(
+            height: 1,
+            indent: 76,
+            endIndent: 16,
+            color: Colors.grey.shade50,
+          ),
+          itemBuilder: (context, index) {
+            final place = _searchResults[index];
+            final name = place['displayName']?['text'] ?? "Unknown Place";
+            final address = place['formattedAddress'] ?? "";
+            final rating = place['rating']?.toDouble();
+            final distanceMeters = place['distanceMeters'] as double?;
+
+            String distanceText = "";
+            if (distanceMeters != null) {
+              if (distanceMeters < 1000) {
+                distanceText = "${distanceMeters.toStringAsFixed(0)}m";
+              } else {
+                distanceText = "${(distanceMeters / 1000).toStringAsFixed(1)}km";
+              }
+            }
+
+            return InkWell(
+              onTap: () => _selectVenue(place),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.teal.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(
+                        Icons.location_on_rounded,
+                        color: AppColors.teal,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  name,
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.darkSlate,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (distanceText.isNotEmpty)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.teal.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    distanceText,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.teal,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            address,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: Colors.grey.shade500,
+                              fontWeight: FontWeight.w400,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (rating != null) ...[
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                ...List.generate(5, (i) {
+                                  return Icon(
+                                    Icons.star_rounded,
+                                    color:
+                                        i < rating.floor()
+                                            ? Colors.amber
+                                            : Colors.grey.shade200,
+                                    size: 14,
+                                  );
+                                }),
+                                const SizedBox(width: 6),
+                                Text(
+                                  rating.toString(),
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  "(${place['userRatingCount'] ?? 0})",
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    color: Colors.grey.shade400,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
