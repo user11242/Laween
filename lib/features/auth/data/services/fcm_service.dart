@@ -266,20 +266,27 @@ class FcmService {
 
   /// Internal helper to show a local notification
   void _showLocalNotification(RemoteMessage message) {
+    debugPrint("🔔 [FCM] Processing manual local notification...");
+    
     final senderId = message.data['senderId'];
     final groupId = message.data['groupId'];
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
 
+    debugPrint("   - Sender ID: $senderId");
+    debugPrint("   - Group ID: $groupId");
+    debugPrint("   - Active Group: $activeGroupId");
+    debugPrint("   - Current User: $currentUserId");
+
     // 🛡️ Filter out self-notifications in the foreground
-    if (senderId != null && senderId == currentUserId) {
-      debugPrint("🛡️ Suppressing self-notification in foreground");
+    if (senderId != null && currentUserId != null && senderId == currentUserId) {
+      debugPrint("🛡️ [FCM] Suppressing self-notification (Matched Current User)");
       return;
     }
 
     // 🛡️ Suppress notification if user is already looking at this group
-    if (groupId != null && groupId == activeGroupId) {
+    if (groupId != null && activeGroupId != null && groupId == activeGroupId) {
       debugPrint(
-        "🛡️ Suppressing foreground notification for active group: $groupId",
+        "🛡️ [FCM] Suppressing foreground notification for ACTIVE group: $groupId",
       );
       return;
     }

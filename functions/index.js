@@ -14,9 +14,31 @@ async function sendGroupNotification(groupId, senderId, titlePrefix, body, data 
     
     const groupData = groupDoc.data();
     const groupName = groupData.name || "Group";
-    
-    // We send to the topic: group_{groupId}
-    const topic = `group_${groupId}`;
+    const memberIds = groupData.memberIds || [];
+
+    // Filter out the sender
+    const recipientIds = memberIds.filter(id => id !== senderId);
+    if (recipientIds.length === 0) {
+      console.log("No recipients to notify (sender is only member or no members).");
+      return;
+    }
+
+    // Fetch tokens for recipients
+    const tokens = [];
+    const userDocs = await Promise.all(
+      recipientIds.map(id => admin.firestore().collection("users").doc(id).get())
+    );
+
+    userDocs.forEach(doc => {
+      if (doc.exists && doc.data().fcmToken) {
+        tokens.push(doc.data().fcmToken);
+      }
+    });
+
+    if (tokens.length === 0) {
+      console.log("No valid FCM tokens found for recipients.");
+      return;
+    }
 
     const message = {
       notification: { 
@@ -28,7 +50,7 @@ async function sendGroupNotification(groupId, senderId, titlePrefix, body, data 
         groupId: groupId,
         senderId: senderId || "",
       },
-      topic: topic,
+      tokens: tokens, // Multicast
       android: {
         priority: 'high',
         notification: {
@@ -55,10 +77,10 @@ async function sendGroupNotification(groupId, senderId, titlePrefix, body, data 
       }
     };
 
-    const response = await admin.messaging().send(message);
-    console.log(`Successfully sent topic message to ${topic}:`, response);
+    const response = await admin.messaging().sendEachForMulticast(message);
+    console.log(`Successfully sent multicast message to ${response.successCount} devices.`);
   } catch (error) {
-    console.error(`Error in sendGroupNotification (Topic):`, error);
+    console.error(`Error in sendGroupNotification:`, error);
   }
 }
 
