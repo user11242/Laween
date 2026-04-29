@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/colors.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../data/models/outing_session_model.dart';
 import '../data/services/outing_service.dart';
 import '../pages/outing_map_screen.dart';
@@ -27,14 +28,31 @@ class OutingWaitingRoomSheet extends StatefulWidget {
 
 class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
   final OutingService _outingService = OutingService();
+  int _totalGroupMembers = 1;
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
+    _fetchGroupMemberCount();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) setState(() {});
     });
+  }
+
+  void _fetchGroupMemberCount() async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('groups')
+          .doc(widget.groupId)
+          .get();
+      if (doc.exists && mounted) {
+        final List memberIds = doc.data()?['memberIds'] ?? [];
+        setState(() => _totalGroupMembers = memberIds.length);
+      }
+    } catch (e) {
+      debugPrint("Error fetching member count: $e");
+    }
   }
 
   @override
@@ -109,6 +127,18 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
             final now = DateTime.now();
             final remaining = session.expiresAt.difference(now);
             final isCreator = session.creatorId == currentUser?.uid;
+
+            // AUTO-CANCEL: If time's up and only 1 person joined
+            if (remaining.isNegative &&
+                session.participants.length < 2 &&
+                session.status == OutingStatus.waiting &&
+                isCreator) {
+              _outingService.updateStatus(
+                widget.groupId,
+                widget.sessionId,
+                OutingStatus.cancelled,
+              );
+            }
 
             return Column(
               mainAxisSize: MainAxisSize.min,
@@ -207,7 +237,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            "${session.participants.length} / 8 Friends Joined",
+                            "${session.participants.length} / $_totalGroupMembers Friends Joined",
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -471,11 +501,37 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                             ],
                           ),
                           child: ElevatedButton(
-                            onPressed: () => _outingService.updateStatus(
-                              widget.groupId,
-                              widget.sessionId,
-                              OutingStatus.thinking,
-                            ),
+                            onPressed: () {
+                              if (session.participants.length < 2) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      "You need at least 2 people to start an outing!",
+                                      style: GoogleFonts.inter(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    backgroundColor: Colors.redAccent,
+                                    behavior: SnackBarBehavior.floating,
+                                    margin: const EdgeInsets.only(
+                                      bottom: 100,
+                                      left: 20,
+                                      right: 20,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+                              _outingService.updateStatus(
+                                widget.groupId,
+                                widget.sessionId,
+                                OutingStatus.thinking,
+                              );
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.transparent,
                               shadowColor: Colors.transparent,
