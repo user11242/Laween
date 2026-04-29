@@ -475,6 +475,9 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                       itemBuilder: (context, index) {
                         final p = session.participants[index];
                         final isMe = p.uid == currentUser?.uid;
+                        final isHost = p.uid == session.creatorId;
+                        final userColor = _getUserColor(p.uid);
+                        
                         return Padding(
                               padding: const EdgeInsets.only(right: 24),
                               child: Column(
@@ -488,13 +491,17 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                                           border: Border.all(
                                             color: isMe
                                                 ? AppColors.teal
-                                                : Colors.grey.shade200,
+                                                : isHost
+                                                    ? Colors.orangeAccent
+                                                    : Colors.grey.shade200,
                                             width: 2,
                                           ),
-                                          boxShadow: isMe
+                                          boxShadow: isMe || isHost
                                               ? [
                                                   BoxShadow(
-                                                    color: AppColors.teal
+                                                    color: (isMe
+                                                            ? AppColors.teal
+                                                            : Colors.orangeAccent)
                                                         .withValues(alpha: 0.2),
                                                     blurRadius: 10,
                                                     spreadRadius: 2,
@@ -504,39 +511,43 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                                         ),
                                         child: CircleAvatar(
                                           radius: 28,
-                                          backgroundColor: AppColors.teal
-                                              .withValues(alpha: 0.1),
-                                          child: Text(
-                                            p.name.isNotEmpty
-                                                ? p.name[0].toUpperCase()
-                                                : '?',
-                                            style: const TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppColors.teal,
-                                            ),
-                                          ),
+                                          backgroundColor:
+                                              userColor.withValues(alpha: 0.12),
+                                          backgroundImage: p.photoUrl != null &&
+                                                  p.photoUrl!.isNotEmpty
+                                              ? NetworkImage(p.photoUrl!)
+                                              : null,
+                                          child: p.photoUrl == null ||
+                                                  p.photoUrl!.isEmpty
+                                              ? Text(
+                                                  p.name.isNotEmpty
+                                                      ? p.name[0].toUpperCase()
+                                                      : '?',
+                                                  style: TextStyle(
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: userColor,
+                                                  ),
+                                                )
+                                              : null,
                                         ),
                                       ),
                                       if (isMe)
                                         Positioned(
-                                          right: 2,
+                                          right: -2,
                                           bottom: 2,
-                                          child: Container(
-                                            padding: const EdgeInsets.all(4),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.teal,
-                                              shape: BoxShape.circle,
-                                              border: Border.all(
-                                                color: Colors.white,
-                                                width: 2,
-                                              ),
-                                            ),
-                                            child: const Icon(
-                                              Icons.person,
-                                              color: Colors.white,
-                                              size: 10,
-                                            ),
+                                          child: _buildBadge(
+                                            Icons.person,
+                                            AppColors.teal,
+                                          ),
+                                        ),
+                                      if (isHost)
+                                        Positioned(
+                                          left: -2,
+                                          top: -2,
+                                          child: _buildBadge(
+                                            Icons.workspace_premium_rounded,
+                                            Colors.orangeAccent,
                                           ),
                                         ),
                                     ],
@@ -684,6 +695,46 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
           ),
         ),
       );
+  }
+
+  Widget _buildBadge(IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: Colors.white,
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Icon(
+        icon,
+        color: Colors.white,
+        size: 10,
+      ),
+    );
+  }
+
+  Color _getUserColor(String uid) {
+    final List<Color> colors = [
+      AppColors.teal,
+      Colors.blueAccent,
+      Colors.purpleAccent,
+      Colors.pinkAccent,
+      Colors.orangeAccent,
+      Colors.indigoAccent,
+      Colors.cyan,
+      Colors.tealAccent.shade700,
+    ];
+    return colors[uid.hashCode % colors.length];
   }
 
   Widget _buildActionTile(
