@@ -540,7 +540,7 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
-  Widget _buildBubble(MessageModel message) {
+  Widget _buildBubble(MessageModel message, List<Color>? themeColors) {
     final isMe = message.senderId == currentUser?.uid;
     final key = _messageKeys.putIfAbsent(message.id, () => GlobalKey());
 
@@ -557,6 +557,7 @@ class _ChatPageState extends State<ChatPage> {
       activeAudioIdNotifier: _activeAudioId,
       onPlayNextVoice: _playNextVoice,
       onReactionTap: () => _showReactionDetails(message),
+      themeColors: themeColors,
     );
   }
 
@@ -1384,7 +1385,14 @@ class _ChatPageState extends State<ChatPage> {
         // Hex color
         final hexStr = wallpaperStr.substring(1);
         if (hexStr.length == 8) {
-          backgroundColor = Color(int.parse(hexStr, radix: 16));
+          final color = Color(int.parse(hexStr, radix: 16));
+          backgroundColor = color;
+
+          // To differentiate the bubble slightly from a solid background,
+          // we use the color but make the background itself slightly lighter,
+          // or we just rely on the existing drop shadow of the bubble.
+          // In this case, making the bubble a solid gradient of the same color looks extremely minimal and symmetric.
+          themeGradientColors = [color, color];
         }
       } else if (wallpaperStr.startsWith('file://')) {
         // Local file image
@@ -1531,7 +1539,10 @@ class _ChatPageState extends State<ChatPage> {
                                 return const _UnreadDivider();
                               return _DateDivider(dateLabel: item);
                             }
-                            return _buildBubble(item as MessageModel);
+                            return _buildBubble(
+                              item as MessageModel,
+                              themeGradientColors,
+                            );
                           },
                         );
                       },
@@ -2163,6 +2174,7 @@ class _MessageBubble extends StatelessWidget {
   final ValueNotifier<String?> activeAudioIdNotifier;
   final Function(String) onPlayNextVoice;
   final VoidCallback onReactionTap;
+  final List<Color>? themeColors;
 
   const _MessageBubble({
     super.key,
@@ -2178,6 +2190,7 @@ class _MessageBubble extends StatelessWidget {
     required this.activeAudioIdNotifier,
     required this.onPlayNextVoice,
     required this.onReactionTap,
+    this.themeColors,
   });
 
   @override
@@ -2234,8 +2247,10 @@ class _MessageBubble extends StatelessWidget {
                                 : BoxDecoration(
                                     color: isMe ? null : Colors.white,
                                     gradient: isMe
-                                        ? const LinearGradient(
-                                            colors: AppColors.tealGradient,
+                                        ? LinearGradient(
+                                            colors:
+                                                themeColors ??
+                                                AppColors.tealGradient,
                                             begin: Alignment.topLeft,
                                             end: Alignment.bottomRight,
                                           )

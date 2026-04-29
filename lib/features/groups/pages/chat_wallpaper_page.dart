@@ -199,6 +199,20 @@ class ChatWallpaperPage extends StatelessWidget {
               ),
               delegate: SliverChildBuilderDelegate((context, index) {
                 final gradient = presetGradients[index];
+
+                // Construct string to check if it's active
+                final colors = gradient.colors;
+                final hex1 =
+                    '#${colors[0].value.toRadixString(16).padLeft(8, '0').toUpperCase()}';
+                final hex2 =
+                    '#${colors[1].value.toRadixString(16).padLeft(8, '0').toUpperCase()}';
+                final isActiveStr = 'gradient://$hex1,$hex2';
+
+                final currentWallpaper = context
+                    .watch<WallpaperProvider>()
+                    .getWallpaper(groupId);
+                final isActive = currentWallpaper == isActiveStr;
+
                 return GestureDetector(
                   onTap: () => _setGradient(context, gradient),
                   child: Container(
@@ -206,8 +220,10 @@ class ChatWallpaperPage extends StatelessWidget {
                       gradient: gradient,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        width: 1,
+                        color: isActive
+                            ? AppColors.darkSlate
+                            : Colors.black.withValues(alpha: 0.05),
+                        width: isActive ? 3 : 1,
                       ),
                       boxShadow: [
                         BoxShadow(
@@ -217,6 +233,15 @@ class ChatWallpaperPage extends StatelessWidget {
                         ),
                       ],
                     ),
+                    child: isActive
+                        ? const Center(
+                            child: Icon(
+                              Icons.check_circle_rounded,
+                              color: Colors.white,
+                              size: 36,
+                            ),
+                          )
+                        : null,
                   ),
                 );
               }, childCount: presetGradients.length),
@@ -251,6 +276,14 @@ class ChatWallpaperPage extends StatelessWidget {
               ),
               delegate: SliverChildBuilderDelegate((context, index) {
                 final color = presetColors[index];
+
+                final hexString =
+                    '#${color.value.toRadixString(16).padLeft(8, '0').toUpperCase()}';
+                final currentWallpaper = context
+                    .watch<WallpaperProvider>()
+                    .getWallpaper(groupId);
+                final isActive = currentWallpaper == hexString;
+
                 return GestureDetector(
                   onTap: () => _setColor(context, color),
                   child: Container(
@@ -258,8 +291,10 @@ class ChatWallpaperPage extends StatelessWidget {
                       color: color,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        width: 1,
+                        color: isActive
+                            ? AppColors.darkSlate
+                            : Colors.black.withValues(alpha: 0.1),
+                        width: isActive ? 3 : 1,
                       ),
                       boxShadow: [
                         BoxShadow(
@@ -269,6 +304,15 @@ class ChatWallpaperPage extends StatelessWidget {
                         ),
                       ],
                     ),
+                    child: isActive
+                        ? const Center(
+                            child: Icon(
+                              Icons.check_circle_rounded,
+                              color: Colors.white,
+                              size: 36,
+                            ),
+                          )
+                        : null,
                   ),
                 );
               }, childCount: presetColors.length),
