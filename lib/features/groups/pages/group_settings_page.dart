@@ -342,28 +342,44 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                 children: [
                   // --- Header ---
                   Center(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(50),
-                      child: _currentPhotoUrl != null
-                          ? CachedNetworkImage(
-                              imageUrl: _currentPhotoUrl!,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) =>
-                                  const CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppColors.teal,
-                                  ),
-                              errorWidget: (context, url, error) => const Icon(
+                    child: Container(
+                      width: 140,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.teal.withValues(alpha: 0.1),
+                        border: Border.all(color: Colors.white, width: 4),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: ClipOval(
+                        child: _currentPhotoUrl != null
+                            ? CachedNetworkImage(
+                                imageUrl: _currentPhotoUrl!,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) =>
+                                    const CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.teal,
+                                    ),
+                                errorWidget: (context, url, error) =>
+                                    const Icon(
+                                      Icons.groups,
+                                      color: AppColors.teal,
+                                      size: 50,
+                                    ),
+                              )
+                            : const Icon(
                                 Icons.groups,
                                 color: AppColors.teal,
-                                size: 40,
+                                size: 50,
                               ),
-                            )
-                          : const Icon(
-                              Icons.groups,
-                              color: AppColors.teal,
-                              size: 40,
-                            ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -388,39 +404,56 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                   const SizedBox(height: 32),
 
                   // --- Media & Content Navigation ---
-                  _buildNavigationTile(
-                    icon: Icons.photo_library_outlined,
-                    title: 'Media, Links, and Docs',
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            GroupMediaPage(groupId: widget.group.id),
-                      ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.02),
+                          blurRadius: 5,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                  ),
-                  const Divider(height: 1, indent: 56),
-                  _buildNavigationTile(
-                    icon: Icons.location_on_outlined,
-                    title: 'Shared Locations',
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            GroupLocationsPage(groupId: widget.group.id),
-                      ),
-                    ),
-                  ),
-                  const Divider(height: 1, indent: 56),
-                  _buildNavigationTile(
-                    icon: Icons.wallpaper_rounded,
-                    title: 'Chat Wallpaper',
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            ChatWallpaperPage(groupId: widget.group.id),
-                      ),
+                    child: Column(
+                      children: [
+                        _buildNavigationTile(
+                          icon: Icons.photo_library_outlined,
+                          title: 'Media, Links, and Docs',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  GroupMediaPage(groupId: widget.group.id),
+                            ),
+                          ),
+                        ),
+                        const Divider(height: 1, indent: 56),
+                        _buildNavigationTile(
+                          icon: Icons.location_on_outlined,
+                          title: 'Shared Locations',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  GroupLocationsPage(groupId: widget.group.id),
+                            ),
+                          ),
+                        ),
+                        const Divider(height: 1, indent: 56),
+                        _buildNavigationTile(
+                          icon: Icons.wallpaper_rounded,
+                          title: 'Chat Wallpaper',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ChatWallpaperPage(groupId: widget.group.id),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -586,7 +619,7 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
   }) {
     return ListTile(
       onTap: onTap,
-      contentPadding: EdgeInsets.zero,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
