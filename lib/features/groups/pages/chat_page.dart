@@ -1365,9 +1365,22 @@ class _ChatPageState extends State<ChatPage> {
 
     Color backgroundColor = const Color(0xFFF0F2F5);
     DecorationImage? bgImage;
+    LinearGradient? bgGradient;
 
     if (wallpaperStr != null) {
-      if (wallpaperStr.startsWith('#')) {
+      if (wallpaperStr.startsWith('gradient://')) {
+        final colorsStr = wallpaperStr.substring(11).split(',');
+        if (colorsStr.length == 2) {
+          bgGradient = LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(int.parse(colorsStr[0].substring(1), radix: 16)),
+              Color(int.parse(colorsStr[1].substring(1), radix: 16)),
+            ],
+          );
+        }
+      } else if (wallpaperStr.startsWith('#')) {
         // Hex color
         final hexStr = wallpaperStr.substring(1);
         if (hexStr.length == 8) {
@@ -1379,12 +1392,6 @@ class _ChatPageState extends State<ChatPage> {
         bgImage = DecorationImage(
           image: FileImage(File(filePath)),
           fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(
-            Colors.white.withValues(
-              alpha: 0.9,
-            ), // Subtle overlay to ensure chat is readable
-            BlendMode.dstATop,
-          ),
         );
       }
     }
@@ -1392,9 +1399,20 @@ class _ChatPageState extends State<ChatPage> {
     return Scaffold(
       backgroundColor: backgroundColor,
       body: Container(
-        decoration: bgImage != null ? BoxDecoration(image: bgImage) : null,
+        decoration: BoxDecoration(image: bgImage, gradient: bgGradient),
         child: Stack(
           children: [
+            if (bgImage != null)
+              Positioned.fill(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                  child: Container(
+                    color: Colors.white.withValues(
+                      alpha: 0.5,
+                    ), // Frosted glass tint
+                  ),
+                ),
+              ),
             Positioned.fill(
               child: Column(
                 children: [

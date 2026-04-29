@@ -27,6 +27,39 @@ class ChatWallpaperPage extends StatelessWidget {
     Color(0xFFF0F2F5), // Light Default
   ];
 
+  static const List<LinearGradient> presetGradients = [
+    LinearGradient(
+      colors: [Color(0xFFE2D1C3), Color(0xFFFDFCFB)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ), // Warm Peach
+    LinearGradient(
+      colors: [Color(0xFFa18cd1), Color(0xFFfbc2eb)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ), // Soft purple-pink
+    LinearGradient(
+      colors: [Color(0xFFff9a9e), Color(0xFFfecfef)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ), // Cherry blossom
+    LinearGradient(
+      colors: [Color(0xFF8fd3f4), Color(0xFF84fab0)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ), // Aqua mint
+    LinearGradient(
+      colors: [Color(0xFFe0c3fc), Color(0xFF8ec5fc)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ), // Soft lavender blue
+    LinearGradient(
+      colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ), // Bright blue
+  ];
+
   Future<void> _pickImage(BuildContext context) async {
     final picker = ImagePicker();
     try {
@@ -43,7 +76,7 @@ class ChatWallpaperPage extends StatelessWidget {
         if (context.mounted) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Custom wallpaper applied!')),
+            const SnackBar(content: Text('Custom frosted glass applied!')),
           );
         }
       }
@@ -65,6 +98,24 @@ class ChatWallpaperPage extends StatelessWidget {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Wallpaper updated!')));
+  }
+
+  void _setGradient(BuildContext context, LinearGradient gradient) {
+    final colors = gradient.colors;
+    final hex1 =
+        '#${colors[0].value.toRadixString(16).padLeft(8, '0').toUpperCase()}';
+    final hex2 =
+        '#${colors[1].value.toRadixString(16).padLeft(8, '0').toUpperCase()}';
+
+    // Store as gradient://#color1,#color2
+    context.read<WallpaperProvider>().setWallpaper(
+      groupId,
+      'gradient://$hex1,$hex2',
+    );
+    Navigator.pop(context);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Premium gradient applied!')));
   }
 
   void _resetWallpaper(BuildContext context) {
@@ -111,7 +162,7 @@ class ChatWallpaperPage extends StatelessWidget {
                   _buildOptionCard(
                     icon: Icons.photo_library_rounded,
                     title: "Pick from Gallery",
-                    subtitle: "Choose a custom photo from your device",
+                    subtitle: "Will apply a stunning frosted-glass blur",
                     color: AppColors.teal,
                     onTap: () => _pickImage(context),
                   ),
@@ -125,7 +176,7 @@ class ChatWallpaperPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 32),
                   Text(
-                    "Solid Colors",
+                    "Premium Gradients",
                     style: GoogleFonts.outfit(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -134,6 +185,58 @@ class ChatWallpaperPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                 ],
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            sliver: SliverGrid(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 0.8,
+              ),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final gradient = presetGradients[index];
+                return GestureDetector(
+                  onTap: () => _setGradient(context, gradient),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: gradient,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: gradient.colors.first.withValues(alpha: 0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }, childCount: presetGradients.length),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 32,
+                bottom: 16,
+              ),
+              child: Text(
+                "Solid Colors",
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.darkSlate,
+                ),
               ),
             ),
           ),
