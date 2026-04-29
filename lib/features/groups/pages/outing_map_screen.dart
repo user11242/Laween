@@ -41,7 +41,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
   bool _isDisposed = false;
   final bool _isTrackingMode = false;
   bool _showWinnerDetails = true;
-  DateTime? _lastLocationUpdate;
+
 
   // Premium Map Style (Electric Midnight / High Contrast)
   static const String _mapStyle = '''
@@ -862,21 +862,44 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
           color: AppColors.darkSlate.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.teal.withValues(alpha: 0.2),
+              blurRadius: 15,
+              spreadRadius: 2,
+            ),
+          ],
         ),
         child: Row(
           children: [
-            Icon(
-              isFixed ? Icons.lock_rounded : Icons.radar_rounded,
-              color: AppColors.teal,
-              size: 18,
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: const BoxDecoration(
+                    color: AppColors.teal,
+                    shape: BoxShape.circle,
+                  ),
+                ).animate(onPlay: (controller) => controller.repeat())
+                 .scale(begin: const Offset(1, 1), end: const Offset(2.5, 2.5), duration: 1500.ms)
+                 .fadeOut(duration: 1500.ms),
+                const Icon(
+                  Icons.radar_rounded,
+                  color: AppColors.teal,
+                  size: 16,
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             Text(
               isFixed ? "Locked Journey" : "Discovery Room",
               style: GoogleFonts.outfit(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
+                letterSpacing: 0.5,
               ),
             ),
           ],
@@ -890,7 +913,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
       bottom: 30,
       left: 0,
       right: 0,
-      height: 280, // Increased for travel data
+      height: 440, // Increased height for vertical-style cards
       child: PageView.builder(
         controller: _pageController,
         onPageChanged: (index) {
@@ -908,7 +931,6 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
       ),
     );
   }
-
   Widget _buildVenueCard(
     Map<String, dynamic> venue,
     OutingSessionModel session,
@@ -916,7 +938,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     final apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'];
     final photoRef = venue['photoReference'];
     final imageUrl = photoRef != null
-        ? "https://places.googleapis.com/v1/$photoRef/media?key=$apiKey&maxHeightPx=400"
+        ? "https://places.googleapis.com/v1/$photoRef/media?key=$apiKey&maxHeightPx=800"
         : null;
 
     final votesCount = (venue['votes'] as List?)?.length ?? 0;
@@ -926,177 +948,296 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     final vLng = venue['location']['longitude'] as double;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 15),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 25,
-            offset: const Offset(0, 10),
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 30,
+            offset: const Offset(0, 15),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(32),
         child: Column(
           children: [
+            // 1. Hero Content (Image with info overlay)
             Expanded(
-              child: Row(
+              flex: 5,
+              child: Stack(
                 children: [
                   // Image
-                  if (imageUrl != null)
-                    CachedNetworkImage(
-                      imageUrl: imageUrl,
-                      width: 130,
-                      height: double.infinity,
-                      fit: BoxFit.cover,
-                    )
-                  else
-                    Container(
-                      width: 130,
-                      color: Colors.grey.shade100,
-                      child: const Icon(
-                        Icons.image_not_supported_outlined,
-                        color: Colors.grey,
+                  Positioned.fill(
+                    child: imageUrl != null
+                        ? CachedNetworkImage(
+                            imageUrl: imageUrl,
+                            fit: BoxFit.cover,
+                          )
+                        : Container(
+                            color: Colors.grey.shade100,
+                            child: const Icon(
+                              Icons.restaurant_rounded,
+                              color: Colors.grey,
+                              size: 48,
+                            ),
+                          ),
+                  ),
+                  // Gradient Overlay
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.8),
+                          ],
+                        ),
                       ),
                     ),
-
-                  // Details
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  venue['name'] ?? "Unknown",
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.darkSlate,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              Text(
-                                _getPriceLevel(venue['priceLevel']),
-                                style: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w900,
-                                  color: AppColors.teal,
-                                ),
-                              ),
-                            ],
+                  ),
+                  // Floating Rating Badge
+                  Positioned(
+                    top: 16,
+                    right: 16,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 10,
                           ),
-                          const SizedBox(height: 4),
-                          Row(
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: BackdropFilter(
+                          filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(
                                 Icons.star_rounded,
                                 color: Colors.amber,
-                                size: 16,
+                                size: 14,
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                "${venue['rating'] ?? 'N/A'} (${venue['userRatingCount'] ?? 0})",
+                                "${venue['rating'] ?? 'N/A'}",
                                 style: GoogleFonts.inter(
                                   fontSize: 12,
-                                  color: Colors.grey.shade600,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
-                          // Travel Data
-                          Text(
-                            "ARRIVALS",
-                            style: GoogleFonts.inter(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.grey.shade400,
-                              letterSpacing: 1.5,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Expanded(
-                            child: ListView.builder(
-                              padding: EdgeInsets.zero,
-                              itemCount: session.participants.length,
-                              itemBuilder: (context, i) {
-                                final p = session.participants[i];
-                                if (p.location == null) return const SizedBox();
-                                final dist = double.parse(
-                                  _calculateDistance(
-                                    p.location!.latitude,
-                                    p.location!.longitude,
-                                    vLat,
-                                    vLng,
-                                  ),
-                                );
-                                final time = _estimateTime(dist);
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 2),
-                                  child: Row(
-                                    children: [
-                                      Text(
-                                        p.name.isNotEmpty
-                                            ? p.name.split(' ')[0]
-                                            : 'User',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 11,
-                                          color: AppColors.darkSlate,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      Text(
-                                        "$time min ($dist km)",
-                                        style: GoogleFonts.inter(
-                                          fontSize: 11,
-                                          color: AppColors.teal,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
+                    ),
+                  ),
+                  // Price Level & Name (Bottom Left on image)
+                  Positioned(
+                    bottom: 16,
+                    left: 20,
+                    right: 20,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.teal,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                _getPriceLevel(venue['priceLevel']),
+                                style: GoogleFonts.inter(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              "${venue['userRatingCount'] ?? 0} Reviews",
+                              style: GoogleFonts.inter(
+                                fontSize: 10,
+                                color: Colors.white.withValues(alpha: 0.7),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          venue['name'] ?? "Unknown",
+                          style: GoogleFonts.outfit(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-            // Bottom Vote Bar
+            // 2. Arrivals Section (Horizontal scrolling profile bubbles)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                border: Border(top: BorderSide(color: Colors.grey.shade100)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              height: 100, // Fixed height to avoid overflow
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    "$votesCount / $totalParticipants Votes",
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.teal,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      "WHO'S ARRIVING",
+                      style: GoogleFonts.inter(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.grey.shade400,
+                        letterSpacing: 2,
+                      ),
                     ),
                   ),
-                  _buildVoteButton(venue, session),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: session.participants.length,
+                      itemBuilder: (context, i) {
+                        final p = session.participants[i];
+                        if (p.location == null) return const SizedBox();
+                        final dist = double.parse(
+                          _calculateDistance(
+                            p.location!.latitude,
+                            p.location!.longitude,
+                            vLat,
+                            vLng,
+                          ),
+                        );
+                        final time = _estimateTime(dist);
+                        final userColor = _getUserColor(p.uid);
+
+                        return Container(
+                          margin: const EdgeInsets.only(right: 12),
+                          padding: const EdgeInsets.fromLTRB(6, 6, 12, 6),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.grey.shade100),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircleAvatar(
+                                radius: 14,
+                                backgroundColor: userColor.withValues(alpha: 0.1),
+                                backgroundImage: p.photoUrl != null && p.photoUrl!.isNotEmpty
+                                    ? NetworkImage(p.photoUrl!)
+                                    : null,
+                                child: p.photoUrl == null || p.photoUrl!.isEmpty
+                                    ? Text(
+                                        p.name.isNotEmpty ? p.name[0].toUpperCase() : '?',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: userColor,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: 8),
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    p.name.split(' ')[0],
+                                    style: GoogleFonts.inter(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w900,
+                                      color: AppColors.darkSlate,
+                                    ),
+                                  ),
+                                  Text(
+                                    "$time min ($dist km)",
+                                    style: GoogleFonts.inter(
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.teal,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // 3. Action Bar (Vote & Total)
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "$votesCount / $totalParticipants",
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.darkSlate,
+                          ),
+                        ),
+                        Text(
+                          "Total Votes",
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            color: Colors.grey,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    flex: 3,
+                    child: _buildVoteButton(venue, session),
+                  ),
                 ],
               ),
             ),
@@ -1113,31 +1254,75 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
     final hasVoted = (venue['votes'] as List?)?.contains(uid) ?? false;
 
-    return GestureDetector(
-      onTap: () => _outingService.voteForVenue(
-        groupId: widget.groupId,
-        sessionId: widget.sessionId,
-        venueId: venue['id'],
-        uid: uid,
-      ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: hasVoted
-              ? AppColors.teal.withValues(alpha: 0.1)
-              : AppColors.teal,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.teal),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _outingService.voteForVenue(
+          groupId: widget.groupId,
+          sessionId: widget.sessionId,
+          venueId: venue['id'],
+          uid: uid,
         ),
-        child: Text(
-          hasVoted ? "VOTED" : "VOTE",
-          style: GoogleFonts.inter(
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
-            color: hasVoted ? AppColors.teal : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            gradient: hasVoted
+                ? null
+                : const LinearGradient(
+                    colors: [AppColors.teal, Color(0xFF00B4CC)],
+                  ),
+            color: hasVoted ? Colors.grey.shade100 : null,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: hasVoted
+                ? []
+                : [
+                    BoxShadow(
+                      color: AppColors.teal.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+          ),
+          child: Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  hasVoted ? Icons.check_circle_rounded : Icons.how_to_vote_rounded,
+                  size: 16,
+                  color: hasVoted ? Colors.grey : Colors.white,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  hasVoted ? "VOTED" : "CAST VOTE",
+                  style: GoogleFonts.outfit(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    color: hasVoted ? Colors.grey : Colors.white,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  Color _getUserColor(String uid) {
+    final List<Color> colors = [
+      AppColors.teal,
+      Colors.blueAccent,
+      Colors.purpleAccent,
+      Colors.pinkAccent,
+      Colors.orangeAccent,
+      Colors.indigoAccent,
+      Colors.cyan,
+      Colors.tealAccent.shade700,
+    ];
+    return colors[uid.hashCode % colors.length];
   }
 }

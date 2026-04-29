@@ -382,7 +382,7 @@ class OutingService {
             'radius': 2000.0, // 2km radius
           },
         },
-        'maxResultCount': 3,
+        'maxResultCount': 8,
       }),
     );
 
