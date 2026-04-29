@@ -154,6 +154,7 @@ class _ChatPageState extends State<ChatPage> {
 
     if (text.trim().isNotEmpty) {
       if (!_isTyping) {
+        setState(() => _isTyping = true);
         final displayName =
             _currentUserDisplayName ?? currentUser?.displayName ?? "Someone";
         _chatService.setTypingStatus(
@@ -165,7 +166,7 @@ class _ChatPageState extends State<ChatPage> {
       }
 
       _typingTimer?.cancel();
-      _typingTimer = Timer(const Duration(seconds: 3), () {
+      _typingTimer = Timer(const Duration(seconds: 2), () {
         debugPrint("⌨️ [Typing] Timer expired, stopping...");
         if (mounted && _isTyping) {
           setState(() => _isTyping = false);
@@ -801,7 +802,7 @@ class _ChatPageState extends State<ChatPage> {
                         return Container(
                               width: 5,
                               height: 5,
-                              margin: const EdgeInsets.symmetric(horizontal: 2),
+                              margin: const EdgeInsets.symmetric(horizontal: 2.5),
                               decoration: const BoxDecoration(
                                 color: AppColors.teal,
                                 shape: BoxShape.circle,
@@ -810,17 +811,19 @@ class _ChatPageState extends State<ChatPage> {
                             .animate(onPlay: (c) => c.repeat())
                             .scale(
                               begin: const Offset(1, 1),
-                              end: const Offset(1.6, 1.6),
-                              duration: 600.ms,
-                              delay: (index * 200).ms,
+                              end: const Offset(1.4, 1.4),
+                              duration: 400.ms,
+                              delay: (index * 150).ms,
                               curve: Curves.easeInOut,
                             )
+                            .fadeIn(duration: 400.ms)
                             .then()
                             .scale(
-                              begin: const Offset(1.6, 1.6),
+                              begin: const Offset(1.4, 1.4),
                               end: const Offset(1, 1),
-                              duration: 600.ms,
-                            );
+                              duration: 400.ms,
+                            )
+                            .fadeOut(duration: 400.ms);
                       }),
                     ),
                   ),
