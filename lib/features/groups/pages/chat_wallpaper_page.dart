@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:laween/core/theme/colors.dart';
 import '../providers/wallpaper_provider.dart';
+import 'package:laween/l10n/app_localizations.dart';
 
 class ChatWallpaperPage extends StatelessWidget {
   final String groupId;
@@ -128,11 +129,12 @@ class ChatWallpaperPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
-          "Custom Wallpaper",
+          l10n?.customWallpaper ?? "Custom Wallpaper",
           style: GoogleFonts.outfit(
             color: AppColors.darkSlate,
             fontWeight: FontWeight.bold,
@@ -151,7 +153,7 @@ class ChatWallpaperPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Custom Options",
+                    l10n?.customOptions ?? "Custom Options",
                     style: GoogleFonts.outfit(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -161,22 +163,22 @@ class ChatWallpaperPage extends StatelessWidget {
                   const SizedBox(height: 12),
                   _buildOptionCard(
                     icon: Icons.photo_library_rounded,
-                    title: "Pick from Gallery",
-                    subtitle: "Will apply a stunning frosted-glass blur",
+                    title: l10n?.pickFromGallery ?? "Pick from Gallery",
+                    subtitle: l10n?.frostedGlassBlurDesc ?? "Will apply a stunning frosted-glass blur",
                     color: AppColors.teal,
                     onTap: () => _pickImage(context),
                   ),
                   const SizedBox(height: 12),
                   _buildOptionCard(
                     icon: Icons.layers_clear_rounded,
-                    title: "Remove Wallpaper",
-                    subtitle: "Restore the default light grey background",
+                    title: l10n?.removeWallpaper ?? "Remove Wallpaper",
+                    subtitle: l10n?.restoreDefaultWallpaperDesc ?? "Restore the default light grey background",
                     color: Colors.red.shade400,
                     onTap: () => _resetWallpaper(context),
                   ),
                   const SizedBox(height: 32),
                   Text(
-                    "Premium Gradients",
+                    l10n?.premiumGradients ?? "Premium Gradients",
                     style: GoogleFonts.outfit(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -256,7 +258,7 @@ class ChatWallpaperPage extends StatelessWidget {
                 bottom: 16,
               ),
               child: Text(
-                "Solid Colors",
+                l10n?.solidColors ?? "Solid Colors",
                 style: GoogleFonts.outfit(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,

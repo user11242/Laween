@@ -38,6 +38,8 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
   String _category = 'Restaurant';
   int _timeLimit = 5; // 2, 5, 10
   bool _isCreating = false;
+  bool _isScheduled = false;
+  DateTime? _scheduledDateTime;
 
   // Direct Mode additions
   final TextEditingController _searchController = TextEditingController();
@@ -151,6 +153,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
             pickedLocation.latitude,
             pickedLocation.longitude,
           ),
+          scheduledAt: _isScheduled ? _scheduledDateTime : null,
         );
       } else {
         sessionId = await _outingService.createSession(
@@ -162,6 +165,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
           calculationMode: _calculationMode,
           timeLimitMinutes: _timeLimit,
           location: GeoPoint(pickedLocation.latitude, pickedLocation.longitude),
+          scheduledAt: _isScheduled ? _scheduledDateTime : null,
         );
       }
 
@@ -320,10 +324,10 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
           ],
         ),
         padding: EdgeInsets.only(
-          left: 28,
-          right: 28,
-          top: 24,
-          bottom: 24 + MediaQuery.of(context).viewInsets.bottom,
+          left: 20,
+          right: 20,
+          top: 18,
+          bottom: 18 + MediaQuery.of(context).viewInsets.bottom,
         ),
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -342,7 +346,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                 ),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 16),
 
             // Search Bar (Only shown in Direct Mode)
             if (_isDirectMode) ...[
@@ -350,7 +354,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
 
               if (_searchResults.isNotEmpty) _buildSearchResults(),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 20),
             ],
 
             Row(
@@ -362,7 +366,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                     Text(
                       _isDirectMode ? "Direct Outing" : "Create Outing",
                       style: GoogleFonts.outfit(
-                        fontSize: 28,
+                        fontSize: 26,
                         fontWeight: FontWeight.bold,
                         color: AppColors.darkSlate,
                         letterSpacing: -0.5,
@@ -373,7 +377,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                           ? "Pick a destination and let's go!"
                           : "Find the perfect mid-point",
                       style: GoogleFonts.inter(
-                        fontSize: 14,
+                        fontSize: 13,
                         color: Colors.grey.shade500,
                         fontWeight: FontWeight.w500,
                       ),
@@ -381,7 +385,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                   ],
                 ),
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: AppColors.teal.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
@@ -389,7 +393,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                   child: const Icon(
                     Icons.flash_on_rounded,
                     color: AppColors.teal,
-                    size: 24,
+                    size: 22,
                   ),
                 ).animate().scale(
                   delay: 200.milliseconds,
@@ -399,22 +403,22 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
               ],
             ),
 
-            const SizedBox(height: 40),
+            const SizedBox(height: 24),
 
             // Section 1: Mode (Hidden in Direct Mode as it's not needed for discovery)
             if (!_isDirectMode) ...[
               _buildSectionHeader("Calculation Mode"),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               _buildModeSwitcher(),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
             ],
 
             // Section 2: Category (Only shown in Discovery Mode)
             if (!_isDirectMode) ...[
               _buildSectionHeader("Select Category"),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               SizedBox(
-                height: 110,
+                height: 104,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   clipBehavior: Clip.none,
@@ -423,15 +427,22 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                       _buildCategoryCard(_categories[index]),
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 24),
             ],
 
             // Section 3: Time Limit
             _buildSectionHeader("Join Time Limit"),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             _buildTimeLimitRow(),
 
-            const SizedBox(height: 48),
+            const SizedBox(height: 24),
+
+            // Section 4: Schedule
+            _buildSectionHeader("Schedule Session"),
+            const SizedBox(height: 12),
+            _buildScheduleSection(),
+
+            const SizedBox(height: 32),
 
             // Final Action
             _buildMainButton(),
@@ -527,13 +538,13 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
       onTap: () => setState(() => _category = cat['name']),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
-        width: 100,
-        margin: const EdgeInsets.only(right: 16),
+        width: 86,
+        margin: const EdgeInsets.only(right: 12),
         decoration: BoxDecoration(
           color: isSelected
               ? Colors.white
               : Colors.white.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? AppColors.teal : Colors.transparent,
             width: 2,
@@ -552,18 +563,18 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(cat['icon'], color: color, size: 24),
+              child: Icon(cat['icon'], color: color, size: 20),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 6),
             Text(
               cat['name'],
               style: GoogleFonts.outfit(
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                 color: AppColors.darkSlate,
               ),
@@ -584,10 +595,10 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               margin: EdgeInsets.only(right: t == 10 ? 0 : 12),
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
                 color: isSelected ? AppColors.darkSlate : Colors.white,
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: isSelected
                       ? AppColors.darkSlate
@@ -930,4 +941,166 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
       ),
     );
   }
+
+  Widget _buildScheduleSection() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: _isScheduled ? AppColors.teal.withValues(alpha: 0.4) : Colors.grey.shade200,
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: (_isScheduled ? AppColors.teal : Colors.grey).withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.calendar_month_rounded,
+                      color: _isScheduled ? AppColors.teal : Colors.grey.shade600,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Schedule for Later",
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.darkSlate,
+                        ),
+                      ),
+                      Text(
+                        _isScheduled
+                            ? "Outing set for a future time"
+                            : "Off - Start the session now",
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Switch.adaptive(
+                value: _isScheduled,
+                activeColor: AppColors.teal,
+                onChanged: (val) {
+                  setState(() {
+                    _isScheduled = val;
+                    if (val && _scheduledDateTime == null) {
+                      _scheduledDateTime = DateTime.now().add(const Duration(hours: 1));
+                    }
+                  });
+                },
+              ),
+            ],
+          ),
+          if (_isScheduled) ...[
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.0),
+              child: Divider(height: 1),
+            ),
+            GestureDetector(
+              onTap: () async {
+                final date = await showDatePicker(
+                  context: context,
+                  initialDate: _scheduledDateTime ?? DateTime.now(),
+                  firstDate: DateTime.now(),
+                  lastDate: DateTime.now().add(const Duration(days: 30)),
+                  builder: (context, child) {
+                    return Theme(
+                      data: Theme.of(context).copyWith(
+                        colorScheme: const ColorScheme.light(
+                          primary: AppColors.teal,
+                          onPrimary: Colors.white,
+                          onSurface: AppColors.darkSlate,
+                        ),
+                      ),
+                      child: child!,
+                    );
+                  },
+                );
+                if (date != null && mounted) {
+                  final time = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay.fromDateTime(_scheduledDateTime ?? DateTime.now()),
+                    builder: (context, child) {
+                      return Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: const ColorScheme.light(
+                            primary: AppColors.teal,
+                            onPrimary: Colors.white,
+                            onSurface: AppColors.darkSlate,
+                          ),
+                        ),
+                        child: child!,
+                      );
+                    },
+                  );
+                  if (time != null && mounted) {
+                    setState(() {
+                      _scheduledDateTime = DateTime(
+                        date.year,
+                        date.month,
+                        date.day,
+                        time.hour,
+                        time.minute,
+                      );
+                    });
+                  }
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      _scheduledDateTime != null
+                          ? "${_scheduledDateTime!.day}/${_scheduledDateTime!.month}/${_scheduledDateTime!.year}  at  ${_scheduledDateTime!.hour}:${_scheduledDateTime!.minute.toString().padLeft(2, '0')}"
+                          : "Tap to pick Date & Time",
+                      style: GoogleFonts.outfit(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.teal,
+                      ),
+                    ),
+                    const Icon(
+                      Icons.edit_calendar_rounded,
+                      color: AppColors.teal,
+                      size: 20,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }
+

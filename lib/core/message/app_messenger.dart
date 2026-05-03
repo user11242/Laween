@@ -32,6 +32,22 @@ class AppMessenger {
     _showOverlay(context, title, message, primaryColor, icon);
   }
 
+  static void showSuccess(BuildContext context, {required String message, String title = "Success"}) {
+    showSnackBar(context, title: title, message: message, type: MessengerType.success);
+  }
+
+  static void showError(BuildContext context, {required String message, String title = "Error"}) {
+    showSnackBar(context, title: title, message: message, type: MessengerType.error);
+  }
+
+  static void showWarning(BuildContext context, {required String message, String title = "Warning"}) {
+    showSnackBar(context, title: title, message: message, type: MessengerType.warning);
+  }
+
+  static void showInfo(BuildContext context, {required String message, String title = "Info"}) {
+    showSnackBar(context, title: title, message: message, type: MessengerType.info);
+  }
+
   static void _showOverlay(
     BuildContext context,
     String title,
@@ -151,15 +167,15 @@ class _MessengerOverlayState extends State<_MessengerOverlay> {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.96),
+            color: widget.primaryColor,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: widget.primaryColor.withValues(alpha: 0.2),
+              color: Colors.white.withValues(alpha: 0.25),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: widget.primaryColor.withValues(alpha: 0.08),
+                color: widget.primaryColor.withValues(alpha: 0.3),
                 blurRadius: 30,
                 offset: const Offset(0, 10),
               ),
@@ -170,10 +186,10 @@ class _MessengerOverlayState extends State<_MessengerOverlay> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: widget.primaryColor.withValues(alpha: 0.08),
+                  color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(widget.icon, color: widget.primaryColor, size: 24),
+                child: Icon(widget.icon, color: Colors.white, size: 24),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -185,7 +201,7 @@ class _MessengerOverlayState extends State<_MessengerOverlay> {
                       widget.title,
                       style: GoogleFonts.inter(
                         fontWeight: FontWeight.bold,
-                        color: widget.primaryColor,
+                        color: Colors.white,
                         fontSize: 15,
                       ),
                     ),
@@ -193,7 +209,7 @@ class _MessengerOverlayState extends State<_MessengerOverlay> {
                     Text(
                       widget.message,
                       style: GoogleFonts.inter(
-                        color: Colors.black.withValues(alpha: 0.75),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontSize: 13,
                         height: 1.4,
                         fontWeight: FontWeight.w500,
@@ -206,7 +222,7 @@ class _MessengerOverlayState extends State<_MessengerOverlay> {
               IconButton(
                 icon: Icon(
                   Icons.close,
-                  color: Colors.grey.withValues(alpha: 0.5),
+                  color: Colors.white.withValues(alpha: 0.7),
                   size: 18,
                 ),
                 onPressed: _close,

@@ -9,7 +9,7 @@ class AppLocalizations {
 
   bool get isAr => languageCode == 'ar';
 
-  static AppLocalizations? of(BuildContext context, {bool listen = true}) {
+  static AppLocalizations? of(BuildContext context, {bool listen = false}) {
     try {
       final locale = Provider.of<LocaleProvider>(
         context,
@@ -314,4 +314,35 @@ class AppLocalizations {
       ? "لتفعيل الدخول بالبصمة، يرجى إدخال كلمة المرور لحفظ بياناتك بشكل آمن."
       : "To enable biometric login, please enter your password to securely save your credentials.";
   String get enableBiometric => isAr ? "تفعيل" : "Enable";
+
+  // New location and outings strings
+  String get outingsHistory => isAr ? "سجل الخرجات" : "Outings History";
+  String get shareLocation => isAr ? "مشاركة الموقع" : "Share Location";
+  String get shareLiveLocation => isAr ? "مشاركة الموقع المباشر" : "Share Live Location";
+  String get shareLiveDesc => isAr ? "مشاركة إحداثياتك المباشرة" : "Share your real-time coordinates";
+  String get chooseOnMap => isAr ? "اختر على الخريطة" : "Choose on Map";
+  String get chooseOnMapDesc => isAr ? "تحديد موقع يدوياً على الخريطة" : "Manually pin a location to share";
+  String get tapToOpenInMaps => isAr ? "اضغط للفتح في الخرائط" : "Tap to open in Maps";
+  String get selectedLocation => isAr ? "الموقع المحدد" : "Selected Location";
+  String get sendLocation => isAr ? "إرسال الموقع" : "Send Location";
+  String get noMemoriesYet => isAr ? "لا توجد ذكريات بعد" : "No memories yet";
+  String get finishOutingToSave => isAr ? "أنهِ خرجة في المجموعة لرؤيتها هنا!" : "Finish an outing in a group to see it here!";
+  String get tapOnMapOrDragPin => isAr ? "اضغط على الخريطة أو اسحب الدبوس" : "Tap on the map or drag the pin";
+  String get searchForAPlace => isAr ? "البحث عن مكان..." : "Search for a place...";
+  String get yourLocation => isAr ? "موقعك" : "Your location";
+
+  // Additional chat and wallpaper localizations
+  String get mediaTitle => isAr ? "الوسائط" : "Media";
+  String get noMediaYet => isAr ? "لم يتم مشاركة أي وسائط بعد" : "No media shared yet";
+  String get sharedLocationsTitle => isAr ? "المواقع المشتركة" : "Shared Locations";
+  String get noLocationsYet => isAr ? "لم يتم مشاركة أي مواقع بعد" : "No locations shared yet";
+  String get customWallpaper => isAr ? "خلفية مخصصة" : "Custom Wallpaper";
+  String get customOptions => isAr ? "خيارات مخصصة" : "Custom Options";
+  String get pickFromGallery => isAr ? "اختر من المعرض" : "Pick from Gallery";
+  String get frostedGlassBlurDesc => isAr ? "سيتم تطبيق تأثير ضبابي مذهل" : "Will apply a stunning frosted-glass blur";
+  String get removeWallpaper => isAr ? "إزالة الخلفية" : "Remove Wallpaper";
+  String get restoreDefaultWallpaperDesc => isAr ? "استعادة الخلفية الرمادية الفاتحة الافتراضية" : "Restore the default light grey background";
+  String get premiumGradients => isAr ? "تدرجات ألوان مميزة" : "Premium Gradients";
+  String get solidColors => isAr ? "ألوان سادة" : "Solid Colors";
 }
+

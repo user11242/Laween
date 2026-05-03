@@ -1,5 +1,6 @@
-// lib/features/auth/data/services/fcm_service.dart
+import 'dart:async';
 import 'dart:io';
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -10,6 +11,7 @@ import '../../../groups/data/models/group_model.dart';
 import '../../../groups/pages/chat_page.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:laween/core/services/location_service.dart';
 
 class FcmService {
   // Singleton Pattern
@@ -33,15 +35,25 @@ class FcmService {
     playSound: true,
   );
 
+  static const AndroidNotificationChannel _sosChannel = AndroidNotificationChannel(
+    'sos_emergencies',
+    'SOS Emergencies',
+    description: 'Urgent emergency alerts that wake the phone and show a full-screen alert',
+    importance: Importance.max,
+    playSound: true,
+    enableVibration: true,
+    showBadge: true,
+  );
+
   /// Call this once in main.dart after Firebase.initializeApp()
   Future<void> initialize() async {
     // 1. Request permissions (Crucial for iOS)
     NotificationSettings settings = await _messaging.requestPermission(
       alert: true,
-      announcement: false,
+      announcement: true, // Allow for critical announcements
       badge: true,
-      carPlay: false,
-      criticalAlert: false,
+      carPlay: true,
+      criticalAlert: true, // Crucial for SOS to bypass silent mode
       provisional: false,
       sound: true,
     );
@@ -91,6 +103,12 @@ class FcmService {
             AndroidFlutterLocalNotificationsPlugin
           >()
           ?.createNotificationChannel(_channel);
+      
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.createNotificationChannel(_sosChannel);
     }
 
     // 3. Set up foreground message listener
@@ -210,7 +228,7 @@ class FcmService {
         await subscribeToTopic('group_${doc.id}');
       }
       debugPrint(
-        "✅ Synced \${groupsSnap.docs.length} group topics for background delivery.",
+        "✅ Synced ${groupsSnap.docs.length} group topics for background delivery.",
       );
     } catch (e) {
       debugPrint("❌ Error syncing group topics: $e");
@@ -219,6 +237,10 @@ class FcmService {
 
   Future<void> _handleNotificationTap(RemoteMessage message) async {
     final groupId = message.data['groupId'];
+    final sessionId = message.data['sessionId'];
+    if (groupId != null) {
+      LocationService().setActiveSession(groupId, sessionId);
+    }
     if (groupId == null) return;
 
     try {
@@ -228,6 +250,8 @@ class FcmService {
         data['id'] = doc.id; // Map constructor expects id field
         final group = GroupModel.fromMap(data);
 
+        // For SOS, we could potentially navigate directly to tracking if it's active
+        // But the overlay logic in ChatPage/MapPage will handle it if we just go to the group
         navigatorKey.currentState?.push(
           MaterialPageRoute(builder: (context) => ChatPage(group: group)),
         );
@@ -265,9 +289,16 @@ class FcmService {
   }
 
   /// Internal helper to show a local notification
-  void _showLocalNotification(RemoteMessage message) {
+  Future<void> _showLocalNotification(RemoteMessage message) async {
     debugPrint("🔔 [FCM] Processing manual local notification...");
-    
+
+    final prefs = await SharedPreferences.getInstance();
+    final notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
+    if (!notificationsEnabled) {
+      debugPrint("🛡️ [FCM] Notifications are disabled by user preference.");
+      return;
+    }
+
     final senderId = message.data['senderId'];
     final groupId = message.data['groupId'];
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
@@ -293,28 +324,49 @@ class FcmService {
 
     RemoteNotification? notification = message.notification;
     AndroidNotification? android = message.notification?.android;
+    
+    // 🚨 DETECT SOS: Check if it's an SOS alert
+    bool isSos = message.data['type'] == 'sos' || 
+                 (notification?.title?.contains('SOS') ?? false) || 
+                 (notification?.body?.contains('SOS') ?? false);
 
-    if (notification != null && !kIsWeb) {
+    if (isSos && groupId != null) {
+       LocationService().setActiveSession(groupId, message.data['sessionId']);
+    }
+
+    // Extract title and body. For SOS data-only messages on Android, these come from data payload.
+    final title = notification?.title ?? message.data['title'] ?? (isSos ? '🚨 EMERGENCY' : 'New Message');
+    final body = notification?.body ?? message.data['body'] ?? (isSos ? 'SOS Triggered!' : '');
+    // NOTE: CallKit is NOT triggered here (foreground). GlobalSosListener handles
+    // showing the SOS overlay when the app is open. CallKit is only for background/lock screen.
+
+    // Show local notification if it's a normal notification OR if it's an SOS (even if data-only)
+    if ((notification != null || isSos) && !kIsWeb) {
       _localNotifications.show(
-        notification.hashCode,
-        notification.title,
-        notification.body,
+        notification?.hashCode ?? message.hashCode,
+        title,
+        body,
         NotificationDetails(
           android: AndroidNotificationDetails(
-            _channel.id,
-            _channel.name,
-            channelDescription: _channel.description,
+            isSos ? _sosChannel.id : _channel.id,
+            isSos ? _sosChannel.name : _channel.name,
+            channelDescription: isSos ? _sosChannel.description : _channel.description,
             icon: android?.smallIcon ?? '@mipmap/ic_launcher',
             importance: Importance.max,
             priority: Priority.high,
+            fullScreenIntent: isSos, // 🔥 WAKES UP THE PHONE ON ANDROID
+            category: isSos ? AndroidNotificationCategory.alarm : AndroidNotificationCategory.message,
+            visibility: NotificationVisibility.public,
           ),
-          iOS: const DarwinNotificationDetails(
+          iOS: DarwinNotificationDetails(
             presentAlert: true,
             presentBadge: true,
             presentSound: true,
+            interruptionLevel: isSos ? InterruptionLevel.critical : InterruptionLevel.active, // 🔥 BYPASS SILENT ON iOS
+
           ),
         ),
-        payload: message.data.toString(),
+        payload: jsonEncode(message.data),
       );
     }
   }

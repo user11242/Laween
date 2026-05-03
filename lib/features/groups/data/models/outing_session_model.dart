@@ -7,6 +7,8 @@ enum OutingStatus {
   thinking, // Algorithm is calculating
   voting, // Friends are voting on Top 3
   completed, // Location picked
+  finished, // Collecting memories (24h window)
+  archived, // Session finished/closed
   cancelled, // Session aborted
 }
 
@@ -17,6 +19,11 @@ class OutingParticipant {
   final GeoPoint? location; // Last known location
   final GeoPoint? startLocation; // Baseline for journey progress
   final DateTime joinedAt;
+  final int? etaMinutes; // Real Google ETA
+  final double? distanceKm; // Real Google distance
+  final DateTime? lastEtaUpdate; // Throttling field
+  final bool arrived;
+  final bool isSosActive;
 
   OutingParticipant({
     required this.uid,
@@ -25,6 +32,11 @@ class OutingParticipant {
     this.location,
     this.startLocation,
     required this.joinedAt,
+    this.etaMinutes,
+    this.distanceKm,
+    this.lastEtaUpdate,
+    this.arrived = false,
+    this.isSosActive = false,
   });
 
   OutingParticipant copyWith({
@@ -34,6 +46,11 @@ class OutingParticipant {
     GeoPoint? location,
     GeoPoint? startLocation,
     DateTime? joinedAt,
+    int? etaMinutes,
+    double? distanceKm,
+    DateTime? lastEtaUpdate,
+    bool? arrived,
+    bool? isSosActive,
   }) {
     return OutingParticipant(
       uid: uid ?? this.uid,
@@ -42,6 +59,11 @@ class OutingParticipant {
       location: location ?? this.location,
       startLocation: startLocation ?? this.startLocation,
       joinedAt: joinedAt ?? this.joinedAt,
+      etaMinutes: etaMinutes ?? this.etaMinutes,
+      distanceKm: distanceKm ?? this.distanceKm,
+      lastEtaUpdate: lastEtaUpdate ?? this.lastEtaUpdate,
+      arrived: arrived ?? this.arrived,
+      isSosActive: isSosActive ?? this.isSosActive,
     );
   }
 
@@ -53,6 +75,11 @@ class OutingParticipant {
       'location': location,
       'startLocation': startLocation,
       'joinedAt': Timestamp.fromDate(joinedAt),
+      'etaMinutes': etaMinutes,
+      'distanceKm': distanceKm,
+      'lastEtaUpdate': lastEtaUpdate != null ? Timestamp.fromDate(lastEtaUpdate!) : null,
+      'arrived': arrived,
+      'isSosActive': isSosActive,
     };
   }
 
@@ -64,6 +91,11 @@ class OutingParticipant {
       location: map['location'],
       startLocation: map['startLocation'],
       joinedAt: (map['joinedAt'] as Timestamp).toDate(),
+      etaMinutes: map['etaMinutes'],
+      distanceKm: (map['distanceKm'] as num?)?.toDouble(),
+      lastEtaUpdate: (map['lastEtaUpdate'] as Timestamp?)?.toDate(),
+      arrived: map['arrived'] ?? false,
+      isSosActive: map['isSosActive'] ?? false,
     );
   }
 }
@@ -82,6 +114,15 @@ class OutingSessionModel {
   final Map<String, dynamic>? finalLocation; // Result of the session
   final Map<String, dynamic>? winner; // The winning venue
   final String? firstArrivedUid; // The UID of the friend who reached first
+  
+  // Memories & Archive Metadata
+  final List<String> favoritedBy;
+  final List<String>? memoryPhotos;
+  final String? memoryTitle;
+  final String? memoryRecap;
+  final String? coverPhotoUrl;
+  final DateTime? finishedAt;
+  final DateTime? scheduledAt;
 
   OutingSessionModel({
     required this.id,
@@ -97,6 +138,13 @@ class OutingSessionModel {
     this.finalLocation,
     this.winner,
     this.firstArrivedUid,
+    this.favoritedBy = const [],
+    this.memoryPhotos,
+    this.memoryTitle,
+    this.memoryRecap,
+    this.coverPhotoUrl,
+    this.finishedAt,
+    this.scheduledAt,
   });
 
   Map<String, dynamic> toMap() {
@@ -114,6 +162,13 @@ class OutingSessionModel {
       'finalLocation': finalLocation,
       'winner': winner,
       'firstArrivedUid': firstArrivedUid,
+      'favoritedBy': favoritedBy,
+      'memoryPhotos': memoryPhotos,
+      'memoryTitle': memoryTitle,
+      'memoryRecap': memoryRecap,
+      'coverPhotoUrl': coverPhotoUrl,
+      'finishedAt': finishedAt != null ? Timestamp.fromDate(finishedAt!) : null,
+      'scheduledAt': scheduledAt != null ? Timestamp.fromDate(scheduledAt!) : null,
     };
   }
 
@@ -134,6 +189,17 @@ class OutingSessionModel {
       finalLocation: map['finalLocation'],
       winner: map['winner'],
       firstArrivedUid: map['firstArrivedUid'],
+      favoritedBy: List<String>.from(map['favoritedBy'] ?? []),
+      memoryPhotos: map['memoryPhotos'] != null ? List<String>.from(map['memoryPhotos']) : null,
+      memoryTitle: map['memoryTitle'],
+      memoryRecap: map['memoryRecap'],
+      coverPhotoUrl: map['coverPhotoUrl'],
+      finishedAt: map['finishedAt'] != null ? (map['finishedAt'] as Timestamp).toDate() : null,
+      scheduledAt: map['scheduledAt'] != null ? (map['scheduledAt'] as Timestamp).toDate() : null,
     );
+  }
+
+  factory OutingSessionModel.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
+    return OutingSessionModel.fromMap({...doc.data()!, 'id': doc.id});
   }
 }

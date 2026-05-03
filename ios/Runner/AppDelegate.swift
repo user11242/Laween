@@ -4,6 +4,7 @@ import GoogleMaps
 import FirebaseCore
 import FirebaseMessaging
 import AudioToolbox
+import Vision
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, MessagingDelegate {
@@ -42,6 +43,23 @@ import AudioToolbox
         } else {
           result(FlutterError(code: "INVALID_ARGUMENTS", message: "Sound ID missing", details: nil))
         }
+      } else {
+        result(FlutterMethodNotImplemented)
+      }
+    })
+
+    // Setup Method Channel for Apple Vision OCR
+    let ocrChannel = FlutterMethodChannel(name: "com.laween.app/ocr",
+                                           binaryMessenger: controller.binaryMessenger)
+    ocrChannel.setMethodCallHandler({
+      (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
+      if call.method == "recognizeText" {
+        guard let args = call.arguments as? [String: Any],
+              let imagePath = args["imagePath"] as? String else {
+          result(FlutterError(code: "INVALID_ARGS", message: "imagePath required", details: nil))
+          return
+        }
+        self.recognizeText(imagePath: imagePath, result: result)
       } else {
         result(FlutterMethodNotImplemented)
       }
@@ -110,5 +128,48 @@ import AudioToolbox
       object: nil,
       userInfo: dataDict
     )
+  }
+
+  // MARK: - Apple Vision OCR
+  private func recognizeText(imagePath: String, result: @escaping FlutterResult) {
+    guard let image = UIImage(contentsOfFile: imagePath),
+          let cgImage = image.cgImage else {
+      result(FlutterError(code: "IMAGE_ERROR", message: "Could not load image", details: nil))
+      return
+    }
+
+    let request = VNRecognizeTextRequest { (request, error) in
+      if let error = error {
+        result(FlutterError(code: "OCR_ERROR", message: error.localizedDescription, details: nil))
+        return
+      }
+
+      guard let observations = request.results as? [VNRecognizedTextObservation] else {
+        result([String]())
+        return
+      }
+
+      var lines = [String]()
+      for observation in observations {
+        if let topCandidate = observation.topCandidates(1).first {
+          lines.append(topCandidate.string)
+        }
+      }
+      result(lines)
+    }
+
+    request.recognitionLevel = .accurate
+    request.usesLanguageCorrection = true
+    // Support both English and Arabic
+    request.recognitionLanguages = ["en-US", "ar"]
+
+    let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+    DispatchQueue.global(qos: .userInitiated).async {
+      do {
+        try handler.perform([request])
+      } catch {
+        result(FlutterError(code: "OCR_ERROR", message: error.localizedDescription, details: nil))
+      }
+    }
   }
 }

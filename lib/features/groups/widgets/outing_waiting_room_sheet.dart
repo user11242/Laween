@@ -30,6 +30,16 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
   final OutingService _outingService = OutingService();
   int _totalGroupMembers = 1;
   Timer? _timer;
+  String? _errorMessage;
+  Timer? _errorTimer;
+
+  void _showError(String msg) {
+    if (_errorTimer?.isActive ?? false) _errorTimer?.cancel();
+    setState(() => _errorMessage = msg);
+    _errorTimer = Timer(const Duration(seconds: 4), () {
+      if (mounted) setState(() => _errorMessage = null);
+    });
+  }
 
   @override
   void initState() {
@@ -58,6 +68,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
   @override
   void dispose() {
     _timer?.cancel();
+    _errorTimer?.cancel();
     super.dispose();
   }
 
@@ -100,7 +111,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
 
             final currentUser = FirebaseAuth.instance.currentUser;
 
-            // AUTOMATIC REDIRECTION: Jump to Discovery Room if session starts
+            // REDIRECTION: Jump to Discovery Room if session starts
             if (session.status == OutingStatus.thinking ||
                 session.status == OutingStatus.voting) {
               final isParticipant = session.participants.any(
@@ -121,6 +132,22 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                   }
                 });
               }
+              return const SizedBox();
+            }
+
+            // REDIRECTION: Close and show message if cancelled
+            if (session.status == OutingStatus.cancelled) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted && _errorMessage == null) {
+                  _showError("Session cancelled: Not enough participants joined.");
+                  // Delay closure so user can read the message
+                  Future.delayed(const Duration(seconds: 3), () {
+                    if (context.mounted && Navigator.canPop(context)) {
+                      Navigator.pop(context);
+                    }
+                  });
+                }
+              });
               return const SizedBox();
             }
 
@@ -147,16 +174,21 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                 Container(
                   width: 45,
                   height: 5,
+                  margin: const EdgeInsets.only(bottom: 24),
                   decoration: BoxDecoration(
                     color: Colors.grey.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
-                const SizedBox(height: 24),
 
-                  // Header
-                  Row(
-                    children: [
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Header
+                Row(
+                  children: [
                       Stack(
                         alignment: Alignment.center,
                         children: [
@@ -476,7 +508,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                         final p = session.participants[index];
                         final isMe = p.uid == currentUser?.uid;
                         final isHost = p.uid == session.creatorId;
-                        final userColor = _getUserColor(p.uid);
+                        final userColor = AppColors.getUserColor(p.uid);
                         
                         return Padding(
                               padding: const EdgeInsets.only(right: 24),
@@ -567,8 +599,66 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                       },
                     ),
                   ),
+                ],
+              ),
+            ),
+          ),
 
-                  const SizedBox(height: 32),
+          const SizedBox(height: 32),
+
+          // BOTTOM ALERT (Local)
+          if (_errorMessage != null)
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 24),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 16,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.redAccent,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.redAccent.withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.error_outline_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              _errorMessage!,
+                              style: GoogleFonts.inter(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => setState(() => _errorMessage = null),
+                            child: const Icon(
+                              Icons.close_rounded,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                        .animate()
+                        .slideY(begin: 0.2, end: 0, curve: Curves.easeOutBack)
+                        .fadeIn()
+                        .shimmer(delay: 400.ms, duration: 1.seconds),
 
                   // Action Buttons Row
                   Row(
@@ -616,27 +706,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                             child: ElevatedButton(
                               onPressed: () {
                                 if (session.participants.length < 2) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        "You need at least 2 people to start an outing!",
-                                        style: GoogleFonts.inter(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      backgroundColor: Colors.redAccent,
-                                      behavior: SnackBarBehavior.floating,
-                                      margin: const EdgeInsets.only(
-                                        bottom: 100,
-                                        left: 20,
-                                        right: 20,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                  );
+                                  _showError("You need at least 2 people to start an outing!");
                                   return;
                                 }
                                 _outingService.updateStatus(
@@ -714,19 +784,8 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
     );
   }
 
-  Color _getUserColor(String uid) {
-    final List<Color> colors = [
-      AppColors.teal,
-      Colors.blueAccent,
-      Colors.purpleAccent,
-      Colors.pinkAccent,
-      Colors.orangeAccent,
-      Colors.indigoAccent,
-      Colors.cyan,
-      Colors.tealAccent.shade700,
-    ];
-    return colors[uid.hashCode % colors.length];
-  }
+  
+
 
   Widget _buildActionTile(
     BuildContext context,

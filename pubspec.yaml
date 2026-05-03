@@ -66,6 +66,10 @@ dependencies:
   audioplayers: ^6.1.0
   path_provider: ^2.1.5
   path: ^1.9.1
+  flutter_callkit_incoming: ^3.0.0
+  uuid: ^4.5.3
+  camera: ^0.12.0+1
+  flutter_compass: ^0.8.1
 
 
 dev_dependencies:
@@ -96,6 +100,7 @@ flutter:
     - assets/onboarding_imgs/
     - assets/google_logo.jpg
     - assets/logo/
+    - assets/sounds/
     - .env
 
 flutter_launcher_icons:

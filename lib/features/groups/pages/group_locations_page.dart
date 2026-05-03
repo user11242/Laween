@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/colors.dart';
 import '../data/services/group_service.dart';
+import 'package:laween/l10n/app_localizations.dart';
 
 class GroupLocationsPage extends StatelessWidget {
   final String groupId;
@@ -14,11 +15,12 @@ class GroupLocationsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
         title: Text(
-          'Shared Locations',
+          l10n?.sharedLocationsTitle ?? 'Shared Locations',
           style: GoogleFonts.outfit(
             fontWeight: FontWeight.bold,
             color: AppColors.darkSlate,
@@ -48,7 +50,7 @@ class GroupLocationsPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'No locations shared yet',
+                    l10n?.noLocationsYet ?? 'No locations shared yet',
                     style: GoogleFonts.inter(color: Colors.grey, fontSize: 16),
                   ),
                 ],
@@ -98,14 +100,16 @@ class GroupLocationsPage extends StatelessWidget {
                     ),
                   ),
                   title: Text(
-                    'Shared by ${msg['senderName'] ?? 'Unknown'}',
+                    l10n?.isAr == true
+                        ? 'بواسطة ${msg['senderName'] ?? 'شخص غير معروف'}'
+                        : 'Shared by ${msg['senderName'] ?? 'Unknown'}',
                     style: GoogleFonts.inter(
                       fontWeight: FontWeight.bold,
                       color: AppColors.darkSlate,
                     ),
                   ),
                   subtitle: Text(
-                    DateFormat('MMM dd, hh:mm a').format(date),
+                    DateFormat('MMM dd, hh:mm a', l10n?.isAr == true ? 'ar' : 'en').format(date),
                     style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
                   ),
                   trailing: IconButton(

@@ -19,6 +19,7 @@ import 'package:path/path.dart' as p;
 import '../../../core/theme/colors.dart';
 import '../data/models/group_model.dart';
 import '../data/models/message_model.dart';
+import '../data/models/outing_session_model.dart';
 import '../../auth/data/services/fcm_service.dart';
 import '../data/services/chat_service.dart';
 import '../widgets/group_share_sheet.dart';
@@ -26,10 +27,16 @@ import '../widgets/outing_message_bubble.dart';
 import '../widgets/create_outing_sheet.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'group_settings_page.dart';
+import 'history_feed_screen.dart';
 import '../widgets/voice_message_bubble.dart';
+import '../data/services/outing_service.dart';
+import 'outing_memory_upload_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import '../providers/wallpaper_provider.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart' as gmaps;
+import 'location_picker_page.dart';
+import 'package:laween/l10n/app_localizations.dart';
 
 class ChatPage extends StatefulWidget {
   final GroupModel group;
@@ -63,6 +70,8 @@ class _ChatPageState extends State<ChatPage> {
   final Map<String, String> _memberNames = {};
   List<MessageModel> _allMessages = [];
   bool _isFetchingMembers = false;
+  int _messageLimit = 30;
+  bool _isLoadingMore = false;
   late Stream<List<MessageModel>> _messagesStream;
   late Stream<DocumentSnapshot> _groupStream;
   OverlayEntry? _attachmentMenuEntry;
@@ -75,9 +84,14 @@ class _ChatPageState extends State<ChatPage> {
   Timer? _highlightTimer;
   Timer? _typingTimer;
   bool _isTyping = false;
+  final Set<String> _markingReadIds = {}; // Tracking currently marking as read
 
   // Audio Coordination
   final ValueNotifier<String?> _activeAudioId = ValueNotifier(null);
+  final List<File> _selectedImages = [];
+
+  // Finished Outings (24h window)
+  late Stream<QuerySnapshot> _finishedOutingsStream;
 
   bool _isSameDay(DateTime d1, DateTime d2) {
     return d1.year == d2.year && d1.month == d2.month && d1.day == d2.day;
@@ -88,17 +102,28 @@ class _ChatPageState extends State<ChatPage> {
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
     final messageDate = DateTime(date.year, date.month, date.day);
+    final isAr = AppLocalizations.of(context)?.isAr == true;
 
-    if (messageDate == today) return "Today";
-    if (messageDate == yesterday) return "Yesterday";
-    return intl.DateFormat('MMMM d, yyyy').format(date);
+    if (messageDate == today) return isAr ? "اليوم" : "Today";
+    if (messageDate == yesterday) return isAr ? "أمس" : "Yesterday";
+    return intl.DateFormat('MMMM d, yyyy', isAr ? 'ar' : 'en').format(date);
+  }
+
+  String _formatTime(DateTime time) {
+    final isAr = AppLocalizations.of(context)?.isAr == true;
+    final formattedTime = intl.DateFormat('hh:mm a').format(time);
+    if (isAr) {
+      return formattedTime.replaceAll('AM', 'ص').replaceAll('PM', 'م');
+    }
+    return formattedTime;
   }
 
   @override
   void initState() {
     super.initState();
     _initialUnreadCount = widget.group.unreadCounts[currentUser?.uid] ?? 0;
-    _messagesStream = _chatService.getMessagesStream(widget.group.id);
+    _scrollController.addListener(_scrollListener);
+    _messagesStream = _chatService.getMessagesStream(widget.group.id, limit: _messageLimit);
     _groupStream = FirebaseFirestore.instance
         .collection('groups')
         .doc(widget.group.id)
@@ -109,12 +134,41 @@ class _ChatPageState extends State<ChatPage> {
     FcmService.instance.activeGroupId = widget.group.id;
     _messageController.addListener(_onTypingChanged);
 
+    _finishedOutingsStream = FirebaseFirestore.instance
+        .collection('groups')
+        .doc(widget.group.id)
+        .collection('outings')
+        .where('status', isEqualTo: OutingStatus.finished.name)
+        .orderBy('finishedAt', descending: true)
+        .limit(1)
+        .snapshots();
+
     // 🛡️ Periodic rebuild for typing indicator TTL
     _rebuildTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       if (mounted && _hasActiveTypers()) {
         setState(() {});
       }
     });
+  }
+
+  void _scrollListener() {
+    if (_scrollController.hasClients &&
+        _scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200) {
+      if (!_isLoadingMore) {
+        setState(() {
+          _isLoadingMore = true;
+          _messageLimit += 30;
+          _messagesStream = _chatService.getMessagesStream(
+            widget.group.id,
+            limit: _messageLimit,
+          );
+        });
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) setState(() => _isLoadingMore = false);
+        });
+      }
+    }
   }
 
   Timer? _rebuildTimer;
@@ -142,6 +196,32 @@ class _ChatPageState extends State<ChatPage> {
     _amplitudeTimer?.cancel();
     FcmService.instance.activeGroupId = null;
     super.dispose();
+  }
+
+  void _throttledMarkAsRead(List<String> messageIds) {
+    if (currentUser == null) return;
+    
+    // Filter out IDs that are already being processed
+    final newIds = messageIds.where((id) => !_markingReadIds.contains(id)).toList();
+    if (newIds.isEmpty) return;
+
+    _markingReadIds.addAll(newIds);
+    
+    Future.microtask(() async {
+      try {
+        await _chatService.markMessagesAsRead(
+          widget.group.id,
+          newIds,
+          currentUser!.uid,
+        );
+      } catch (e) {
+        debugPrint("Error marking messages as read: $e");
+        // Remove from tracking so we can retry later if needed
+        for (var id in newIds) {
+          _markingReadIds.remove(id);
+        }
+      }
+    });
   }
 
   void _onTypingChanged() {
@@ -431,48 +511,73 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  void _sendMessage() {
-    if (_messageController.text.trim().isEmpty) return;
+  Future<void> _sendMessage() async {
+    final text = _messageController.text.trim();
+    if (text.isEmpty && _selectedImages.isEmpty) return;
 
-    if (_editingMessage != null) {
-      _chatService.editMessage(
-        widget.group.id,
-        _editingMessage!.id,
-        _messageController.text.trim(),
-      );
-      setState(() {
-        _editingMessage = null;
-        _messageController.clear();
-      });
-    } else {
-      // Use the latest cached name/photo if available, fallback to Auth profile
-      final displayName =
-          _currentUserDisplayName ?? currentUser?.displayName ?? 'Me';
-      final photoUrl = _memberPhotos[currentUser?.uid] ?? currentUser?.photoURL;
+    setState(() => _isUploading = true);
+    try {
+      List<String> imageUrls = [];
+      if (_selectedImages.isNotEmpty) {
+        final uploadTasks = _selectedImages.map(
+          (file) => _chatService.uploadImage(file, widget.group.id),
+        );
+        imageUrls = await Future.wait(uploadTasks);
+      }
 
-      _chatService.sendMessage(
-        groupId: widget.group.id,
-        senderId: currentUser?.uid ?? '',
-        senderName: displayName,
-        senderPhotoUrl: photoUrl,
-        text: _messageController.text.trim(),
-        replyToId: _replyingTo?.id,
-        replyToText: _replyingTo?.text,
-        replyToSenderId: _replyingTo?.senderId,
-        replyToSenderName:
-            _memberNames[_replyingTo?.senderId] ?? _replyingTo?.senderName,
-      );
-      setState(() {
-        _replyingTo = null;
-        _messageController.clear();
-      });
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          0,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
+      if (_editingMessage != null) {
+        _chatService.editMessage(
+          widget.group.id,
+          _editingMessage!.id,
+          text,
+        );
+        setState(() {
+          _editingMessage = null;
+          _messageController.clear();
+          _selectedImages.clear();
+        });
+      } else {
+        final displayName =
+            _currentUserDisplayName ?? currentUser?.displayName ?? 'Me';
+        final photoUrl = _memberPhotos[currentUser?.uid] ?? currentUser?.photoURL;
+
+        if (text.isNotEmpty || imageUrls.isNotEmpty) {
+          await _chatService.sendMessage(
+            groupId: widget.group.id,
+            senderId: currentUser?.uid ?? '',
+            senderName: displayName,
+            senderPhotoUrl: photoUrl,
+            text: text.isNotEmpty ? text : (imageUrls.isNotEmpty ? imageUrls.first : ''),
+            mediaUrls: imageUrls,
+            type: imageUrls.isNotEmpty ? 'image' : 'text',
+            replyToId: _replyingTo?.id,
+            replyToText: _replyingTo?.text,
+            replyToSenderId: _replyingTo?.senderId,
+            replyToSenderName:
+                _memberNames[_replyingTo?.senderId] ?? _replyingTo?.senderName,
+          );
+          setState(() {
+            _replyingTo = null;
+            _messageController.clear();
+            _selectedImages.clear();
+          });
+          if (_scrollController.hasClients) {
+            _scrollController.animateTo(
+              0,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to send: $e')),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isUploading = false);
     }
   }
 
@@ -739,10 +844,21 @@ class _ChatPageState extends State<ChatPage> {
                           ],
                         ),
                         child: ClipOval(
-                          child: pUrl != null
+                          child: (pUrl != null && pUrl.startsWith('http'))
                               ? CachedNetworkImage(
                                   imageUrl: pUrl,
                                   fit: BoxFit.cover,
+                                  placeholder: (context, url) => Container(
+                                    color: Colors.grey.shade200,
+                                  ),
+                                  errorWidget: (context, url, error) => Container(
+                                    color: AppColors.teal.withValues(alpha: 0.1),
+                                    child: const Icon(
+                                      Icons.person,
+                                      size: 20,
+                                      color: AppColors.teal,
+                                    ),
+                                  ),
                                 )
                               : Container(
                                   color: AppColors.teal.withValues(alpha: 0.1),
@@ -924,7 +1040,7 @@ class _ChatPageState extends State<ChatPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              "Start Outing",
+              AppLocalizations.of(context)?.isAr == true ? "بدء خرجة" : "Start Outing",
               style: GoogleFonts.outfit(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -933,13 +1049,19 @@ class _ChatPageState extends State<ChatPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              "How would you like to plan today?",
+              AppLocalizations.of(context)?.isAr == true
+                  ? "كيف ترغب في التخطيط لليوم؟"
+                  : "How would you like to plan today?",
               style: GoogleFonts.inter(color: Colors.grey, fontSize: 14),
             ),
             const SizedBox(height: 32),
             _buildSelectionOption(
-              title: "Find Midpoint",
-              subtitle: "The fairest spot for everyone",
+              title: AppLocalizations.of(context)?.isAr == true
+                  ? "البحث عن نقطة المنتصف"
+                  : "Find Midpoint",
+              subtitle: AppLocalizations.of(context)?.isAr == true
+                  ? "المكان الأكثر عدلاً للجميع"
+                  : "The fairest spot for everyone",
               icon: Icons.auto_awesome_rounded,
               color: AppColors.teal,
               onTap: () {
@@ -949,8 +1071,12 @@ class _ChatPageState extends State<ChatPage> {
             ),
             const SizedBox(height: 16),
             _buildSelectionOption(
-              title: "Specific Place",
-              subtitle: "I know where we're going",
+              title: AppLocalizations.of(context)?.isAr == true
+                  ? "مكان محدد"
+                  : "Specific Place",
+              subtitle: AppLocalizations.of(context)?.isAr == true
+                  ? "أعرف إلى أين نحن ذاهبون"
+                  : "I know where we're going",
               icon: Icons.location_on_rounded,
               color: Colors.orange,
               onTap: () {
@@ -1079,14 +1205,18 @@ class _ChatPageState extends State<ChatPage> {
                                 ],
                               ),
                               child: Directionality(
-                                textDirection: TextDirection.ltr,
+                                textDirection: AppLocalizations.of(context)?.isAr == true
+                                    ? TextDirection.rtl
+                                    : TextDirection.ltr,
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     const SizedBox(height: 12),
                                     _buildMenuItem(
                                       icon: Icons.camera_alt_rounded,
-                                      label: "Camera",
+                                      label: AppLocalizations.of(context)?.isAr == true
+                                          ? "الكاميرا"
+                                          : "Camera",
                                       color: Colors.teal,
                                       onTap: () {
                                         _closeAttachmentMenu();
@@ -1097,7 +1227,9 @@ class _ChatPageState extends State<ChatPage> {
                                     ),
                                     _buildMenuItem(
                                       icon: Icons.image_rounded,
-                                      label: "Gallery",
+                                      label: AppLocalizations.of(context)?.isAr == true
+                                          ? "المعرض"
+                                          : "Gallery",
                                       color: Colors.indigo,
                                       onTap: () {
                                         _closeAttachmentMenu();
@@ -1108,7 +1240,9 @@ class _ChatPageState extends State<ChatPage> {
                                     ),
                                     _buildMenuItem(
                                       icon: Icons.location_on_rounded,
-                                      label: "Location",
+                                      label: AppLocalizations.of(context)?.isAr == true
+                                          ? "الموقع"
+                                          : "Location",
                                       color: Colors.amber.shade700,
                                       onTap: () {
                                         _closeAttachmentMenu();
@@ -1153,9 +1287,11 @@ class _ChatPageState extends State<ChatPage> {
                                             size: 18,
                                             color: Colors.white,
                                           ),
-                                          label: const Text(
-                                            "Start Outing Session",
-                                            style: TextStyle(
+                                          label: Text(
+                                            AppLocalizations.of(context)?.isAr == true
+                                                ? "بدء جلسة خرجة"
+                                                : "Start Outing Session",
+                                            style: const TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.bold,
                                               color: Colors.white,
@@ -1221,38 +1357,9 @@ class _ChatPageState extends State<ChatPage> {
     }
 
     if (pickedFiles.isNotEmpty && mounted) {
-      setState(() => _isUploading = true);
-      try {
-        // Upload images in parallel for speed
-        final uploadTasks = pickedFiles.map(
-          (file) => _chatService.uploadImage(File(file.path), widget.group.id),
-        );
-
-        final imageUrls = await Future.wait(uploadTasks);
-
-        if (imageUrls.isNotEmpty) {
-          final senderName =
-              _currentUserDisplayName ?? currentUser?.displayName ?? "Me";
-          await _chatService.sendMessage(
-            groupId: widget.group.id,
-            senderId: currentUser?.uid ?? '',
-            senderName: senderName,
-            senderPhotoUrl: currentUser?.photoURL,
-            text:
-                imageUrls.first, // Main text is the first image URL for preview
-            mediaUrls: imageUrls,
-            type: 'image',
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Failed to send images: $e')));
-        }
-      } finally {
-        if (mounted) setState(() => _isUploading = false);
-      }
+      setState(() {
+        _selectedImages.addAll(pickedFiles.map((x) => File(x.path)));
+      });
     }
   }
 
@@ -1297,16 +1404,11 @@ class _ChatPageState extends State<ChatPage> {
     setState(() => _isUploading = true);
     try {
       final position = await Geolocator.getCurrentPosition();
-      final senderName =
-          _currentUserDisplayName ?? currentUser?.displayName ?? "Me";
-      await _chatService.sendMessage(
-        groupId: widget.group.id,
-        senderId: currentUser?.uid ?? '',
-        senderName: senderName,
-        senderPhotoUrl: currentUser?.photoURL,
-        text: 'geo:${position.latitude},${position.longitude}',
-        type: 'location',
-      );
+      if (mounted) {
+        setState(() => _isUploading = false);
+        await _showLocationModeSheet(position);
+      }
+      return;
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -1316,6 +1418,317 @@ class _ChatPageState extends State<ChatPage> {
     } finally {
       if (mounted) setState(() => _isUploading = false);
     }
+  }
+
+  Future<void> _showLocationModeSheet(Position position) async {
+    final userPos = gmaps.LatLng(position.latitude, position.longitude);
+    final l10n = AppLocalizations.of(context, listen: false)!;
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Drag handle
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  l10n.shareLocation,
+                  style: GoogleFonts.outfit(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.darkSlate,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Real Google Map preview
+              SizedBox(
+                height: 200,
+                child: Stack(
+                  children: [
+                    IgnorePointer(
+                      child: gmaps.GoogleMap(
+                        initialCameraPosition: gmaps.CameraPosition(
+                          target: userPos,
+                          zoom: 15,
+                        ),
+                        markers: {
+                          gmaps.Marker(
+                            markerId: const gmaps.MarkerId('user'),
+                            position: userPos,
+                          ),
+                        },
+                        zoomControlsEnabled: false,
+                        myLocationButtonEnabled: false,
+                        mapToolbarEnabled: false,
+                        compassEnabled: false,
+                        tiltGesturesEnabled: false,
+                        rotateGesturesEnabled: false,
+                        scrollGesturesEnabled: false,
+                        zoomGesturesEnabled: false,
+                      ),
+                    ),
+                    // "Your location" pill overlay
+                    Positioned(
+                      top: 10,
+                      left: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 6,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.my_location, color: AppColors.teal, size: 13),
+                            const SizedBox(width: 4),
+                            Text(
+                              l10n.yourLocation,
+                              style: GoogleFonts.outfit(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.darkSlate,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Options
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    InkWell(
+                      onTap: () => Navigator.pop(context, 'live'),
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: AppColors.teal.withValues(alpha: 0.3), width: 1.5),
+                          borderRadius: BorderRadius.circular(16),
+                          color: AppColors.teal.withValues(alpha: 0.04),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: AppColors.teal.withValues(alpha: 0.15),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.my_location, color: AppColors.teal, size: 22),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n.shareLiveLocation,
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.darkSlate,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    l10n.shareLiveDesc,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 13,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.chevron_right, color: Colors.grey),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    InkWell(
+                      onTap: () => Navigator.pop(context, 'custom'),
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.withValues(alpha: 0.2), width: 1.5),
+                          borderRadius: BorderRadius.circular(16),
+                          color: Colors.grey.shade50,
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.map_outlined, color: Colors.grey, size: 22),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n.chooseOnMap,
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.darkSlate,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    l10n.chooseOnMapDesc,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 13,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.chevron_right, color: Colors.grey),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (result == null) return;
+
+    if (result == 'live') {
+      // Send current GPS position
+      final lat = position.latitude;
+      final lng = position.longitude;
+      final senderName = _currentUserDisplayName ?? currentUser?.displayName ?? "Me";
+      await _chatService.sendMessage(
+        groupId: widget.group.id,
+        senderId: currentUser?.uid ?? '',
+        senderName: senderName,
+        senderPhotoUrl: currentUser?.photoURL,
+        text: 'geo:$lat,$lng',
+        type: 'location',
+      );
+    } else if (result == 'custom') {
+      // Open the full-screen map picker
+      if (!mounted) return;
+      final picked = await Navigator.push<gmaps.LatLng>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => LocationPickerPage(initialPosition: position),
+        ),
+      );
+      if (picked == null) return;
+      final senderName = _currentUserDisplayName ?? currentUser?.displayName ?? "Me";
+      await _chatService.sendMessage(
+        groupId: widget.group.id,
+        senderId: currentUser?.uid ?? '',
+        senderName: senderName,
+        senderPhotoUrl: currentUser?.photoURL,
+        text: 'geo:${picked.latitude},${picked.longitude}',
+        type: 'location',
+      );
+    }
+  }
+
+  Widget _buildSelectedImagesPreview() {
+    return Container(
+      height: 90,
+      margin: const EdgeInsets.only(bottom: 8, top: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _selectedImages.length,
+        itemBuilder: (context, index) {
+          return Stack(
+            children: [
+              Container(
+                margin: const EdgeInsets.only(right: 8, top: 4, bottom: 4),
+                width: 76,
+                height: 76,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                  image: DecorationImage(
+                    image: FileImage(_selectedImages[index]),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 0,
+                right: 4,
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedImages.removeAt(index);
+                    });
+                  },
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(4),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
   }
 
   Widget _buildMenuItem({
@@ -1405,40 +1818,49 @@ class _ChatPageState extends State<ChatPage> {
         decoration: BoxDecoration(image: bgImage, gradient: bgGradient),
         child: Stack(
           children: [
-            if (bgImage != null)
-              Positioned.fill(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                  child: Container(
-                    color: Colors.white.withValues(
-                      alpha: 0.5,
-                    ), // Frosted glass tint
-                  ),
-                ),
-              ),
             Positioned.fill(
+              key: const ValueKey('chat_main_column'),
               child: Column(
                 children: [
                   _buildHeader(context),
+                  _buildMemoryPrompt(),
 
                   Expanded(
                     child: StreamBuilder<List<MessageModel>>(
                       stream: _messagesStream,
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                            child: CircularProgressIndicator(
-                              color: AppColors.teal,
+                                ConnectionState.waiting &&
+                            !snapshot.hasData) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const CircularProgressIndicator(
+                                  color: AppColors.teal,
+                                ),
+                                const SizedBox(height: 24),
+                                Text(
+                                  "Loading messages...",
+                                  style: GoogleFonts.inter(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
                             ),
                           );
                         }
 
                         if (snapshot.hasError) {
                           return Center(
-                            child: Text(
-                              "Error: ${snapshot.error}",
-                              style: const TextStyle(color: Colors.red),
+                            child: Padding(
+                              padding: const EdgeInsets.all(24.0),
+                              child: Text(
+                                "Error: ${snapshot.error}",
+                                style: const TextStyle(color: Colors.red),
+                                textAlign: TextAlign.center,
+                              ),
                             ),
                           );
                         }
@@ -1462,17 +1884,12 @@ class _ChatPageState extends State<ChatPage> {
                                     !m.readBy.contains(currentUser!.uid),
                               )
                               .map((m) => m.id)
-                              .take(500) // Firestore batch limit safety
+                              .take(500)
                               .toList();
 
                           if (unreadMessageIds.isNotEmpty) {
-                            Future.microtask(() {
-                              _chatService.markMessagesAsRead(
-                                widget.group.id,
-                                unreadMessageIds,
-                                currentUser!.uid,
-                              );
-                            });
+                            // Debounce / throttle marking as read to avoid stream loops
+                            _throttledMarkAsRead(unreadMessageIds);
                           }
                         }
 
@@ -1526,8 +1943,17 @@ class _ChatPageState extends State<ChatPage> {
                             vertical: 20,
                           ),
                           reverse: true,
-                          itemCount: chatItems.length,
+                          itemCount: chatItems.length + (_isLoadingMore ? 1 : 0),
                           itemBuilder: (context, index) {
+                            if (_isLoadingMore && index == chatItems.length) {
+                              return const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 20),
+                                child: Center(
+                                  child: CircularProgressIndicator(color: AppColors.teal),
+                                ),
+                              );
+                            }
+                            
                             final item = chatItems[index];
                             if (item is String) {
                               if (item == "UNREAD_DIVIDER")
@@ -1767,7 +2193,9 @@ class _ChatPageState extends State<ChatPage> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  "${widget.group.memberIds.length} members",
+                  AppLocalizations.of(context)?.isAr == true
+                      ? "${widget.group.memberIds.length} أعضاء"
+                      : "${widget.group.memberIds.length} members",
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     color: Colors.grey.shade500,
@@ -1783,7 +2211,22 @@ class _ChatPageState extends State<ChatPage> {
               size: 22,
             ),
             onPressed: () => _showShareSheet(context),
-            tooltip: "Invite Members",
+            tooltip: AppLocalizations.of(context)?.isAr == true
+                ? "دعوة أعضاء"
+                : "Invite Members",
+          ),
+          const SizedBox(width: 4),
+          IconButton(
+            icon: const Icon(Icons.photo_album_rounded, color: AppColors.teal, size: 22),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => HistoryFeedScreen(groupId: widget.group.id),
+                ),
+              );
+            },
+            tooltip: "Memories",
           ),
           const SizedBox(width: 4),
           IconButton(
@@ -1799,6 +2242,109 @@ class _ChatPageState extends State<ChatPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMemoryPrompt() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _finishedOutingsStream,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        final doc = snapshot.data!.docs.first;
+        final session = OutingSessionModel.fromFirestore(doc as DocumentSnapshot<Map<String, dynamic>>);
+        
+        if (session.finishedAt == null) return const SizedBox.shrink();
+
+        final diff = DateTime.now().difference(session.finishedAt!);
+        if (diff.inHours >= 24) {
+          // Trigger finalization if needed (lazy cleanup)
+          OutingService().finalizeAndArchive(session);
+          return const SizedBox.shrink();
+        }
+
+        final hoursLeft = 24 - diff.inHours;
+
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.teal, AppColors.tealLight],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.teal.withValues(alpha: 0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Add Memories! 📸",
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      "Ends in $hoursLeft hours",
+                      style: GoogleFonts.inter(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => OutingMemoryUploadScreen(session: session),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: AppColors.teal,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                ),
+                child: Text(
+                  "Upload",
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        ).animate().fadeIn().slideY(begin: -0.2);
+      },
     );
   }
 
@@ -1831,8 +2377,12 @@ class _ChatPageState extends State<ChatPage> {
         top: false,
         child: Directionality(
           textDirection: TextDirection.ltr,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_selectedImages.isNotEmpty) _buildSelectedImagesPreview(),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               if (!_isRecording) ...[
                 CompositedTransformTarget(
@@ -1869,7 +2419,9 @@ class _ChatPageState extends State<ChatPage> {
                         color: AppColors.darkSlate,
                       ),
                       decoration: InputDecoration(
-                        hintText: "Type a message...",
+                        hintText: AppLocalizations.of(context)?.isAr == true
+                            ? "اكتب رسالة..."
+                            : "Type a message...",
                         hintStyle: GoogleFonts.inter(
                           color: Colors.grey.shade400,
                           fontSize: 15,
@@ -2011,7 +2563,7 @@ class _ChatPageState extends State<ChatPage> {
                       }
                     },
                     onTap: () {
-                      if (_messageController.text.trim().isNotEmpty) {
+                      if (_messageController.text.trim().isNotEmpty || _selectedImages.isNotEmpty) {
                         _sendMessage();
                       } else if (_isLocked) {
                         HapticFeedback.mediumImpact();
@@ -2041,7 +2593,7 @@ class _ChatPageState extends State<ChatPage> {
                         ],
                       ),
                       child: Icon(
-                        _messageController.text.trim().isNotEmpty
+                        (_messageController.text.trim().isNotEmpty || _selectedImages.isNotEmpty)
                             ? Icons.send_rounded
                             : (_isLocked
                                   ? Icons.send_rounded
@@ -2086,9 +2638,11 @@ class _ChatPageState extends State<ChatPage> {
               ),
             ],
           ),
-        ),
+        ],
       ),
-    );
+    ),
+  ),
+);
   }
 
   Widget _buildWaveform() {
@@ -2182,6 +2736,15 @@ class _MessageBubble extends StatelessWidget {
     required this.onPlayNextVoice,
     required this.onReactionTap,
   });
+
+  String _formatTime(BuildContext context, DateTime time) {
+    final isAr = AppLocalizations.of(context)?.isAr == true;
+    final formattedTime = intl.DateFormat('hh:mm a').format(time);
+    if (isAr) {
+      return formattedTime.replaceAll('AM', 'ص').replaceAll('PM', 'م');
+    }
+    return formattedTime;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2369,6 +2932,8 @@ class _MessageBubble extends StatelessWidget {
                                       onComplete: () =>
                                           onPlayNextVoice(message.id),
                                     ),
+                                  ] else if (message.text.contains("SOS!") || message.text.contains("Location: https://") || (message.senderName == "🚨 EMERGENCY")) ...[
+                                    _buildSosLocationBubble(context, message),
                                   ] else ...[
                                     Text(
                                       message.text,
@@ -2405,9 +2970,7 @@ class _MessageBubble extends StatelessWidget {
                                             ),
                                           ),
                                         Text(
-                                          intl.DateFormat(
-                                            'hh:mm a',
-                                          ).format(message.timestamp),
+                                          _formatTime(context, message.timestamp),
                                           style: GoogleFonts.inter(
                                             fontSize: 10,
                                             color:
@@ -2530,77 +3093,155 @@ class _MessageBubble extends StatelessWidget {
         ? message.mediaUrls
         : [message.text];
 
+    final bool hasCaption = message.text.isNotEmpty &&
+        !message.text.startsWith('http') &&
+        urls.contains(message.text) == false;
+
     return Container(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.7,
-          ),
-          child: Stack(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: AspectRatio(
-                  aspectRatio: 1, // Constant square aspect ratio as requested
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.of(context).size.width * 0.75,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: Stack(
+              children: [
+                AspectRatio(
+                  aspectRatio: 1, // Constant square aspect ratio
                   child: _buildMediaGrid(context, urls),
                 ),
-              ),
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  height: 40,
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.vertical(
-                      bottom: Radius.circular(14),
+                if (!hasCaption) ...[
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 40,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.3),
+                          ],
+                        ),
+                      ),
                     ),
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withValues(alpha: 0.3),
+                  ),
+                  Positioned(
+                    bottom: 8,
+                    right: 12,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _formatTime(context, message.timestamp),
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                          ),
+                        ),
+                        if (isMe) ...[
+                          const SizedBox(width: 4),
+                          _buildTicks(message, color: Colors.white),
+                        ],
                       ],
                     ),
                   ),
-                ),
-              ),
-              Positioned(
-                bottom: 8,
-                right: 12,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      intl.DateFormat('hh:mm a').format(message.timestamp),
-                      style: GoogleFonts.inter(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                      ),
-                    ),
-                    if (isMe) ...[
-                      const SizedBox(width: 4),
-                      _buildTicks(message, color: Colors.white),
-                    ],
-                  ],
-                ),
-              ),
-            ],
+                ],
+              ],
+            ),
           ),
-        )
-        .animate()
-        .scale(
-          begin: const Offset(0.8, 0.8),
-          end: const Offset(1.0, 1.0),
-          duration: 400.ms,
-          curve: Curves.easeOutBack, // Subtle overshoot "pop"
-        )
-        .fadeIn(duration: 400.ms);
+          if (hasCaption) ...[
+            Padding(
+              padding: const EdgeInsets.only(left: 12, right: 12, top: 8, bottom: 4),
+              child: Text(
+                message.text,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: isMe ? Colors.white : AppColors.darkSlate,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 12, bottom: 6),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    _formatTime(context, message.timestamp),
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      color: isMe ? Colors.white70 : Colors.grey.shade600,
+                    ),
+                  ),
+                  if (isMe) ...[
+                    const SizedBox(width: 4),
+                    _buildTicks(message, color: isMe ? Colors.white70 : Colors.grey.shade600),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    )
+    .animate()
+    .scale(
+      begin: const Offset(0.8, 0.8),
+      end: const Offset(1.0, 1.0),
+      duration: 400.ms,
+      curve: Curves.easeOutBack,
+    )
+    .fadeIn(duration: 400.ms);
   }
 
   Widget _buildMediaGrid(BuildContext context, List<String> urls) {
     if (urls.length == 1) {
       return _buildImageItem(context, urls[0], index: 0, total: 1);
+    }
+
+    if (urls.length == 2) {
+      return Row(
+        children: [
+          Expanded(
+            child: _buildImageItem(context, urls[0], index: 0, total: 2),
+          ),
+          const SizedBox(width: 2),
+          Expanded(
+            child: _buildImageItem(context, urls[1], index: 1, total: 2),
+          ),
+        ],
+      );
+    }
+
+    if (urls.length == 3) {
+      return Row(
+        children: [
+          Expanded(
+            child: _buildImageItem(context, urls[0], index: 0, total: 3),
+          ),
+          const SizedBox(width: 2),
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(
+                  child: _buildImageItem(context, urls[1], index: 1, total: 3),
+                ),
+                const SizedBox(height: 2),
+                Expanded(
+                  child: _buildImageItem(context, urls[2], index: 2, total: 3),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
     }
 
     // Standard WhatsApp-style 2-column grid
@@ -2678,6 +3319,8 @@ class _MessageBubble extends StatelessWidget {
           ? CachedNetworkImage(
               imageUrl: url,
               fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
               placeholder: (context, url) => Container(
                 color: Colors.grey.shade100,
                 child: const Center(
@@ -2815,282 +3458,207 @@ class _MessageBubble extends StatelessWidget {
     );
   }
 
+  Widget _buildSosLocationBubble(BuildContext context, MessageModel message) {
+    // 🚨 Intercept SOS / Google Maps links to create a gorgeous map/SOS card
+    final hasSos = message.text.contains("SOS!") || (message.senderName == "🚨 EMERGENCY");
+    final urlRegex = RegExp(r'(https?://[^\s]+)');
+    final match = urlRegex.firstMatch(message.text);
+    final link = match?.group(0);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: hasSos ? Colors.red.shade50 : Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: hasSos ? Colors.red.shade300 : Colors.blue.shade300,
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                hasSos ? Icons.emergency_rounded : Icons.location_on_rounded,
+                color: hasSos ? Colors.red : Colors.blue,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  hasSos ? "🚨 EMERGENCY" : "📍 Shared Location",
+                  style: GoogleFonts.outfit(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: hasSos ? Colors.red.shade900 : Colors.blue.shade900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            message.text.replaceAll(link ?? '', '').trim(),
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: AppColors.darkSlate,
+              height: 1.3,
+            ),
+          ),
+          if (link != null) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  final uri = Uri.parse(link);
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                },
+                icon: const Icon(Icons.map_rounded, color: Colors.white, size: 18),
+                label: Text(
+                  "Open in Google Maps",
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: hasSos ? Colors.red.shade700 : Colors.blue.shade700,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildLocationBubble() {
     final geo = message.text.replaceFirst('geo:', '').split(',');
+    final latVal = double.tryParse(geo.isNotEmpty ? geo[0] : '0') ?? 0.0;
+    final lngVal = double.tryParse(geo.length > 1 ? geo[1] : '0') ?? 0.0;
     final lat = geo.isNotEmpty ? geo[0] : '0.0';
     final long = geo.length > 1 ? geo[1] : '0.0';
     final apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '';
-
-    // Premium Map Styling for Static API
-    const mapStyle =
-        'feature:all|element:labels|visibility:on&style=feature:water|color:0x00d2ff&style=feature:landscape|color:0xf5f5f5&style=feature:road|color:0xffffff';
-    final staticMapUrl =
-        "https://maps.googleapis.com/maps/api/staticmap?center=$lat,$long&zoom=16&size=600x300&maptype=roadmap&markers=color:red%7C$lat,$long&key=$apiKey&style=$mapStyle";
+    final target = gmaps.LatLng(latVal, lngVal);
 
     return FutureBuilder<String>(
-          future: _getAddress(lat, long, apiKey),
-          builder: (context, snapshot) {
-            final address = snapshot.data ?? "Fetching location name...";
+      future: _getAddress(lat, long, apiKey),
+      builder: (context, snapshot) {
+        final address = snapshot.data ?? "Shared Location";
 
-            return Container(
-              width: double.infinity,
-              margin: const EdgeInsets.symmetric(vertical: 4),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(28),
-                color: isMe ? AppColors.darkSlate : Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 24,
-                    offset: const Offset(0, 12),
+        return GestureDetector(
+          onTap: () => _openMap(lat, long),
+          child: Container(
+            width: 260,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Real Google Map preview
+                  SizedBox(
+                    height: 150,
+                    child: IgnorePointer(
+                      child: gmaps.GoogleMap(
+                        initialCameraPosition: gmaps.CameraPosition(
+                          target: target,
+                          zoom: 15,
+                        ),
+                        markers: {
+                          gmaps.Marker(
+                            markerId: const gmaps.MarkerId('loc'),
+                            position: target,
+                          ),
+                        },
+                        zoomControlsEnabled: false,
+                        myLocationButtonEnabled: false,
+                        mapToolbarEnabled: false,
+                        compassEnabled: false,
+                        tiltGesturesEnabled: false,
+                        rotateGesturesEnabled: false,
+                        scrollGesturesEnabled: false,
+                        zoomGesturesEnabled: false,
+                      ),
+                    ),
                   ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(28),
-                child: Column(
-                  children: [
-                    // Map Header with Glassmorphic Badge
-                    Stack(
+                  // Divider line
+                  Container(
+                    height: 1,
+                    color: Colors.grey.shade200,
+                  ),
+                  // Address footer
+                  Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    child: Row(
                       children: [
-                        CachedNetworkImage(
-                          imageUrl: staticMapUrl,
-                          height: 180,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => Container(
-                            height: 180,
-                            color: Colors.grey.shade100,
-                            child: const Center(
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.teal,
+                        const Icon(
+                          Icons.location_on,
+                          color: Colors.redAccent,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                address,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF202020),
+                                ),
                               ),
-                            ),
-                          ),
-                          errorWidget: (context, url, error) => Container(
-                            height: 180,
-                            color: Colors.grey.shade100,
-                            child: const Icon(
-                              Icons.map_outlined,
-                              color: Colors.grey,
-                              size: 40,
-                            ),
-                          ),
-                        ),
-                        // Dynamic Overlay
-                        Positioned.fill(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.transparent,
-                                  (isMe ? Colors.black : AppColors.darkSlate)
-                                      .withValues(alpha: 0.4),
-                                ],
+                              const SizedBox(height: 1),
+                              Text(
+                                AppLocalizations.of(context)?.tapToOpenInMaps ?? 'Tap to open in Maps',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  color: Colors.grey.shade500,
+                                ),
                               ),
-                            ),
+                            ],
                           ),
                         ),
-                        // Centered Pulse Detail
-                        Positioned(
-                          top: 90 - 20,
-                          left: (MediaQuery.of(context).size.width * 0.35) - 20,
-                          child:
-                              Container(
-                                    width: 40,
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.teal.withValues(
-                                        alpha: 0.2,
-                                      ),
-                                      shape: BoxShape.circle,
-                                    ),
-                                  )
-                                  .animate(
-                                    onPlay: (controller) => controller.repeat(),
-                                  )
-                                  .scale(
-                                    duration: 2.seconds,
-                                    begin: const Offset(1, 1),
-                                    end: const Offset(2.2, 2.2),
-                                    curve: Curves.easeOut,
-                                  )
-                                  .fadeOut(duration: 2.seconds),
-                        ),
-                        // Location Type Badge
-                        Positioned(
-                          top: 14,
-                          left: 14,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              borderRadius: BorderRadius.circular(30),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 10,
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.share_location_rounded,
-                                  color: AppColors.teal,
-                                  size: 14,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  "Shared Spot",
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.teal,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                        const Icon(
+                          Icons.chevron_right,
+                          color: Colors.grey,
+                          size: 18,
                         ),
                       ],
                     ),
-
-                    // Address & Action Panel
-                    Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            address,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.outfit(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: isMe ? Colors.white : AppColors.darkSlate,
-                              height: 1.2,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.gps_fixed_rounded,
-                                size: 12,
-                                color: isMe
-                                    ? Colors.white60
-                                    : Colors.grey.shade500,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                "$lat, $long",
-                                style: GoogleFonts.inter(
-                                  fontSize: 10,
-                                  color: isMe
-                                      ? Colors.white60
-                                      : Colors.grey.shade500,
-                                ),
-                              ),
-                              const Spacer(),
-                              GestureDetector(
-                                onTap: () {
-                                  Clipboard.setData(
-                                    ClipboardData(text: "$lat, $long"),
-                                  );
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text("Coordinates copied!"),
-                                      duration: Duration(seconds: 1),
-                                    ),
-                                  );
-                                },
-                                child: Icon(
-                                  Icons.copy_rounded,
-                                  size: 14,
-                                  color: isMe
-                                      ? AppColors.teal
-                                      : Colors.grey.shade400,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Action Row
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: () => _openMap(lat, long),
-                                    borderRadius: BorderRadius.circular(16),
-                                    child: Container(
-                                      height: 52,
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: AppColors.tealGradient,
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                        borderRadius: BorderRadius.circular(16),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: AppColors.teal.withValues(
-                                              alpha: 0.3,
-                                            ),
-                                            blurRadius: 12,
-                                            offset: const Offset(0, 6),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          const Icon(
-                                            Icons.directions_rounded,
-                                            color: Colors.white,
-                                            size: 20,
-                                          ),
-                                          const SizedBox(width: 10),
-                                          Text(
-                                            "Navigate",
-                                            style: GoogleFonts.outfit(
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            );
-          },
-        )
-        .animate()
-        .fadeIn(duration: 600.ms)
-        .scale(begin: const Offset(0.94, 0.94), curve: Curves.easeOutBack);
+            ),
+          ),
+        );
+      },
+    );
   }
+
+
 
   Future<String> _getAddress(String lat, String long, String apiKey) async {
     try {

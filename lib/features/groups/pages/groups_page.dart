@@ -23,6 +23,7 @@ class GroupsPage extends StatefulWidget {
 class _GroupsPageState extends State<GroupsPage>
     with AutomaticKeepAliveClientMixin {
   bool _showMenu = false;
+  String _searchQuery = '';
   final currentUser = FirebaseAuth.instance.currentUser;
   final Set<String> _syncedGroupIds = {};
   Stream<QuerySnapshot>? _groupsStream;
@@ -93,7 +94,7 @@ class _GroupsPageState extends State<GroupsPage>
                 );
               }
 
-              final groups = snapshot.hasData
+              final allGroups = snapshot.hasData
                   ? snapshot.data!.docs
                         .map(
                           (doc) => GroupModel.fromMap(
@@ -103,9 +104,19 @@ class _GroupsPageState extends State<GroupsPage>
                         .toList()
                   : <GroupModel>[];
 
+              // Filter groups by search query
+              final groups = _searchQuery.isEmpty
+                  ? allGroups
+                  : allGroups.where((g) {
+                      final query = _searchQuery.toLowerCase();
+                      return g.name.toLowerCase().contains(query) ||
+                          (g.lastMessage?.toLowerCase().contains(query) ?? false) ||
+                          (g.lastMessageSender?.toLowerCase().contains(query) ?? false);
+                    }).toList();
+
               // Sync FCM topic subscriptions for all groups
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                for (var g in groups) {
+                for (var g in allGroups) {
                   if (!_syncedGroupIds.contains(g.id)) {
                     FcmService.instance.subscribeToGroup(g.id);
                     _syncedGroupIds.add(g.id);
@@ -181,6 +192,9 @@ class _GroupsPageState extends State<GroupsPage>
                           ],
                         ),
                         child: TextField(
+                          onChanged: (value) {
+                            setState(() => _searchQuery = value.trim());
+                          },
                           decoration: InputDecoration(
                             hintText: l10n.search,
                             hintStyle: GoogleFonts.inter(
@@ -192,6 +206,15 @@ class _GroupsPageState extends State<GroupsPage>
                               color: AppColors.teal,
                               size: 22,
                             ),
+                            suffixIcon: _searchQuery.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(Icons.close, size: 18, color: AppColors.slate),
+                                    onPressed: () {
+                                      setState(() => _searchQuery = '');
+                                      FocusScope.of(context).unfocus();
+                                    },
+                                  )
+                                : null,
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(
                               vertical: 16,
@@ -362,13 +385,52 @@ class _GroupCard extends StatelessWidget {
 
   const _GroupCard({required this.group});
 
-  String _formatTime(DateTime? time) {
+  String _formatTime(BuildContext context, DateTime? time) {
     if (time == null) return "";
     final now = DateTime.now();
     final diff = now.difference(time);
-    if (diff.inDays == 0) return DateFormat('hh:mm a').format(time);
-    if (diff.inDays == 1) return "Yesterday";
+    final l10n = AppLocalizations.of(context);
+    final isAr = l10n?.isAr == true;
+
+    if (diff.inDays == 0) {
+      final formattedTime = DateFormat('hh:mm a').format(time);
+      if (isAr) {
+        return formattedTime.replaceAll('AM', 'ص').replaceAll('PM', 'م');
+      }
+      return formattedTime;
+    }
+    if (diff.inDays == 1) {
+      return isAr ? "أمس" : "Yesterday";
+    }
     return DateFormat('dd/MM/yy').format(time);
+  }
+
+  String _safeStr(String input, String source) {
+    try {
+      // Fast check for unpaired surrogates
+      for (int i = 0; i < input.length; i++) {
+        int code = input.codeUnitAt(i);
+        if (code >= 0xD800 && code <= 0xDBFF) { // High surrogate
+          if (i + 1 == input.length) {
+            debugPrint("🚨 BAD STRING DETECTED in $source: Dangling high surrogate! String: $input");
+            return "CORRUPTED TEXT";
+          }
+          int next = input.codeUnitAt(i + 1);
+          if (next < 0xDC00 || next > 0xDFFF) {
+            debugPrint("🚨 BAD STRING DETECTED in $source: Unpaired high surrogate! String: $input");
+            return "CORRUPTED TEXT";
+          }
+          i++;
+        } else if (code >= 0xDC00 && code <= 0xDFFF) { // Low surrogate
+          debugPrint("🚨 BAD STRING DETECTED in $source: Dangling low surrogate! String: $input");
+          return "CORRUPTED TEXT";
+        }
+      }
+      return input;
+    } catch (e) {
+      debugPrint("🚨 BAD STRING DETECTED in $source: Exception $e");
+      return "CORRUPTED TEXT";
+    }
   }
 
   @override
@@ -455,7 +517,7 @@ class _GroupCard extends StatelessWidget {
                         ),
                         if (group.lastMessageTime != null)
                           Text(
-                            _formatTime(group.lastMessageTime),
+                            _formatTime(context, group.lastMessageTime),
                             style: GoogleFonts.inter(
                               fontSize: 11,
                               color: unreadCount > 0

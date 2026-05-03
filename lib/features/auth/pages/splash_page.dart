@@ -35,9 +35,12 @@ class _SplashPageState extends State<SplashPage> {
     Widget nextScreen = const OnboardingPage(); // Default
 
     final user = FirebaseAuth.instance.currentUser;
+    
     if (user != null) {
       // User is logged in, check app lock
-      final isLocked = await BiometricService().isAppLocked();
+      final isLocked = await BiometricService()
+          .isAppLocked()
+          .timeout(const Duration(seconds: 2), onTimeout: () => false);
 
       if (!isLocked) {
         // Not locked, check profile
@@ -45,7 +48,8 @@ class _SplashPageState extends State<SplashPage> {
           final doc = await FirebaseFirestore.instance
               .collection('users')
               .doc(user.uid)
-              .get();
+              .get()
+              .timeout(const Duration(seconds: 3));
           if (doc.exists) {
             nextScreen = const HomePage();
             // Sync FCM token to database

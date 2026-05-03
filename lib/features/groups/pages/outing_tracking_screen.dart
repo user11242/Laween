@@ -8,20 +8,24 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../../core/services/google_maps_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/theme/colors.dart';
 import '../data/models/outing_session_model.dart';
 import '../data/services/outing_service.dart';
 import '../../../core/services/location_service.dart';
+import '../widgets/sos_alarm_overlay.dart';
 
 class OutingTrackingScreen extends StatefulWidget {
   final String groupId;
   final String sessionId;
+  final OutingSessionModel? initialSession;
 
   const OutingTrackingScreen({
     super.key,
     required this.groupId,
     required this.sessionId,
+    this.initialSession,
   });
 
   @override
@@ -37,6 +41,10 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
   final Map<String, BitmapDescriptor> _customMarkers = {};
   bool _hasInitialFit = false;
   bool _shouldFollow = true; // User can toggle this behavior
+  String? _selectedParticipantUid;
+  Set<Polyline> _polylines = {};
+  final Map<String, List<LatLng>> _cachedRoutes = {};
+
 
   @override
   void initState() {
@@ -54,36 +62,78 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
     super.dispose();
   }
 
-  Future<BitmapDescriptor> _getAvatarIcon(String name, int index) async {
-    if (_customMarkers.containsKey(name)) return _customMarkers[name]!;
-
-    final colors = [
-      const Color(0xFF00C9A7),
-      const Color(0xFF0097A7),
-      const Color(0xFF00B4CC),
-      const Color(0xFF009688),
-      const Color(0xFF26A69A),
-    ];
-    final color = colors[index % colors.length];
+  Future<BitmapDescriptor> _getAvatarIcon(String name, String? photoUrl, Color color) async {
+    final cacheKey = "avatar_${photoUrl ?? name}_${color.toARGB32()}";
+    if (_customMarkers.containsKey(cacheKey)) return _customMarkers[cacheKey]!;
 
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
     const size = 110.0;
     const radius = size / 2;
 
+    // Outer glow ring (strong, colored)
     final glowPaint = Paint()
-      ..color = AppColors.teal.withValues(alpha: 0.5)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
-    canvas.drawCircle(const Offset(radius, radius), radius - 10, glowPaint);
+      ..color = color.withValues(alpha: 0.6)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+    canvas.drawCircle(Offset(radius, radius), radius - 8, glowPaint);
 
-    final paint = Paint()..color = color;
-    canvas.drawCircle(const Offset(radius, radius), radius - 15, paint);
+    // Colored border ring
+    final ringPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 6;
+    canvas.drawCircle(Offset(radius, radius), radius - 8, ringPaint);
 
+    // White inner border
     final borderPaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 4;
-    canvas.drawCircle(const Offset(radius, radius), radius - 15, borderPaint);
+      ..strokeWidth = 3;
+
+    if (photoUrl != null && photoUrl.isNotEmpty) {
+      try {
+        final Completer<ui.Image> completer = Completer();
+        final imageStream = NetworkImage(photoUrl).resolve(ImageConfiguration.empty);
+        imageStream.addListener(ImageStreamListener((info, _) {
+          if (!completer.isCompleted) completer.complete(info.image);
+        }, onError: (exception, stackTrace) {
+           if (!completer.isCompleted) completer.completeError(exception);
+        }));
+        
+        final ui.Image image = await completer.future.timeout(const Duration(seconds: 4));
+        
+        canvas.save();
+        Path path = Path()..addOval(Rect.fromCircle(center: Offset(radius, radius), radius: radius - 16));
+        canvas.clipPath(path);
+        
+        paintImage(
+          canvas: canvas,
+          rect: Rect.fromCircle(center: Offset(radius, radius), radius: radius - 16),
+          image: image,
+          fit: BoxFit.cover,
+        );
+        canvas.restore();
+        canvas.drawCircle(const Offset(radius, radius), radius - 16, borderPaint);
+      } catch (e) {
+        _drawInitialMarker(canvas, radius, color, name, borderPaint);
+      }
+    } else {
+      _drawInitialMarker(canvas, radius, color, name, borderPaint);
+    }
+
+    final picture = recorder.endRecording();
+    final img = await picture.toImage(size.toInt(), size.toInt());
+    final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
+    final descriptor = BitmapDescriptor.bytes(byteData!.buffer.asUint8List());
+
+    _customMarkers[cacheKey] = descriptor;
+    return descriptor;
+  }
+
+  void _drawInitialMarker(Canvas canvas, double radius, Color color, String name, Paint borderPaint) {
+    final paint = Paint()..color = color;
+    canvas.drawCircle(Offset(radius, radius), radius - 16, paint);
+    canvas.drawCircle(Offset(radius, radius), radius - 16, borderPaint);
 
     final textPainter = TextPainter(
       text: TextSpan(
@@ -101,14 +151,6 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
       canvas,
       Offset(radius - textPainter.width / 2, radius - textPainter.height / 2),
     );
-
-    final picture = recorder.endRecording();
-    final img = await picture.toImage(size.toInt(), size.toInt());
-    final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
-    final descriptor = BitmapDescriptor.bytes(byteData!.buffer.asUint8List());
-
-    _customMarkers[name] = descriptor;
-    return descriptor;
   }
 
   String _calculateDistance(
@@ -135,54 +177,136 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
     return mins.toInt().toString();
   }
 
+  Future<void> _fitRouteBounds(double pLat, double pLng, dynamic winnerLoc) async {
+    if (!_controller.isCompleted) return;
+    final controller = await _controller.future;
+    final vLat = (winnerLoc['latitude'] as num).toDouble();
+    final vLng = (winnerLoc['longitude'] as num).toDouble();
+
+    final minLat = math.min(pLat, vLat);
+    final maxLat = math.max(pLat, vLat);
+    final minLng = math.min(pLng, vLng);
+    final maxLng = math.max(pLng, vLng);
+
+    final bounds = LatLngBounds(
+      southwest: LatLng(minLat, minLng),
+      northeast: LatLng(maxLat, maxLng),
+    );
+    // Large padding to account for ETA sheet at the bottom
+    controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 120.0));
+  }
+
   Future<void> _updateMarkers(OutingSessionModel session) async {
     if (_isDisposed || !mounted) return;
 
     final Set<Marker> newMarkers = {};
+    final Set<Polyline> newPolylines = {};
     final winner = session.winner;
+    final winnerLoc = winner?['location'];
 
     // 1. Destination Marker
-    if (winner != null && winner['location'] != null) {
-      final loc = winner['location'];
+    if (winnerLoc != null) {
       newMarkers.add(
         Marker(
           markerId: const MarkerId('v_winner'),
           position: LatLng(
-            (loc['latitude'] as num).toDouble(),
-            (loc['longitude'] as num).toDouble(),
+            (winnerLoc['latitude'] as num).toDouble(),
+            (winnerLoc['longitude'] as num).toDouble(),
           ),
           icon: BitmapDescriptor.defaultMarkerWithHue(
             BitmapDescriptor.hueOrange,
           ),
-          infoWindow: InfoWindow(title: winner['name'] ?? "Destination"),
+          infoWindow: InfoWindow(title: winner?['name'] ?? "Destination"),
         ),
       );
     }
 
     // 2. Participant Live Avatars
+    final List<Future<Marker?>> participantMarkerFutures = [];
     for (int i = 0; i < session.participants.length; i++) {
       final p = session.participants[i];
       if (p.location != null) {
-        final icon = await _getAvatarIcon(p.name, i);
-        if (_isDisposed || !mounted) return;
-        newMarkers.add(
-          Marker(
+        participantMarkerFutures.add(() async {
+          final color = AppColors.getUserColor(p.uid);
+          final icon = await _getAvatarIcon(p.name, p.photoUrl, color);
+          if (_isDisposed || !mounted) return null;
+          return Marker(
             markerId: MarkerId('p_${p.uid}'),
             position: LatLng(p.location!.latitude, p.location!.longitude),
             infoWindow: InfoWindow(title: p.name),
             icon: icon,
             anchor: const Offset(0.5, 0.5),
-          ),
-        );
+            onTap: () {
+              setState(() {
+                if (_selectedParticipantUid == p.uid) {
+                  _selectedParticipantUid = null;
+                } else {
+                  _selectedParticipantUid = p.uid;
+                }
+              });
+              _updateMarkers(session); // Re-trigger to update polylines
+              if (_selectedParticipantUid != null && winnerLoc != null) {
+                _shouldFollow = false; // Stop auto-following when they inspect a route
+                _fitRouteBounds(p.location!.latitude, p.location!.longitude, winnerLoc);
+              }
+            },
+          );
+        }());
+      }
+    }
+
+    final results = await Future.wait(participantMarkerFutures);
+    for (var m in results) {
+      if (m != null) newMarkers.add(m);
+    }
+
+    // 3. Handle Selected Polyline
+    if (_selectedParticipantUid != null && winnerLoc != null) {
+      final selectedP = session.participants.firstWhere((p) => p.uid == _selectedParticipantUid);
+      if (selectedP.location != null) {
+        List<LatLng>? route = _cachedRoutes[_selectedParticipantUid!];
+        if (route == null) {
+          route = await GoogleMapsService().getRoutePolyline(
+            originLat: selectedP.location!.latitude,
+            originLng: selectedP.location!.longitude,
+            destLat: (winnerLoc['latitude'] as num).toDouble(),
+            destLng: (winnerLoc['longitude'] as num).toDouble(),
+          );
+          if (route != null) {
+            _cachedRoutes[_selectedParticipantUid!] = route;
+          }
+        }
+
+        if (route != null && mounted) {
+          final color = AppColors.getUserColor(selectedP.uid);
+          newPolylines.add(
+            Polyline(
+              polylineId: PolylineId('route_${_selectedParticipantUid}'),
+              points: route,
+              color: color,
+              width: 5,
+              jointType: JointType.round,
+              startCap: Cap.roundCap,
+              endCap: Cap.roundCap,
+            ),
+          );
+        }
       }
     }
 
     if (_isDisposed || !mounted) return;
+    
+    // Guard against infinite rebuild loops
+    bool markersChanged = newMarkers.length != _markers.length || !_markers.containsAll(newMarkers);
+    bool polylinesChanged = newPolylines.length != _polylines.length;
 
-    // Trigger update if hardware coordinates changed for anyone
-    if (newMarkers.length != _markers.length ||
-        !_markers.containsAll(newMarkers)) {
-      setState(() => _markers = newMarkers);
+    if (markersChanged || polylinesChanged) {
+      if (mounted) {
+        setState(() {
+          _markers = newMarkers;
+          _polylines = newPolylines;
+        });
+      }
       // Only auto-fit once or if 'follow' is enabled
       if (!_hasInitialFit || _shouldFollow) {
         _fitBounds();
@@ -190,7 +314,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
       }
     }
 
-    // 3. Detect First Arrival
+    // 4. Detect First Arrival
     if (session.firstArrivedUid == null) {
       final myUid = FirebaseAuth.instance.currentUser?.uid;
       final me = session.participants.firstWhere(
@@ -198,10 +322,9 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
         orElse: () => session.participants.first,
       ); // Fallback to avoid error
 
-      if (me.location != null && winner != null && winner['location'] != null) {
-        final loc = winner['location'];
-        final vLat = (loc['latitude'] as num).toDouble();
-        final vLng = (loc['longitude'] as num).toDouble();
+      if (me.location != null && winnerLoc != null) {
+        final vLat = (winnerLoc['latitude'] as num).toDouble();
+        final vLng = (winnerLoc['longitude'] as num).toDouble();
 
         final dist = double.parse(
           _calculateDistance(
@@ -220,6 +343,30 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
             myUid ?? '',
           );
         }
+      }
+    }
+  }
+
+  Future<void> _animateToUser(String uid) async {
+    if (!_controller.isCompleted) return;
+    final controller = await _controller.future;
+    
+    // Find the participant's location
+    final snapshot = await FirebaseFirestore.instance
+        .collection('groups')
+        .doc(widget.groupId)
+        .collection('outings')
+        .doc(widget.sessionId)
+        .get();
+        
+    if (snapshot.exists) {
+      final session = OutingSessionModel.fromFirestore(snapshot);
+      final participant = session.participants.where((p) => p.uid == uid).firstOrNull;
+      if (participant != null && participant.location != null) {
+        controller.animateCamera(CameraUpdate.newLatLngZoom(
+          LatLng(participant.location!.latitude, participant.location!.longitude),
+          16.0,
+        ));
       }
     }
   }
@@ -253,11 +400,10 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
       backgroundColor: AppColors.background,
       body: StreamBuilder<OutingSessionModel?>(
         stream: _outingService.streamSession(widget.groupId, widget.sessionId),
+        initialData: widget.initialSession,
         builder: (context, snapshot) {
           if (!snapshot.hasData || snapshot.data == null) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.teal),
-            );
+            return _buildSkeletonLoader();
           }
 
           final session = snapshot.data!;
@@ -281,122 +427,147 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                 zoomControlsEnabled: false,
                 mapToolbarEnabled: false,
                 markers: _markers,
+                polylines: _polylines,
                 onMapCreated: (controller) {
-                  if (!_controller.isCompleted)
+                  if (!_controller.isCompleted) {
                     _controller.complete(controller);
+                  }
                 },
               ),
+              
 
-              // --- 2. HEADER & NAVIGATION ---
+
+              // --- 2. PREMIUM GLASS HEADER ---
               Positioned(
                 top: 55,
                 left: 20,
                 right: 20,
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.darkSlate.withValues(alpha: 0.9),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          color: Colors.white,
-                          size: 18,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: BackdropFilter(
+                    filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.darkSlate.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          width: 1,
                         ),
                       ),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.darkSlate.withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, 5),
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              margin: const EdgeInsets.all(4),
+                              padding: const EdgeInsets.all(12),
+                              decoration: const BoxDecoration(
+                                color: Colors.white10,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.arrow_back_ios_new_rounded,
+                                color: Colors.white,
+                                size: 18,
+                              ),
                             ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  "LIVE TRACKING",
-                                  style: GoogleFonts.inter(
-                                    fontSize: 10,
-                                    color: AppColors.teal,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1.5,
-                                  ),
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 6,
+                                      height: 6,
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.teal,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ).animate(onPlay: (c) => c.repeat())
+                                     .scale(duration: 1000.ms, begin: const Offset(0.8, 0.8), end: const Offset(1.2, 1.2))
+                                     .then().scale(duration: 1000.ms, begin: const Offset(1.2, 1.2), end: const Offset(0.8, 0.8)),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      "LIVE TRACKING",
+                                      style: GoogleFonts.inter(
+                                        fontSize: 9,
+                                        color: Colors.white70,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 1.2,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const Spacer(),
-                                if (_shouldFollow)
-                                  const Icon(
-                                    Icons.auto_fix_high_rounded,
-                                    color: AppColors.teal,
-                                    size: 12,
+                                Text(
+                                  winner?['name'] ?? "Destination",
+                                  style: GoogleFonts.outfit(
+                                    color: Colors.white,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
                                   ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ],
                             ),
-                            Text(
-                              winner?['name'] ?? "Destination",
-                              style: GoogleFonts.outfit(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                          ),
+                          if (_shouldFollow)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              margin: const EdgeInsets.only(right: 8),
+                              decoration: BoxDecoration(
+                                color: AppColors.teal.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppColors.teal.withValues(alpha: 0.3)),
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                              child: Text(
+                                "FOLLOWING",
+                                style: GoogleFonts.outfit(
+                                  fontSize: 8,
+                                  color: AppColors.teal,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
                             ),
-                          ],
-                        ),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-
-              // --- MAP CONTROLS ---
-              Positioned(
-                bottom: 340, // Above ETA sheet
-                right: 20,
-                child: Column(
-                  children: [
-                    _buildMapControl(
-                      icon: _shouldFollow
-                          ? Icons.gps_fixed_rounded
-                          : Icons.gps_not_fixed_rounded,
-                      color: _shouldFollow
-                          ? AppColors.teal
-                          : AppColors.darkSlate,
-                      onTap: () {
-                        setState(() => _shouldFollow = !_shouldFollow);
-                        if (_shouldFollow) _fitBounds();
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    _buildMapControl(
-                      icon: Icons.layers_rounded,
-                      onTap: () {
-                        // Toggle map style or just zoom out
-                        _fitBounds();
-                      },
-                    ),
-                  ],
-                ),
-              ),
+              ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.2),
+ 
+               // --- MAP CONTROLS ---
+               Positioned(
+                 bottom: 350, // Above ETA sheet
+                 right: 20,
+                 child: Column(
+                   children: [
+                     _buildMapControl(
+                       icon: _shouldFollow
+                           ? Icons.gps_fixed_rounded
+                           : Icons.gps_not_fixed_rounded,
+                       active: _shouldFollow,
+                       onTap: () {
+                         setState(() => _shouldFollow = !_shouldFollow);
+                         if (_shouldFollow) _fitBounds();
+                       },
+                     ),
+                     const SizedBox(height: 12),
+                     _buildMapControl(
+                       icon: Icons.layers_rounded,
+                       onTap: () {
+                         _fitBounds();
+                       },
+                     ),
+                   ],
+                 ),
+               ),
 
               // --- 3. DYNAMIC ETA BOARD ---
               _buildETASheet(session, winner),
@@ -414,10 +585,11 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
     OutingSessionModel session,
     Map<String, dynamic>? winner,
   ) {
-    if (winner == null || winner['location'] == null)
+    if (winner == null || winner['location'] == null) {
       return const SizedBox.shrink();
-    final vLat = winner['location']['latitude'] as double;
-    final vLng = winner['location']['longitude'] as double;
+    }
+    final vLat = (winner['location']['latitude'] as num).toDouble();
+    final vLng = (winner['location']['longitude'] as num).toDouble();
 
     // Distill mathematically sorted participants matrix
     final sortedP = List<OutingParticipant>.from(session.participants);
@@ -511,8 +683,10 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                   itemBuilder: (context, i) {
                     final p = sortedP[i];
                     if (p.location == null) return const SizedBox.shrink();
+                    final isMe = p.uid == FirebaseAuth.instance.currentUser?.uid;
 
-                    final dist = double.parse(
+                    // Use real Google values from Firestore if available
+                    final dist = p.distanceKm ?? double.parse(
                       _calculateDistance(
                         p.location!.latitude,
                         p.location!.longitude,
@@ -520,110 +694,19 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                         vLng,
                       ),
                     );
-                    final time = _estimateTime(dist);
-                    final bool isArrived = dist <= 0.1; // Less than 100 meters
+                    final timeMins = p.etaMinutes ?? int.tryParse(_estimateTime(dist)) ?? 0;
+                    final bool isArrived = dist <= 0.1;
 
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: isArrived
-                                ? AppColors.teal
-                                : Colors.grey.shade200,
-                            radius: 18,
-                            child: isArrived
-                                ? const Icon(
-                                    Icons.check_rounded,
-                                    color: Colors.white,
-                                    size: 20,
-                                  )
-                                : Text(
-                                    "${i + 1}",
-                                    style: GoogleFonts.outfit(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.grey.shade700,
-                                    ),
-                                  ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  p.name,
-                                  style: GoogleFonts.outfit(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: AppColors.darkSlate,
-                                  ),
-                                ),
-                                Text(
-                                  "$dist km away",
-                                  style: GoogleFonts.inter(
-                                    color: Colors.grey,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (isArrived)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.teal.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                "ARRIVED",
-                                style: GoogleFonts.inter(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 11,
-                                  color: AppColors.teal,
-                                  letterSpacing: 1,
-                                ),
-                              ),
-                            )
-                          else
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.amber.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    time,
-                                    style: GoogleFonts.outfit(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                      color: Colors.amber.shade700,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    "min",
-                                    style: GoogleFonts.inter(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 11,
-                                      color: Colors.amber.shade700,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
-                    );
+                    return _buildParticipantTile(
+                      p: p,
+                      index: i,
+                      isMe: isMe,
+                      dist: dist,
+                      timeMins: timeMins,
+                      isArrived: isArrived,
+                      vLat: vLat,
+                      vLng: vLng,
+                    ).animate(delay: (i * 100).ms).fadeIn(duration: 400.ms).slideX(begin: 0.1);
                   },
                 ),
               ],
@@ -633,6 +716,227 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
             duration: 600.ms,
             curve: Curves.easeOutQuart,
           ),
+    );
+  }
+
+  Widget _buildParticipantTile({
+    required OutingParticipant p,
+    required int index,
+    required bool isMe,
+    required double dist,
+    required int timeMins,
+    required bool isArrived,
+    required double vLat,
+    required double vLng,
+  }) {
+    // Calculate Journey Progress
+    double progress = 0.0;
+    if (p.startLocation != null) {
+      final totalDist = double.tryParse(_calculateDistance(
+        p.startLocation!.latitude,
+        p.startLocation!.longitude,
+        vLat,
+        vLng,
+      )) ?? 0.0;
+      if (totalDist > 0.05) {
+        progress = (1.0 - (dist / totalDist)).clamp(0.0, 1.0);
+      } else {
+        progress = 1.0;
+      }
+    } else {
+      progress = (1.0 - (dist / 10.0)).clamp(0.0, 1.0);
+    }
+
+    final isSelected = _selectedParticipantUid == p.uid;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      padding: EdgeInsets.symmetric(vertical: 16, horizontal: isSelected ? 12 : 0),
+      decoration: BoxDecoration(
+        color: isSelected ? AppColors.getUserColor(p.uid).withValues(alpha: 0.1) : Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // --- AVATAR ---
+          Stack(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColors.getUserColor(p.uid),
+                    width: 2,
+                  ),
+                ),
+                child: ClipOval(
+                  child: p.photoUrl != null && p.photoUrl!.isNotEmpty
+                      ? Image.network(p.photoUrl!, fit: BoxFit.cover)
+                      : Container(
+                          color: AppColors.getUserColor(p.uid),
+                          child: Center(
+                            child: Text(
+                              p.name.isNotEmpty ? p.name[0].toUpperCase() : "?",
+                              style: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                ),
+              ),
+              if (isArrived)
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check_circle_rounded,
+                      color: AppColors.teal,
+                      size: 18,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 16),
+
+          // --- INFO & PROGRESS ---
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      p.name + (isMe ? " (You)" : ""),
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: AppColors.getUserColor(p.uid),
+                      ),
+                    ),
+                    if (isMe) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.getUserColor(p.uid).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          "ME",
+                          style: GoogleFonts.inter(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.getUserColor(p.uid),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 4),
+                if (!isArrived) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(2),
+                    child: SizedBox(
+                      height: 4,
+                      width: 120,
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        backgroundColor: AppColors.getUserColor(p.uid).withValues(alpha: 0.1),
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.getUserColor(p.uid)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                ],
+                Text(
+                  isArrived ? "Joined the masterpiece" : "${dist.toStringAsFixed(1)} km left",
+                  style: GoogleFonts.inter(
+                    color: Colors.grey.shade500,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // --- STATUS / ETA ---
+          if (isArrived)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.teal.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                "ARRIVED",
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 10,
+                  color: AppColors.teal,
+                  letterSpacing: 1,
+                ),
+              ),
+            )
+          else
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.amber.shade400,
+                    Colors.amber.shade600,
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.amber.withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "$timeMins",
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 18,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    "min",
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -708,6 +1012,77 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
     );
   }
 
+  Widget _buildSkeletonLoader() {
+    return Container(
+      color: AppColors.darkSlate,
+      child: Stack(
+        children: [
+          // Shimmery Map Placeholder
+          Opacity(
+            opacity: 0.1,
+            child: Container(color: Colors.white),
+          ).animate(onPlay: (controller) => controller.repeat())
+            .shimmer(duration: 1500.ms, color: Colors.white24),
+          
+          // Header Skeleton
+          Positioned(
+            top: 55, left: 20, right: 20,
+            child: Row(
+              children: [
+                Container(
+                  width: 40, height: 40,
+                  decoration: const BoxDecoration(color: Colors.white10, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    height: 50,
+                    decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(20)),
+                  ),
+                ),
+              ],
+            ),
+          ).animate().fadeIn().shimmer(duration: 1500.ms),
+
+          // Bottom Sheet Skeleton
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              height: 380,
+              padding: const EdgeInsets.all(24),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+              ),
+              child: Column(
+                children: List.generate(3, (i) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Row(
+                    children: [
+                      Container(width: 36, height: 36, decoration: BoxDecoration(color: Colors.grey.shade100, shape: BoxShape.circle)),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(width: 120, height: 16, decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(4))),
+                            const SizedBox(height: 6),
+                            Container(width: 60, height: 12, decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(4))),
+                          ],
+                        ),
+                      ),
+                      Container(width: 60, height: 30, decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(12))),
+                    ],
+                  ),
+                )),
+              ),
+            ),
+          ).animate().slideY(begin: 1, duration: 400.ms, curve: Curves.easeOut),
+        ],
+      ),
+    );
+  }
+
   void _syncLiveActivity(
     OutingSessionModel session,
     Map<String, dynamic>? winner,
@@ -717,27 +1092,48 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
 
   Widget _buildMapControl({
     required IconData icon,
-    Color color = AppColors.darkSlate,
+    bool active = false,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: 50,
-        height: 50,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(25),
+        child: BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: active
+                  ? AppColors.teal.withValues(alpha: 0.8)
+                  : AppColors.darkSlate.withValues(alpha: 0.6),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: active
+                    ? Colors.white.withValues(alpha: 0.5)
+                    : Colors.white.withValues(alpha: 0.1),
+                width: 1,
+              ),
+              boxShadow: [
+                if (active)
+                  BoxShadow(
+                    color: AppColors.teal.withValues(alpha: 0.3),
+                    blurRadius: 15,
+                    spreadRadius: 2,
+                  ),
+              ],
             ),
-          ],
+            child: Icon(
+              icon,
+              color: Colors.white,
+              size: 22,
+            ),
+          ),
         ),
-        child: Icon(icon, color: color, size: 24),
       ),
-    );
+    ).animate(target: active ? 1 : 0)
+     .scale(begin: const Offset(1, 1), end: const Offset(1.05, 1.05), duration: 200.ms);
   }
 }
+

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../../../core/theme/colors.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../data/models/group_model.dart';
 
 class GroupShareSheet extends StatelessWidget {
@@ -14,7 +15,13 @@ class GroupShareSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (group.groupCode == null) {
-      return const Center(child: Text("Group code not available"));
+      return Center(
+        child: Text(
+          AppLocalizations.of(context)?.isAr == true
+              ? "كود المجموعة غير متاح"
+              : "Group code not available",
+        ),
+      );
     }
 
     final shareLink = "https://laween.app/join/${group.groupCode}";
@@ -51,7 +58,9 @@ class GroupShareSheet extends StatelessWidget {
                 ),
 
                 Text(
-                  "Invite Members",
+                  AppLocalizations.of(context)?.isAr == true
+                      ? "دعوة أعضاء"
+                      : "Invite Members",
                   style: GoogleFonts.outfit(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -60,7 +69,9 @@ class GroupShareSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "Share this code or QR to let others join",
+                  AppLocalizations.of(context)?.isAr == true
+                      ? "شارك هذا الكود أو رمز الاستجابة السريعة للسماح للآخرين بالانضمام"
+                      : "Share this code or QR to let others join",
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(color: Colors.grey.shade600),
                 ),
@@ -135,8 +146,12 @@ class GroupShareSheet extends StatelessWidget {
                           );
                           HapticFeedback.mediumImpact();
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Code copied to clipboard!"),
+                            SnackBar(
+                              content: Text(
+                                AppLocalizations.of(context)?.isAr == true
+                                    ? "تم نسخ الكود إلى الحافظة!"
+                                    : "Code copied to clipboard!",
+                              ),
                             ),
                           );
                         },
@@ -156,14 +171,20 @@ class GroupShareSheet extends StatelessWidget {
                       Clipboard.setData(ClipboardData(text: shareLink));
                       HapticFeedback.mediumImpact();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Link copied to clipboard!"),
+                        SnackBar(
+                          content: Text(
+                            AppLocalizations.of(context)?.isAr == true
+                                ? "تم نسخ الرابط إلى الحافظة!"
+                                : "Link copied to clipboard!",
+                          ),
                         ),
                       );
                     },
                     icon: const Icon(Icons.link_rounded, color: Colors.white),
                     label: Text(
-                      "Copy Invite Link",
+                      AppLocalizations.of(context)?.isAr == true
+                          ? "نسخ رابط الدعوة"
+                          : "Copy Invite Link",
                       style: GoogleFonts.inter(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

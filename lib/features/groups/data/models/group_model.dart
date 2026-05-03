@@ -1,5 +1,6 @@
 // lib/features/groups/data/models/group_model.dart
 
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class GroupModel {
@@ -55,22 +56,59 @@ class GroupModel {
     };
   }
 
+  static String? _sanitize(dynamic input) {
+    if (input == null) return null;
+    String str = input.toString();
+    List<int> cleanUnits = [];
+    for (int i = 0; i < str.length; i++) {
+      int c = str.codeUnitAt(i);
+      if (c >= 0xD800 && c <= 0xDBFF) { // High surrogate
+        if (i + 1 < str.length) {
+          int n = str.codeUnitAt(i + 1);
+          if (n >= 0xDC00 && n <= 0xDFFF) { // Valid pair
+            cleanUnits.add(c);
+            cleanUnits.add(n);
+            i++;
+          } else {
+            cleanUnits.add(0xFFFD); // Replacement char
+          }
+        } else {
+          cleanUnits.add(0xFFFD); // Replacement char
+        }
+      } else if (c >= 0xDC00 && c <= 0xDFFF) { // Unpaired low surrogate
+        cleanUnits.add(0xFFFD); // Replacement char
+      } else {
+        cleanUnits.add(c);
+      }
+    }
+    return String.fromCharCodes(cleanUnits);
+  }
+
   factory GroupModel.fromMap(Map<String, dynamic> map) {
     return GroupModel(
       id: map['id'] ?? '',
-      name: map['name'] ?? '',
+      name: _sanitize(map['name']) ?? '',
       photoUrl: map['photoUrl'],
       creatorId: map['creatorId'] ?? '',
       memberIds: List<String>.from(map['memberIds'] ?? []),
       createdAt: (map['createdAt'] as Timestamp).toDate(),
       groupCode: map['groupCode'],
-      lastMessage: map['lastMessage'],
-      lastMessageSender: map['lastMessageSender'],
+      lastMessage: _sanitize(map['lastMessage']),
+      lastMessageSender: _sanitize(map['lastMessageSender']),
       lastMessageTime: map['lastMessageTime'] != null
           ? (map['lastMessageTime'] as Timestamp).toDate()
           : null,
       unreadCounts: Map<String, int>.from(map['unreadCounts'] ?? {}),
-      typingUsers: Map<String, dynamic>.from(map['typingUsers'] ?? {}),
+      typingUsers: Map<String, dynamic>.from(map['typingUsers'] ?? {}).map((key, value) {
+        if (value is Map) {
+          final newValue = Map<String, dynamic>.from(value);
+          if (newValue['userName'] != null) {
+            newValue['userName'] = _sanitize(newValue['userName']);
+          }
+          return MapEntry(key, newValue);
+        }
+        return MapEntry(key, value);
+      }),
       pendingPhoneNumbers: List<String>.from(map['pendingPhoneNumbers'] ?? []),
     );
   }

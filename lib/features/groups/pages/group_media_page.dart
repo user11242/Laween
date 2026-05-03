@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/colors.dart';
 import '../data/services/group_service.dart';
 import './chat_page.dart';
+import 'package:laween/l10n/app_localizations.dart';
 
 class GroupMediaPage extends StatelessWidget {
   final String groupId;
@@ -14,11 +15,12 @@ class GroupMediaPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
-          'Media',
+          l10n?.mediaTitle ?? 'Media',
           style: GoogleFonts.outfit(
             fontWeight: FontWeight.bold,
             color: AppColors.darkSlate,
@@ -50,7 +52,7 @@ class GroupMediaPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'No media shared yet',
+                    l10n?.noMediaYet ?? 'No media shared yet',
                     style: GoogleFonts.inter(color: Colors.grey, fontSize: 16),
                   ),
                 ],

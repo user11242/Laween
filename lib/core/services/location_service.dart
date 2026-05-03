@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -13,6 +14,21 @@ class LocationService {
 
   String? _activeGroupId;
   String? _activeSessionId;
+
+  // Synchronization lock for permission requests
+  Future<LocationPermission>? _permissionRequest;
+
+  Future<LocationPermission> _synchronizedRequest() async {
+    if (_permissionRequest != null) return _permissionRequest!;
+    
+    _permissionRequest = Geolocator.requestPermission();
+    try {
+      final result = await _permissionRequest!;
+      return result;
+    } finally {
+      _permissionRequest = null;
+    }
+  }
 
   /// Update the active session for group-level tracking updates
   Future<void> setActiveSession(String? groupId, String? sessionId) async {
@@ -41,7 +57,7 @@ class LocationService {
 
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
+      permission = await _synchronizedRequest();
       if (permission == LocationPermission.denied) {
         return Future.error('Location permissions are denied');
       }
@@ -63,8 +79,8 @@ class LocationService {
     if (_positionSubscription != null) return;
     // 1. Ensure permissions (Request 'Always' for true background)
     LocationPermission permission = await Geolocator.checkPermission();
-    if (permission != LocationPermission.always) {
-      permission = await Geolocator.requestPermission();
+    if (permission != LocationPermission.always && permission != LocationPermission.whileInUse) {
+      permission = await _synchronizedRequest();
     }
 
     // 2. Cancel existing if any
@@ -77,12 +93,32 @@ class LocationService {
     });
 
     // 4. Start Position Stream
-    final locationSettings = AppleSettings(
-      accuracy: LocationAccuracy.best,
-      distanceFilter: 10,
-      pauseLocationUpdatesAutomatically: false,
-      showBackgroundLocationIndicator: true,
-    );
+    LocationSettings locationSettings;
+    
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      locationSettings = AndroidSettings(
+        accuracy: LocationAccuracy.best,
+        distanceFilter: 10,
+        forceLocationManager: true,
+        foregroundNotificationConfig: const ForegroundNotificationConfig(
+          notificationText: "Laween is tracking your live location",
+          notificationTitle: "Active Outing",
+          enableWakeLock: true,
+        ),
+      );
+    } else if (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.macOS) {
+      locationSettings = AppleSettings(
+        accuracy: LocationAccuracy.best,
+        distanceFilter: 10,
+        pauseLocationUpdatesAutomatically: false,
+        showBackgroundLocationIndicator: true,
+      );
+    } else {
+      locationSettings = const LocationSettings(
+        accuracy: LocationAccuracy.best,
+        distanceFilter: 10,
+      );
+    }
 
     _positionSubscription =
         Geolocator.getPositionStream(locationSettings: locationSettings).listen(

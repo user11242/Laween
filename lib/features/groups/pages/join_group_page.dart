@@ -394,7 +394,7 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    "Toggle Flashlight",
+                    l10n.isAr ? "تشغيل الكشاف" : "Toggle Flashlight",
                     style: GoogleFonts.outfit(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -580,9 +580,16 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 15,
+            spreadRadius: 1,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: AppColors.teal.withValues(alpha: 0.05),
+            blurRadius: 5,
+            spreadRadius: -2,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -599,17 +606,19 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
         ),
         decoration: InputDecoration(
           counterText: "",
+          filled: true,
+          fillColor: Colors.white,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide(color: Colors.grey.shade200),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.grey.shade200),
+            borderSide: BorderSide(color: Colors.grey.shade300, width: 1.2),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: AppColors.teal, width: 2),
+            borderSide: const BorderSide(color: AppColors.teal, width: 2.5),
           ),
         ),
         onChanged: (value) => _onPinChanged(value, index),

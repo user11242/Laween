@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/colors.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../groups/data/models/group_model.dart';
 import '../../groups/pages/chat_page.dart';
 
@@ -25,10 +26,14 @@ class RecentGroupCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).brightness == Brightness.dark
+              ? const Color(0xFF1E1E1E)
+              : Colors.white,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: AppColors.slate.withValues(alpha: 0.1),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white.withValues(alpha: 0.05)
+                : AppColors.slate.withValues(alpha: 0.1),
             width: 1,
           ),
           boxShadow: [
@@ -41,7 +46,7 @@ class RecentGroupCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            _buildGroupAvatar(),
+            _buildGroupAvatar(context),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -56,7 +61,9 @@ class RecentGroupCard extends StatelessWidget {
                           style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white
+                                : AppColors.primary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -64,7 +71,7 @@ class RecentGroupCard extends StatelessWidget {
                       ),
                       if (group.lastMessageTime != null)
                         Text(
-                          _formatTime(group.lastMessageTime!),
+                          _formatTime(context, group.lastMessageTime!),
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             color: AppColors.slate,
@@ -98,14 +105,18 @@ class RecentGroupCard extends StatelessWidget {
     );
   }
 
-  Widget _buildGroupAvatar() {
+  Widget _buildGroupAvatar(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: 52,
       height: 52,
       decoration: BoxDecoration(
         color: AppColors.teal.withValues(alpha: 0.15),
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
+        border: Border.all(
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          width: 2,
+        ),
         boxShadow: [
           BoxShadow(
             color: AppColors.teal.withValues(alpha: 0.2),
@@ -128,9 +139,15 @@ class RecentGroupCard extends StatelessWidget {
   }
 
   Widget _buildPlaceholderAvatar() {
+    String firstChar = "G";
+    if (group.name.isNotEmpty) {
+      // Using .characters to safely extract the first grapheme cluster without splitting emojis!
+      firstChar = group.name.characters.first.toUpperCase();
+    }
+    
     return Center(
       child: Text(
-        group.name[0].toUpperCase(),
+        firstChar,
         style: GoogleFonts.outfit(
           fontSize: 20,
           fontWeight: FontWeight.bold,
@@ -165,11 +182,21 @@ class RecentGroupCard extends StatelessWidget {
     );
   }
 
-  String _formatTime(DateTime date) {
+  String _formatTime(BuildContext context, DateTime date) {
     final now = DateTime.now();
     final diff = now.difference(date);
-    if (diff.inDays == 0) return DateFormat('hh:mm a').format(date);
-    if (diff.inDays < 7) return DateFormat('EEE').format(date);
-    return DateFormat('MMM d').format(date);
+    final isAr = AppLocalizations.of(context)?.isAr == true;
+
+    if (diff.inDays == 0) {
+      final formattedTime = DateFormat('hh:mm a').format(date);
+      if (isAr) {
+        return formattedTime.replaceAll('AM', 'ص').replaceAll('PM', 'م');
+      }
+      return formattedTime;
+    }
+    if (diff.inDays < 7) {
+      return DateFormat('EEE', isAr ? 'ar' : 'en').format(date);
+    }
+    return DateFormat('MMM d', isAr ? 'ar' : 'en').format(date);
   }
 }

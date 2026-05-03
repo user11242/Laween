@@ -255,10 +255,13 @@ class ChatService {
     List<String> messageIds,
     String uid,
   ) async {
-    if (messageIds.isEmpty) return;
+    if (groupId.isEmpty || messageIds.isEmpty || uid.isEmpty) return;
 
     final batch = _firestore.batch();
+    int count = 0;
     for (String msgId in messageIds) {
+      if (msgId.isEmpty) continue;
+      
       final docRef = _firestore
           .collection('groups')
           .doc(groupId)
@@ -267,8 +270,12 @@ class ChatService {
       batch.update(docRef, {
         'readBy': FieldValue.arrayUnion([uid]),
       });
+      count++;
     }
-    await batch.commit();
+    
+    if (count > 0) {
+      await batch.commit();
+    }
   }
 
   // setTypingStatus
@@ -294,17 +301,30 @@ class ChatService {
   }
 
   // Get real-time messages stream for a group
-  Stream<List<MessageModel>> getMessagesStream(String groupId) {
+  Stream<List<MessageModel>> getMessagesStream(String groupId, {int limit = 30}) {
     return _firestore
         .collection('groups')
         .doc(groupId)
         .collection('messages')
         .orderBy('timestamp', descending: true)
+        .limit(limit)
         .snapshots()
         .map((snapshot) {
-          return snapshot.docs
-              .map((doc) => MessageModel.fromMap(doc.data()))
-              .toList();
+          return snapshot.docs.map((doc) {
+            try {
+              return MessageModel.fromMap(doc.data());
+            } catch (e) {
+              // Return a fallback system message if a specific message is corrupted
+              return MessageModel(
+                id: doc.id,
+                senderId: 'system',
+                senderName: 'System',
+                text: 'Message corrupted',
+                timestamp: DateTime.now(),
+                type: 'system',
+              );
+            }
+          }).toList();
         });
   }
 }

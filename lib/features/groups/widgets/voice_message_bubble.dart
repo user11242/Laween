@@ -47,6 +47,12 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble>
   @override
   void initState() {
     super.initState();
+    final match = RegExp(r'\((\d+):(\d+)\)').firstMatch(widget.message.text);
+    if (match != null) {
+      final minutes = int.tryParse(match.group(1) ?? '0') ?? 0;
+      final seconds = int.tryParse(match.group(2) ?? '0') ?? 0;
+      _duration = Duration(minutes: minutes, seconds: seconds);
+    }
     _initAudio();
 
     // 🛡️ Listen for global audio sync
@@ -75,9 +81,6 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble>
         : widget.message.text;
     if (url.isEmpty || !url.startsWith('http')) return;
 
-    // ⚡ PRE-FETCH BYTES for zero-latency
-    _preFetchAudio(url);
-
     _durationSubscription = _audioPlayer.onDurationChanged.listen((duration) {
       if (mounted) setState(() => _duration = duration);
     });
@@ -105,8 +108,19 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble>
       if (mounted) setState(() => _playerState = state);
     });
 
-    // ⚡ ONLY listen to events, DO NOT set source here to avoid AVPlayer saturation
-    // Source will be set lazily when play is pressed.
+    final tempDir = await getTemporaryDirectory();
+    final filePath = "${tempDir.path}/audio_${widget.message.id}.m4a";
+    final file = File(filePath);
+    if (await file.exists()) {
+      if (mounted) {
+        setState(() {
+          _localPath = filePath;
+        });
+        await _audioPlayer.setSource(DeviceFileSource(filePath));
+      }
+    } else {
+      _preFetchAudio(url);
+    }
   }
 
   Future<void> _preFetchAudio(String url) async {
@@ -125,6 +139,7 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble>
             _localPath = filePath;
             _isDownloading = false;
           });
+          await _audioPlayer.setSource(DeviceFileSource(filePath));
         }
       } else {
         if (mounted) setState(() => _isDownloading = false);
@@ -177,6 +192,7 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble>
 
         // ⚡ RE-USE SOURCE: Use resume() if possible, or play() if it's the first time
         // audioplayers resume() is faster after setting source.
+        await _audioPlayer.setVolume(1.0);
         await _audioPlayer.resume();
         await _audioPlayer.setPlaybackRate(_playbackRate);
       }
@@ -199,6 +215,67 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble>
       }
     });
     await _audioPlayer.setPlaybackRate(_playbackRate);
+  }
+
+  Widget _buildWaveformSeeder() {
+    final List<double> barHeights = [
+      0.3, 0.5, 0.7, 0.4, 0.6, 0.8, 0.5, 0.3, 0.6, 0.8,
+      0.4, 0.7, 0.9, 0.6, 0.4, 0.7, 0.5, 0.8, 0.6, 0.4,
+      0.6, 0.8, 0.5, 0.3, 0.7, 0.5, 0.8, 0.6, 0.4, 0.3
+    ];
+
+    return GestureDetector(
+      onHorizontalDragUpdate: (details) {
+        final box = context.findRenderObject() as RenderBox?;
+        if (box == null) return;
+        final localPos = box.globalToLocal(details.globalPosition);
+        final progress = (localPos.dx / box.size.width).clamp(0.0, 1.0);
+        final targetMs = _duration.inMilliseconds * progress;
+        _audioPlayer.seek(Duration(milliseconds: targetMs.toInt()));
+      },
+      onTapDown: (details) {
+        final box = context.findRenderObject() as RenderBox?;
+        if (box == null) return;
+        final localPos = box.globalToLocal(details.globalPosition);
+        final progress = (localPos.dx / box.size.width).clamp(0.0, 1.0);
+        final targetMs = _duration.inMilliseconds * progress;
+        _audioPlayer.seek(Duration(milliseconds: targetMs.toInt()));
+      },
+      child: Container(
+        height: 36,
+        color: Colors.transparent,
+        alignment: Alignment.center,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: barHeights.asMap().entries.map((entry) {
+            final index = entry.key;
+            final heightFactor = entry.value;
+
+            final barProgress = index / barHeights.length;
+            final currentProgress = _duration.inMilliseconds > 0
+                ? _position.inMilliseconds / _duration.inMilliseconds
+                : 0.0;
+
+            final hasPlayed = barProgress <= currentProgress;
+
+            return Expanded(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                height: 4 + (28 * heightFactor),
+                decoration: BoxDecoration(
+                  color: hasPlayed
+                      ? (widget.isMe ? Colors.white : AppColors.teal)
+                      : (widget.isMe
+                          ? Colors.white.withValues(alpha: 0.35)
+                          : Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
   }
 
   String _formatDuration(Duration duration) {
@@ -242,35 +319,7 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble>
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    trackHeight: 3,
-                    thumbShape: const RoundSliderThumbShape(
-                      enabledThumbRadius: 6,
-                    ),
-                    overlayShape: const RoundSliderOverlayShape(
-                      overlayRadius: 10,
-                    ),
-                    activeTrackColor: widget.isMe
-                        ? Colors.white
-                        : AppColors.teal,
-                    inactiveTrackColor: widget.isMe
-                        ? Colors.white.withValues(alpha: 0.3)
-                        : Colors.grey.shade300,
-                    thumbColor: widget.isMe ? Colors.white : AppColors.teal,
-                  ),
-                  child: Slider(
-                    value: _position.inMilliseconds.toDouble(),
-                    max: _duration.inMilliseconds.toDouble() > 0
-                        ? _duration.inMilliseconds.toDouble()
-                        : 1.0,
-                    onChanged: (value) async {
-                      await _audioPlayer.seek(
-                        Duration(milliseconds: value.toInt()),
-                      );
-                    },
-                  ),
-                ),
+                _buildWaveformSeeder(),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Row(

@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme/colors.dart';
 import 'package:laween/l10n/app_localizations.dart';
 import '../../../../core/services/storage_service.dart';
+import 'package:laween/core/message/app_messenger.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -75,7 +76,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       if (_imageFile != null) {
         photoUrl = await _storageService.uploadFile(
           file: _imageFile!,
-          path: 'profile_pics/${user?.uid}.jpg',
+          path: 'profile_pics/${user?.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg',
         );
       }
 
@@ -87,7 +88,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
       if (photoUrl != null) {
         updates['photoUrl'] = photoUrl;
         updates['profilePic'] = photoUrl;
+        await user?.updatePhotoURL(photoUrl);
       }
+      await user?.updateDisplayName(_nameController.text.trim());
 
       await FirebaseFirestore.instance
           .collection('users')
@@ -95,18 +98,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
           .update(updates);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.successUpdate),
-            backgroundColor: AppColors.teal,
-          ),
+        AppMessenger.showSuccess(
+          context,
+          message: l10n.successUpdate,
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        AppMessenger.showError(
+          context,
+          message: e.toString(),
         );
       }
     } finally {

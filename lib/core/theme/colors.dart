@@ -4,6 +4,7 @@ class AppColors {
   // --- 1. Core Brand Colors ---
   static const Color primary = Color(0xFF1F1F1F); // Dark Background
   static const Color teal = Color(0xFF006D77); // Primary Brand Blue/Teal
+  static const Color tealLight = Color(0xFF83C5BE); // Light Teal
   static const Color accentGold = Color(0xFFD4AF37); // Gold Accent
   static const Color lightGold = Color(0xFFEEE593); // Lighter Gold/Text code
 
@@ -35,4 +36,19 @@ class AppColors {
     teal,
   ]; // Lighter teal to primary teal
   static const List<Color> titleGradientReversed = [teal, Color(0xFF83C5BE)];
+
+  // --- 5. User Colors ---
+  static Color getUserColor(String uid) {
+    final List<Color> colors = [
+      teal,
+      Colors.blueAccent,
+      Colors.purpleAccent,
+      Colors.pinkAccent,
+      Colors.orangeAccent,
+      Colors.indigoAccent,
+      Colors.cyan,
+      Colors.tealAccent.shade700,
+    ];
+    return colors[uid.hashCode % colors.length];
+  }
 }

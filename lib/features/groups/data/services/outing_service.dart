@@ -11,8 +11,11 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
+import '../../../../core/services/location_service.dart';
+import '../../../../core/services/google_maps_service.dart';
 import '../models/outing_session_model.dart';
 import '../models/message_model.dart';
+import '../../../auth/data/services/fcm_service.dart';
 
 class OutingService {
   static final OutingService _instance = OutingService._internal();
@@ -33,6 +36,7 @@ class OutingService {
     required Map<String, dynamic> venue,
     required int timeLimitMinutes,
     GeoPoint? creatorLocation,
+    DateTime? scheduledAt,
   }) async {
     final sessionRef = _firestore
         .collection('groups')
@@ -64,6 +68,7 @@ class OutingService {
       winner: venue, // Set the selected venue as winner
       createdAt: now,
       expiresAt: expiresAt,
+      scheduledAt: scheduledAt,
     );
 
     // 1. Create the session document
@@ -81,7 +86,9 @@ class OutingService {
       senderId: creatorId,
       senderName: creatorName,
       senderPhotoUrl: creatorPhotoUrl,
-      text: "⚡ Locked Destination: ${venue['name']}",
+      text: scheduledAt != null
+          ? "📅 Scheduled Outing to ${venue['name']} at ${scheduledAt.day}/${scheduledAt.month} ${scheduledAt.hour}:${scheduledAt.minute.toString().padLeft(2, '0')}"
+          : "⚡ Locked Destination: ${venue['name']}",
       timestamp: now,
       type: 'outing',
       outingSessionId: sessionRef.id,
@@ -91,7 +98,9 @@ class OutingService {
 
     // 3. Update group's last message
     await _firestore.collection('groups').doc(groupId).update({
-      'lastMessage': "📍 Session: ${venue['name']}",
+      'lastMessage': scheduledAt != null
+          ? "📅 Scheduled: ${venue['name']}"
+          : "📍 Session: ${venue['name']}",
       'lastMessageTime': FieldValue.serverTimestamp(),
     });
 
@@ -108,6 +117,7 @@ class OutingService {
     required String calculationMode,
     required int timeLimitMinutes,
     GeoPoint? location,
+    DateTime? scheduledAt,
   }) async {
     final sessionRef = _firestore
         .collection('groups')
@@ -138,6 +148,7 @@ class OutingService {
       ],
       createdAt: now,
       expiresAt: expiresAt,
+      scheduledAt: scheduledAt,
     );
 
     // 1. Create the session document
@@ -155,7 +166,9 @@ class OutingService {
       senderId: creatorId,
       senderName: creatorName,
       senderPhotoUrl: creatorPhotoUrl,
-      text: "Started an Outing Session for $category",
+      text: scheduledAt != null
+          ? "📅 Scheduled Discovery Session ($category) at ${scheduledAt.day}/${scheduledAt.month} ${scheduledAt.hour}:${scheduledAt.minute.toString().padLeft(2, '0')}"
+          : "Started an Outing Session for $category",
       timestamp: now,
       type: 'outing',
       outingSessionId: sessionRef.id,
@@ -165,7 +178,9 @@ class OutingService {
 
     // 3. Update group's last message
     await _firestore.collection('groups').doc(groupId).update({
-      'lastMessage': "🔥 Outing Session: $category",
+      'lastMessage': scheduledAt != null
+          ? "📅 Scheduled: $category"
+          : "🔥 Outing Session: $category",
       'lastMessageTime': FieldValue.serverTimestamp(),
     });
 
@@ -235,7 +250,7 @@ class OutingService {
         .snapshots()
         .map((doc) {
           if (!doc.exists) return null;
-          return OutingSessionModel.fromMap(doc.data()!);
+          return OutingSessionModel.fromFirestore(doc);
         });
   }
 
@@ -267,6 +282,15 @@ class OutingService {
     if (status == OutingStatus.thinking) {
       _processThinkingPhase(groupId, sessionId);
     }
+  }
+
+  Future<void> archiveSession(String groupId, String sessionId) async {
+    await _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('outings')
+        .doc(sessionId)
+        .update({'status': OutingStatus.archived.name});
   }
 
   /// Record the first participant to arrive
@@ -314,7 +338,7 @@ class OutingService {
     final snapshot = await sessionRef.get();
     if (!snapshot.exists) return;
 
-    final session = OutingSessionModel.fromMap(snapshot.data()!);
+    final session = OutingSessionModel.fromFirestore(snapshot);
 
     // IF FIXED DESTINATION: Jump directly to completed!
     if (session.calculationMode == 'Fixed') {
@@ -439,14 +463,16 @@ class OutingService {
       final data = snapshot.data()!;
       final List topVenues = List.from(data['finalLocation']['topVenues']);
 
-      // Update the vote count for the specific venue
+      // Update the vote count for the specific venue (Toggle logic)
       for (var venue in topVenues) {
         if (venue['id'] == venueId) {
           final List currentVotes = List.from(venue['votes'] ?? []);
-          if (!currentVotes.contains(uid)) {
-            currentVotes.add(uid);
-            venue['votes'] = currentVotes;
+          if (currentVotes.contains(uid)) {
+            currentVotes.remove(uid); // UNVOTE
+          } else {
+            currentVotes.add(uid); // VOTE
           }
+          venue['votes'] = currentVotes;
           break;
         }
       }
@@ -472,6 +498,13 @@ class OutingService {
             final votesA = (a['votes'] as List?)?.length ?? 0;
             final votesB = (b['votes'] as List?)?.length ?? 0;
             if (votesA != votesB) return votesB.compareTo(votesA);
+
+            // Tie-breaker: Host's Choice
+            final creatorId = data['creatorId'];
+            final hostVotedA = (a['votes'] as List?)?.contains(creatorId) ?? false;
+            final hostVotedB = (b['votes'] as List?)?.contains(creatorId) ?? false;
+            if (hostVotedA != hostVotedB) return hostVotedA ? -1 : 1;
+
             final ratingA = (a['rating'] as num?)?.toDouble() ?? 0;
             final ratingB = (b['rating'] as num?)?.toDouble() ?? 0;
             return ratingB.compareTo(ratingA);
@@ -510,11 +543,18 @@ class OutingService {
       return;
     }
 
-    // Sort by votes length descending, then by rating
+    // Sort by votes length descending, then by Host's choice, then by rating
     topVenues.sort((a, b) {
       final votesA = (a['votes'] as List?)?.length ?? 0;
       final votesB = (b['votes'] as List?)?.length ?? 0;
       if (votesA != votesB) return votesB.compareTo(votesA);
+
+      // Tie-breaker: Host's Choice
+      final creatorId = data['creatorId'];
+      final hostVotedA = (a['votes'] as List?)?.contains(creatorId) ?? false;
+      final hostVotedB = (b['votes'] as List?)?.contains(creatorId) ?? false;
+      if (hostVotedA != hostVotedB) return hostVotedA ? -1 : 1;
+
       final ratingA = (a['rating'] as num?)?.toDouble() ?? 0;
       final ratingB = (b['rating'] as num?)?.toDouble() ?? 0;
       return ratingB.compareTo(ratingA);
@@ -542,17 +582,56 @@ class OutingService {
         .doc(sessionId);
 
     try {
-      await _firestore.runTransaction((transaction) async {
-        final snapshot = await transaction.get(sessionRef);
-        if (!snapshot.exists) return;
+      // 1. Get current session state (outside transaction for async ETA fetch)
+      final snapshot = await sessionRef.get();
+      if (!snapshot.exists) return;
+      final session = OutingSessionModel.fromFirestore(snapshot);
 
-        final data = snapshot.data()!;
+      // 2. Fetch Real Google ETA if winner decided
+      int? realEta;
+      double? realDist;
+      bool shouldUpdateEta = false;
+
+      if (session.winner != null && session.winner?['location'] != null) {
+        final p = session.participants.firstWhere((p) => p.uid == uid);
+        final lastUpdate = p.lastEtaUpdate;
+        final now = DateTime.now();
+
+        // Throttle: Update ETA every 1 minute or if never updated
+        if (lastUpdate == null || now.difference(lastUpdate).inMinutes >= 1) {
+          final dest = session.winner!['location'];
+          final etaResult = await GoogleMapsService().getETA(
+            originLat: location.latitude,
+            originLng: location.longitude,
+            destLat: (dest['latitude'] as num).toDouble(),
+            destLng: (dest['longitude'] as num).toDouble(),
+          );
+
+          if (etaResult != null) {
+            realEta = etaResult['etaMinutes'];
+            realDist = etaResult['distanceKm'];
+            shouldUpdateEta = true;
+          }
+        }
+      }
+
+      // 3. Update Firestore via Transaction
+      await _firestore.runTransaction((transaction) async {
+        final freshSnapshot = await transaction.get(sessionRef);
+        if (!freshSnapshot.exists) return;
+
+        final data = freshSnapshot.data()!;
         final List participants = List.from(data['participants'] ?? []);
 
         bool updated = false;
         for (var i = 0; i < participants.length; i++) {
           if (participants[i]['uid'] == uid) {
             participants[i]['location'] = location;
+            if (shouldUpdateEta) {
+              participants[i]['etaMinutes'] = realEta;
+              participants[i]['distanceKm'] = realDist;
+              participants[i]['lastEtaUpdate'] = Timestamp.now();
+            }
             updated = true;
             break;
           }
@@ -561,25 +640,27 @@ class OutingService {
         if (updated) {
           transaction.update(sessionRef, {'participants': participants});
 
-          // Optimization: Sync Live Activity using the data we already fetched
-          final session = OutingSessionModel.fromMap(data);
-          // Manually update the participant in the local session object to reflect what we just wrote
-          for (var i = 0; i < session.participants.length; i++) {
-            if (session.participants[i].uid == uid) {
-              session.participants[i] = session.participants[i].copyWith(
+          // 4. Sync Live Activity with FRESH data
+          final freshSession = OutingSessionModel.fromMap({...data, 'id': snapshot.id});
+          // Update local participant to reflect new location/ETA
+          for (var i = 0; i < freshSession.participants.length; i++) {
+            if (freshSession.participants[i].uid == uid) {
+              freshSession.participants[i] = freshSession.participants[i].copyWith(
                 location: location,
+                etaMinutes: shouldUpdateEta ? realEta : freshSession.participants[i].etaMinutes,
+                distanceKm: shouldUpdateEta ? realDist : freshSession.participants[i].distanceKm,
+                lastEtaUpdate: shouldUpdateEta ? DateTime.now() : freshSession.participants[i].lastEtaUpdate,
               );
               break;
             }
           }
-          if (session.winner != null) {
-            syncLiveActivity(session);
+          if (freshSession.winner != null) {
+            syncLiveActivity(freshSession);
           }
         }
       });
     } catch (e) {
-      // Background location updates should not crash the app
-      print("Telemetry update skipped: $e");
+      print("Telemetry update failed: $e");
     }
   }
 
@@ -593,21 +674,24 @@ class OutingService {
 
     if (session.participants.isEmpty) return;
 
+    final Map<String, dynamic> win = winner;
+    
     // 1. Calculate all participant stats
     int maxEta = 0;
     final participantsList = session.participants
         .where((p) => p.location != null)
         .map((p) {
-          final pDistStr = _calculateDistance(
+          final isMe = p.uid == uid;
+          
+          // Use real Google values from Firestore if available
+          final pDist = p.distanceKm ?? double.tryParse(_calculateDistance(
             p.location!.latitude,
             p.location!.longitude,
-            (winner['location']['latitude'] as num).toDouble(),
-            (winner['location']['longitude'] as num).toDouble(),
-          );
-          final pDist = double.tryParse(pDistStr) ?? 0.0;
-          final isMe = p.uid == uid;
+            (win['location']['latitude'] as num).toDouble(),
+            (win['location']['longitude'] as num).toDouble(),
+          )) ?? 0.0;
 
-          final pEtaInt = int.tryParse(_estimateTime(pDist)) ?? 0;
+          final pEtaInt = p.etaMinutes ?? int.tryParse(_estimateTime(pDist)) ?? 0;
           if (pEtaInt > maxEta) maxEta = pEtaInt;
 
           // --- RELATIVE JOURNEY PROGRESS ---
@@ -625,7 +709,6 @@ class OutingService {
                 0.0;
 
             if (totalDist > 0.05) {
-              // 50m minimum for slider
               progress = (1.0 - (pDist / totalDist)).clamp(0.0, 1.0);
             } else {
               progress = 1.0;
@@ -639,7 +722,7 @@ class OutingService {
             'initial': (p.name.isNotEmpty ? p.name[0] : "?").toUpperCase(),
             'photoUrl': p.photoUrl ?? "",
             'eta': pEtaInt.toString(),
-            'dist': "$pDistStr km",
+            'dist': "${pDist.toStringAsFixed(1)} km",
             'progress': progress,
             'isMe': isMe,
           };
@@ -670,6 +753,8 @@ class OutingService {
     if (_activityId == null) {
       try {
         _liveActivitiesPlugin.init(appGroupId: "group.laween");
+        // End all stale activities to avoid hitting Apple's max limit
+        await _liveActivitiesPlugin.endAllActivities();
         _activityId = await _liveActivitiesPlugin.createActivity(
           "laween_tracking",
           payload,
@@ -686,6 +771,201 @@ class OutingService {
         debugPrint("Live Activity Update Error in Service - Resetting ID: $e");
       }
     }
+  }
+
+  /// Marks the outing as finished (starts the 24h memory collection window)
+  Future<void> markAsFinished(OutingSessionModel session) async {
+    final sessionRef = _firestore
+        .collection('groups')
+        .doc(session.groupId)
+        .collection('outings')
+        .doc(session.id);
+
+    await sessionRef.update({
+      'status': OutingStatus.finished.name,
+      'finishedAt': FieldValue.serverTimestamp(),
+    });
+
+    // Clean up live activity immediately when host finishes tracking
+    if (_activityId != null) {
+      _liveActivitiesPlugin.endActivity(_activityId!);
+      _activityId = null;
+    }
+  }
+
+  /// Allows any participant to upload photos to the "finished" session
+  Future<void> uploadMemories({
+    required OutingSessionModel session,
+    required List<File> photos,
+  }) async {
+    final sessionRef = _firestore
+        .collection('groups')
+        .doc(session.groupId)
+        .collection('outings')
+        .doc(session.id);
+
+    List<String> uploadedUrls = [];
+
+    // 1. Upload photos to Firebase Storage
+    for (int i = 0; i < photos.length; i++) {
+      final file = photos[i];
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('groups')
+          .child(session.groupId)
+          .child('outings')
+          .child(session.id)
+          .child('memory_${DateTime.now().millisecondsSinceEpoch}_$i.jpg');
+          
+      final uploadTask = await ref.putFile(file);
+      final url = await uploadTask.ref.getDownloadURL();
+      uploadedUrls.add(url);
+    }
+
+    // 2. Add to existing photos via arrayUnion
+    await sessionRef.update({
+      'memoryPhotos': FieldValue.arrayUnion(uploadedUrls),
+    });
+  }
+
+  /// Finalizes the session, generates the AI recap, selects cover, and archives
+  Future<void> finalizeAndArchive(OutingSessionModel session) async {
+    final sessionRef = _firestore
+        .collection('groups')
+        .doc(session.groupId)
+        .collection('outings')
+        .doc(session.id);
+
+    // Refresh session data to get all photos
+    final doc = await sessionRef.get();
+    if (!doc.exists) return;
+    
+    final data = doc.data() as Map<String, dynamic>;
+    final photos = List<String>.from(data['memoryPhotos'] ?? []);
+    
+    String? coverPhotoUrl;
+    if (photos.isNotEmpty) {
+      // Simulate "AI Cover Selection"
+      coverPhotoUrl = photos.first;
+    }
+
+    // 2. Generate the "AI Roast & Hype" Recap
+    String generatedTitle = "Epic outing at ${session.winner?['name'] ?? session.category}";
+    String generatedRecap = "";
+
+    // Build the AI Recap algorithmically using our telemetry data
+    final sortedP = List.from(session.participants)..sort((a, b) {
+      final aJoin = a.joinedAt.millisecondsSinceEpoch;
+      final bJoin = b.joinedAt.millisecondsSinceEpoch;
+      return aJoin.compareTo(bJoin);
+    });
+
+    String firstArrived = "Someone";
+    String lastArrived = "someone else";
+
+    if (session.firstArrivedUid != null) {
+      firstArrived = session.participants.firstWhere((p) => p.uid == session.firstArrivedUid).name;
+    } else if (sortedP.isNotEmpty) {
+       firstArrived = sortedP.first.name; // Fallback
+    }
+    
+    // Simulate finding who "held up the squad"
+    if (sortedP.length > 1) {
+      lastArrived = sortedP.last.name;
+      generatedRecap = "Epic night at ${session.winner?['name'] ?? session.category}! 🔥 $firstArrived secured the table early and was the true MVP, while $lastArrived made everyone starve waiting. Ultimately worth it. 10/10 vibes.";
+    } else {
+      generatedRecap = "A perfect solo trip or intimate hangout at ${session.winner?['name']}. Good food, great vibes!";
+    }
+
+    if (session.winner != null && session.winner?['name'] != null) {
+      final terms = ["Midnight feast", "Unreal cravings", "Legendary dinner", "Vibe check passed"];
+      generatedTitle = "${terms[DateTime.now().microsecond % terms.length]} at ${session.winner!['name']}";
+    }
+
+    // 3. Save to Firestore as Archived
+    await sessionRef.update({
+      'status': OutingStatus.archived.name,
+      'coverPhotoUrl': coverPhotoUrl,
+      'memoryTitle': generatedTitle,
+      'memoryRecap': generatedRecap,
+    });
+  }
+
+  /// Triggers an SOS emergency for the current user
+  Future<void> triggerSOS({
+    required OutingSessionModel session,
+    required String userUid,
+    required String userName,
+    required double lat,
+    required double lng,
+  }) async {
+    final sessionRef = _firestore
+        .collection('groups')
+        .doc(session.groupId)
+        .collection('outings')
+        .doc(session.id);
+
+    // 1. Update participant status
+    final doc = await sessionRef.get();
+    if (!doc.exists) return;
+    
+    final data = doc.data() as Map<String, dynamic>;
+    final List participants = data['participants'] ?? [];
+    
+    final updatedParticipants = participants.map((p) {
+      if (p['uid'] == userUid) {
+        return {...p, 'isSosActive': true};
+      }
+      return p;
+    }).toList();
+
+    await sessionRef.update({'participants': updatedParticipants});
+
+    // 2. Send SOS Message to Chat
+    final googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=$lat,$lng";
+    
+    await _firestore
+        .collection('groups')
+        .doc(session.groupId)
+        .collection('messages')
+        .add({
+      'senderId': 'system',
+      'senderName': '🚨 EMERGENCY',
+      'text': "SOS! $userName needs help! \nLocation: $googleMapsUrl",
+      'timestamp': FieldValue.serverTimestamp(),
+      'type': 'text',
+      'isSos': true, // 🔥 Added to help Cloud Functions route this as an emergency
+      'sessionId': session.id, // 🔥 Added to ensure the push notification wakes up the exact session
+      'readBy': [userUid],
+      'deletedFor': [],
+    });
+  }
+
+  /// Clears the SOS status
+  Future<void> clearSOS({
+    required OutingSessionModel session,
+    required String userUid,
+  }) async {
+    final sessionRef = _firestore
+        .collection('groups')
+        .doc(session.groupId)
+        .collection('outings')
+        .doc(session.id);
+
+    final doc = await sessionRef.get();
+    if (!doc.exists) return;
+    
+    final data = doc.data() as Map<String, dynamic>;
+    final List participants = data['participants'] ?? [];
+    
+    final updatedParticipants = participants.map((p) {
+      if (p['uid'] == userUid) {
+        return {...p, 'isSosActive': false};
+      }
+      return p;
+    }).toList();
+
+    await sessionRef.update({'participants': updatedParticipants});
   }
 
   String _calculateDistance(

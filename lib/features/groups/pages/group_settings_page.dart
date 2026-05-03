@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/theme/colors.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../data/models/group_model.dart';
 import '../data/services/group_service.dart';
 import './group_media_page.dart';
@@ -37,19 +38,20 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
   }
 
   Future<void> _leaveGroup() async {
+    final isAr = AppLocalizations.of(context)?.isAr == true;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Leave Group'),
-        content: const Text('Are you sure you want to leave this group?'),
+        title: Text(isAr ? 'مغادرة المجموعة' : 'Leave Group'),
+        content: Text(isAr ? 'هل أنت متأكد أنك تريد مغادرة هذه المجموعة؟' : 'Are you sure you want to leave this group?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(isAr ? 'إلغاء' : 'Cancel'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Leave', style: TextStyle(color: Colors.red)),
+            child: Text(isAr ? 'مغادرة' : 'Leave', style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -77,21 +79,24 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
   }
 
   Future<void> _deleteGroup() async {
+    final isAr = AppLocalizations.of(context)?.isAr == true;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Group'),
-        content: const Text(
-          'Are you sure you want to permanently delete this group? This action cannot be undone.',
+        title: Text(isAr ? 'حذف المجموعة' : 'Delete Group'),
+        content: Text(
+          isAr
+              ? 'هل أنت متأكد أنك تريد حذف هذه المجموعة نهائياً؟ لا يمكن التراجع عن هذا الإجراء.'
+              : 'Are you sure you want to permanently delete this group? This action cannot be undone.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(isAr ? 'إلغاء' : 'Cancel'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: Text(isAr ? 'حذف' : 'Delete', style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -156,7 +161,9 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Edit Group',
+                  AppLocalizations.of(context)?.isAr == true
+                      ? 'تعديل المجموعة'
+                      : 'Edit Group',
                   style: GoogleFonts.outfit(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -231,7 +238,9 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                 TextField(
                   controller: nameController,
                   decoration: InputDecoration(
-                    labelText: 'Group Name',
+                    labelText: AppLocalizations.of(context)?.isAr == true
+                        ? 'اسم المجموعة'
+                        : 'Group Name',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -292,7 +301,9 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                       ),
                     ),
                     child: Text(
-                      'Save Changes',
+                      AppLocalizations.of(context)?.isAr == true
+                          ? 'حفظ التغييرات'
+                          : 'Save Changes',
                       style: GoogleFonts.inter(fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -307,13 +318,13 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isCreator = widget.group.creatorId == _currentUserId;
-
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
         title: Text(
-          'Group Info',
+          AppLocalizations.of(context)?.isAr == true
+              ? 'معلومات المجموعة'
+              : 'Group Info',
           style: GoogleFonts.outfit(
             color: AppColors.darkSlate,
             fontWeight: FontWeight.bold,
@@ -323,12 +334,13 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.darkSlate),
         actions: [
-          if (isCreator)
-            IconButton(
-              icon: const Icon(Icons.edit, color: AppColors.teal),
-              onPressed: _showEditGroupSheet,
-              tooltip: 'Edit Group',
-            ),
+          IconButton(
+            icon: const Icon(Icons.edit, color: AppColors.teal),
+            onPressed: _showEditGroupSheet,
+            tooltip: AppLocalizations.of(context)?.isAr == true
+                ? 'تعديل المجموعة'
+                : 'Edit Group',
+          ),
         ],
       ),
       body: _isLoading
@@ -394,7 +406,9 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${widget.group.memberIds.length} Members',
+                    AppLocalizations.of(context)?.isAr == true
+                        ? '${widget.group.memberIds.length} أعضاء'
+                        : '${widget.group.memberIds.length} Members',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
                       fontSize: 14,
@@ -420,7 +434,9 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                       children: [
                         _buildNavigationTile(
                           icon: Icons.photo_library_outlined,
-                          title: 'Media, Links, and Docs',
+                          title: AppLocalizations.of(context)?.isAr == true
+                              ? "الوسائط والروابط والمستندات"
+                              : "Media, Links, and Docs",
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -432,7 +448,9 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                         const Divider(height: 1, indent: 56),
                         _buildNavigationTile(
                           icon: Icons.location_on_outlined,
-                          title: 'Shared Locations',
+                          title: AppLocalizations.of(context)?.isAr == true
+                              ? "المواقع المشتركة"
+                              : "Shared Locations",
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -444,7 +462,9 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                         const Divider(height: 1, indent: 56),
                         _buildNavigationTile(
                           icon: Icons.wallpaper_rounded,
-                          title: 'Chat Wallpaper',
+                          title: AppLocalizations.of(context)?.isAr == true
+                              ? "خلفية الدردشة"
+                              : "Chat Wallpaper",
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -460,7 +480,9 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
 
                   // --- Members List ---
                   Text(
-                    'Members',
+                    AppLocalizations.of(context)?.isAr == true
+                        ? 'الأعضاء'
+                        : 'Members',
                     style: GoogleFonts.inter(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -502,8 +524,6 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                                 doc.data() as Map<String, dynamic>? ?? {};
                             final name = data['name'] ?? 'Unknown User';
                             final photo = data['photoUrl'];
-                            final isCreatorMember =
-                                doc.id == widget.group.creatorId;
 
                             return ListTile(
                               leading: Container(
@@ -543,28 +563,7 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                                   color: AppColors.darkSlate,
                                 ),
                               ),
-                              trailing: isCreatorMember
-                                  ? Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.primary.withValues(
-                                          alpha: 0.1,
-                                        ),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Text(
-                                        'Admin',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.primary,
-                                        ),
-                                      ),
-                                    )
-                                  : null,
+                              trailing: null,
                             );
                           },
                         ),
@@ -574,37 +573,24 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                   const SizedBox(height: 32),
 
                   // --- Danger Zone ---
-                  if (isCreator) ...[
-                    ElevatedButton.icon(
-                      onPressed: _deleteGroup,
-                      icon: const Icon(Icons.delete_forever),
-                      label: const Text('Delete Group'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red.shade50,
-                        foregroundColor: Colors.red,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
+                  ElevatedButton.icon(
+                    onPressed: _leaveGroup,
+                    icon: const Icon(Icons.exit_to_app),
+                    label: Text(
+                      AppLocalizations.of(context)?.isAr == true
+                          ? 'مغادرة المجموعة'
+                          : 'Leave Group',
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade50,
+                      foregroundColor: Colors.red,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                  ] else ...[
-                    ElevatedButton.icon(
-                      onPressed: _leaveGroup,
-                      icon: const Icon(Icons.exit_to_app),
-                      label: const Text('Leave Group'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red.shade50,
-                        foregroundColor: Colors.red,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                   const SizedBox(height: 40),
                 ],
               ),

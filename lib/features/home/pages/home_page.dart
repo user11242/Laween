@@ -13,6 +13,7 @@ import '../widgets/live_tracking_widget.dart';
 import '../widgets/recent_group_card.dart';
 import '../../groups/pages/create_group_page.dart';
 import '../../groups/pages/join_group_page.dart';
+import '../../groups/pages/global_outings_history_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -22,31 +23,45 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _currentIndex = 0; // Set back to 0 (Home) by default
+  int _currentIndex = 0;
+  late Stream<int> _totalUnreadStream;
+  final _auth = FirebaseAuth.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _initUnreadStream();
+  }
+
+  void _initUnreadStream() {
+    final user = _auth.currentUser;
+    if (user == null) {
+      _totalUnreadStream = Stream.value(0);
+      return;
+    }
+    
+    _totalUnreadStream = FirebaseFirestore.instance
+        .collection('groups')
+        .where('memberIds', arrayContains: user.uid)
+        .snapshots()
+        .map((snapshot) {
+          int total = 0;
+          for (var doc in snapshot.docs) {
+            final unreadCounts =
+                doc.data()['unreadCounts'] as Map<String, dynamic>?;
+            if (unreadCounts != null) {
+              total += (unreadCounts[user.uid] as num? ?? 0).toInt();
+            }
+          }
+          return total;
+        });
+  }
 
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     final l10n = AppLocalizations.of(context)!;
 
-    Stream<int> unreadCountStream() {
-      if (user == null) return Stream.value(0);
-      return FirebaseFirestore.instance
-          .collection('groups')
-          .where('memberIds', arrayContains: user.uid)
-          .snapshots()
-          .map((snapshot) {
-            int total = 0;
-            for (var doc in snapshot.docs) {
-              final unreadCounts =
-                  doc.data()['unreadCounts'] as Map<String, dynamic>?;
-              if (unreadCounts != null) {
-                total += (unreadCounts[user.uid] as num? ?? 0).toInt();
-              }
-            }
-            return total;
-          });
-    }
 
     final List<Widget> pages = [
       _buildHomeContent(user),
@@ -55,15 +70,16 @@ class _HomePageState extends State<HomePage> {
       const ProfilePage(),
     ];
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: IndexedStack(index: _currentIndex, children: pages),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF1F1F1F) : Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
               blurRadius: 10,
               offset: const Offset(0, -5),
             ),
@@ -77,7 +93,7 @@ class _HomePageState extends State<HomePage> {
             });
           },
           type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
+          backgroundColor: isDark ? const Color(0xFF1F1F1F) : Colors.white,
           selectedItemColor: AppColors.teal,
           unselectedItemColor: const Color(0xFF94A3B8),
           selectedLabelStyle: GoogleFonts.inter(
@@ -96,7 +112,7 @@ class _HomePageState extends State<HomePage> {
             ),
             BottomNavigationBarItem(
               icon: StreamBuilder<int>(
-                stream: unreadCountStream(),
+                stream: _totalUnreadStream,
                 builder: (context, snapshot) {
                   final count = snapshot.data ?? 0;
                   return Badge(
@@ -130,9 +146,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildHomeContent(User? user) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFFF8F9FA), // Clean Light Background
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
       ),
       child: Stack(
         children: [
@@ -185,11 +203,11 @@ class _HomePageState extends State<HomePage> {
 
                   // 4. QUICK ACTIONS GRID (2x2)
                   Text(
-                    "Quick Actions",
+                    l10n.isAr ? "الإجراءات السريعة" : "Quick Actions",
                     style: GoogleFonts.inter(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
+                      color: isDark ? Colors.white : AppColors.primary,
                     ),
                   ).animate().fadeIn(delay: 200.ms).slideX(begin: -0.1),
 
@@ -203,17 +221,17 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "Recently Active",
+                        l10n.isAr ? "النشطة مؤخراً" : "Recently Active",
                         style: GoogleFonts.inter(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
+                          color: isDark ? Colors.white : AppColors.primary,
                         ),
                       ),
                       TextButton(
                         onPressed: () => setState(() => _currentIndex = 1),
                         child: Text(
-                          "See All",
+                          l10n.isAr ? "عرض الكل" : "See All",
                           style: GoogleFonts.inter(
                             color: AppColors.teal.withValues(alpha: 0.8),
                             fontWeight: FontWeight.w600,
@@ -251,13 +269,14 @@ class _HomePageState extends State<HomePage> {
           photoUrl = data['photoUrl'] ?? data['profilePic'];
         }
 
+        final l10n = AppLocalizations.of(context)!;
         return Row(
           children: [
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _getGreeting(),
+                  _getGreeting(l10n),
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     color: AppColors.slate,
@@ -316,17 +335,18 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  String _getGreeting() {
+  String _getGreeting(AppLocalizations l10n) {
     final hour = DateTime.now().hour;
-    if (hour < 12) return "Good Morning";
-    if (hour < 17) return "Good Afternoon";
-    return "Good Evening";
+    if (hour < 12) return l10n.isAr ? "صباح الخير" : "Good Morning";
+    if (hour < 17) return l10n.isAr ? "مساء الخير" : "Good Afternoon";
+    return l10n.isAr ? "مساء الخير" : "Good Evening";
   }
 
   Widget _buildQuickActionsGrid() {
+    final l10n = AppLocalizations.of(context)!;
     final List<Map<String, dynamic>> actions = [
       {
-        "title": "Create Group",
+        "title": l10n.isAr ? "إنشاء مجموعة" : "Create Group",
         "icon": Icons.add_circle_outline_rounded,
         "color": const Color(0xFF6366F1), // Indigo
         "onTap": () {
@@ -337,7 +357,7 @@ class _HomePageState extends State<HomePage> {
         },
       },
       {
-        "title": "Join Group",
+        "title": l10n.isAr ? "الانضمام لمجموعة" : "Join Group",
         "icon": Icons.qr_code_scanner_rounded,
         "color": AppColors.teal,
         "onTap": () {
@@ -348,13 +368,18 @@ class _HomePageState extends State<HomePage> {
         },
       },
       {
-        "title": "Nearby Radar",
-        "icon": Icons.radar_rounded,
+        "title": l10n.isAr ? "سجل الخرجات" : "Outings History",
+        "icon": Icons.history_rounded,
         "color": const Color(0xFFF59E0B),
-        "onTap": () {},
+        "onTap": () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const GlobalOutingsHistoryPage()),
+          );
+        },
       },
       {
-        "title": "Global Search",
+        "title": l10n.isAr ? "البحث العام" : "Global Search",
         "icon": Icons.search_rounded,
         "color": const Color(0xFFEC4899),
         "onTap": () {},

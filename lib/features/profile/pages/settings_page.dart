@@ -7,6 +7,7 @@ import '../../../../l10n/app_localizations.dart';
 import 'package:laween/core/services/biometric_service.dart';
 import 'package:laween/core/message/app_messenger.dart';
 import '../widgets/biometric_auth_dialog.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -17,7 +18,6 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   bool _notificationsEnabled = true;
-  bool _darkModeEnabled = false;
   bool _biometricEnabled = false;
   bool _isBiometricAvailable = false;
   bool _isLoading = true;
@@ -41,10 +41,13 @@ class _SettingsPageState extends State<SettingsPage> {
           .get();
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
+        final notifEnabled = data['notificationsEnabled'] ?? true;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('notifications_enabled', notifEnabled);
+
         if (mounted) {
           setState(() {
-            _notificationsEnabled = data['notificationsEnabled'] ?? true;
-            _darkModeEnabled = data['darkModeEnabled'] ?? false;
+            _notificationsEnabled = notifEnabled;
             _biometricEnabled = enabled;
             _isBiometricAvailable = available;
             _isLoading = false;
@@ -135,20 +138,12 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _toggleNotifications(bool value) async {
     setState(() => _notificationsEnabled = value);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notifications_enabled', value);
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       await FirebaseFirestore.instance.collection('users').doc(user.uid).update(
         {'notificationsEnabled': value},
-      );
-    }
-  }
-
-  Future<void> _toggleDarkMode(bool value) async {
-    setState(() => _darkModeEnabled = value);
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update(
-        {'darkModeEnabled': value},
       );
     }
   }
@@ -185,7 +180,9 @@ class _SettingsPageState extends State<SettingsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionHeader("Account Settings"),
+                  _buildSectionHeader(
+                    l10n.isAr ? "إعدادات الحساب" : "Account Settings",
+                  ),
                   const SizedBox(height: 16),
                   _buildSettingTile(
                     icon: Icons.notifications_active_outlined,
@@ -203,16 +200,6 @@ class _SettingsPageState extends State<SettingsPage> {
                       value: _biometricEnabled,
                       onChanged: _toggleBiometric,
                     ),
-                  const SizedBox(height: 40),
-
-                  _buildSectionHeader("Appearance"),
-                  const SizedBox(height: 16),
-                  _buildSettingTile(
-                    icon: Icons.dark_mode_outlined,
-                    title: l10n.darkMode,
-                    value: _darkModeEnabled,
-                    onChanged: _toggleDarkMode,
-                  ),
                 ],
               ),
             ),
