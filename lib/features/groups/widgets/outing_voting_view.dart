@@ -132,7 +132,7 @@ class OutingVotingView extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              "${venue['rating'] ?? 'N/A'} (${venue['userRatingCount'] ?? 0})",
+                              "${venue['rating'] ?? 'N/A'} (${venue['userRatingCount'] ?? 0}) • ${session.calculationMode == 'Time' ? '~${venue['averageEtaMinutes'] ?? '?'} min drive' : '~${venue['averageRouteDistanceMeters'] != null ? (venue['averageRouteDistanceMeters'] / 1000).toStringAsFixed(1) : '?'} km'}",
                               style: GoogleFonts.inter(
                                 fontSize: 12,
                                 color: isMe

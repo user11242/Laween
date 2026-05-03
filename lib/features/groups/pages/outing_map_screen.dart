@@ -50,7 +50,10 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
   final bool _isTrackingMode = false;
   bool _showWinnerDetails = true;
   bool _showChat = false; // toggle between Suggested Places and Mini Chat
+  // Global selected member — drives which member's ETA/distance is shown in every venue card.
+  // Defaults to the current logged-in user on first load.
   String? _selectedParticipantUid;
+  bool _selectedParticipantInitialized = false;
   Set<Polyline> _polylines = {};
   final TextEditingController _chatController = TextEditingController();
   final ScrollController _chatScrollController = ScrollController();
@@ -166,8 +169,8 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     }
   }
 
-  Future<BitmapDescriptor> _getAvatarIcon(String name, String? photoUrl, Color color) async {
-    final cacheKey = "avatar_${photoUrl ?? name}_${color.toARGB32()}";
+  Future<BitmapDescriptor> _getAvatarIcon(String name, String? photoUrl, Color color, {bool isSelected = false}) async {
+    final cacheKey = "avatar_${photoUrl ?? name}_${color.toARGB32()}_$isSelected";
     if (_customMarkers.containsKey(cacheKey)) return _customMarkers[cacheKey]!;
 
     final recorder = ui.PictureRecorder();
@@ -175,17 +178,26 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     const size = 95.0;
     const radius = size / 2;
 
-    // Outer glow ring (strong, colored)
+    // Outer glow ring — stronger when this member is the selected metric member
     final glowPaint = Paint()
-      ..color = color.withValues(alpha: 0.6)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14);
+      ..color = color.withValues(alpha: isSelected ? 0.9 : 0.6)
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, isSelected ? 22 : 14);
     canvas.drawCircle(Offset(radius, radius), radius - 6, glowPaint);
+
+    // Extra white pulse ring for selected state
+    if (isSelected) {
+      final pulsePaint = Paint()
+        ..color = Colors.white.withValues(alpha: 0.55)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 5;
+      canvas.drawCircle(Offset(radius, radius), radius - 2, pulsePaint);
+    }
 
     // Colored border ring
     final ringPaint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 6;
+      ..strokeWidth = isSelected ? 8 : 6;
     canvas.drawCircle(Offset(radius, radius), radius - 6, ringPaint);
 
     // White inner border (separates image from colored ring)
@@ -416,6 +428,21 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
   Future<void> _updateMarkers(OutingSessionModel session) async {
     if (_isDisposed || !mounted) return;
 
+    // Default selected member to current user on first load
+    if (!_selectedParticipantInitialized && session.participants.isNotEmpty) {
+      final myUid = FirebaseAuth.instance.currentUser?.uid;
+      final defaultUid = myUid != null &&
+              session.participants.any((p) => p.uid == myUid)
+          ? myUid
+          : session.participants.first.uid;
+      if (mounted) {
+        setState(() {
+          _selectedParticipantUid = defaultUid;
+          _selectedParticipantInitialized = true;
+        });
+      }
+    }
+
     final Set<Marker> newMarkers = {};
 
     // 1. Participant Markers
@@ -423,21 +450,20 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
       final p = session.participants[i];
       if (p.location != null) {
         final userColor = AppColors.getUserColor(p.uid);
-        final icon = await _getAvatarIcon(p.name, p.photoUrl, userColor);
+        final isThisMemberSelected = _selectedParticipantUid == p.uid;
+        final icon = await _getAvatarIcon(p.name, p.photoUrl, userColor,
+            isSelected: isThisMemberSelected);
         newMarkers.add(
           Marker(
             markerId: MarkerId('p_${p.uid}'),
             position: LatLng(p.location!.latitude, p.location!.longitude),
             infoWindow: InfoWindow(title: p.name),
             icon: icon,
+            // Always keep someone selected — tapping a member sets them as
+            // the metric source for all venue cards.
+            zIndexInt: isThisMemberSelected ? 210 : 200, // members always above venues
             onTap: () {
-              setState(() {
-                if (_selectedParticipantUid == p.uid) {
-                  _selectedParticipantUid = null;
-                } else {
-                  _selectedParticipantUid = p.uid;
-                }
-              });
+              setState(() => _selectedParticipantUid = p.uid);
               _updateMarkers(session);
             },
           ),
@@ -469,7 +495,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
           Marker(
             markerId: MarkerId('v_${v['id']}'),
             position: LatLng(loc['latitude'], loc['longitude']),
-            zIndex: i == _currentVenueIndex ? 100 : (10 - i).toDouble(),
+            zIndexInt: i == _currentVenueIndex ? 100 : (10 - i),
             onTap: () {
               if (mounted) {
                 setState(() => _currentVenueIndex = i);
@@ -600,6 +626,17 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
         final session = snapshot.data!;
         if (session.status == OutingStatus.completed) {
           _startLiveTracking();
+        }
+
+        // Initialize the selected member synchronously on first data arrival
+        // so venue cards always have a valid UID to look up — never null.
+        if (!_selectedParticipantInitialized && session.participants.isNotEmpty) {
+          final myUid = FirebaseAuth.instance.currentUser?.uid;
+          _selectedParticipantUid = myUid != null &&
+                  session.participants.any((p) => p.uid == myUid)
+              ? myUid
+              : session.participants.first.uid;
+          _selectedParticipantInitialized = true;
         }
 
         return PopScope(
@@ -1065,7 +1102,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      height: 124, // Increased from 114 to prevent overflow with borders
+      height: 150, // Increased to fit per-member route metric row
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -1239,7 +1276,96 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                               color: AppColors.darkSlate,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 6),
+                          // ── SELECTED MEMBER ROUTE METRIC ─────────────────
+                          Builder(builder: (context) {
+                            // 1. Try per-member route (new sessions with memberRoutes stored)
+                            final memberRoutes = venue['memberRoutes'] as Map<String, dynamic>?;
+
+                            // 🔍 DEBUG — remove after fix is confirmed
+                            debugPrint('=== VENUE: ${venue['name']} ===');
+                            debugPrint('  selectedUid: $_selectedParticipantUid');
+                            debugPrint('  memberRoutes keys: ${memberRoutes?.keys.toList()}');
+                            debugPrint('  averageEtaMinutes: ${venue['averageEtaMinutes']}');
+                            debugPrint('  averageRouteDistanceMeters: ${venue['averageRouteDistanceMeters']}');
+                            if (memberRoutes != null && _selectedParticipantUid != null) {
+                              debugPrint('  selectedRoute: ${memberRoutes[_selectedParticipantUid]}');
+                            }
+
+                            final selectedRoute = (memberRoutes != null && _selectedParticipantUid != null)
+                                ? memberRoutes[_selectedParticipantUid] as Map<String, dynamic>?
+                                : null;
+                            final routeOk = selectedRoute?['routeAvailable'] == true;
+                            final etaMin = selectedRoute?['etaMinutes'] as int?;
+                            final distKm = (selectedRoute?['distanceKm'] as num?)?.toDouble();
+
+                            // 2. Fall back to aggregate averages for old sessions
+                            //    that were computed before memberRoutes was added.
+                            final fallbackEta = venue['averageEtaMinutes'] as int?;
+                            final fallbackDistMeters = venue['averageRouteDistanceMeters'] as int?;
+                            final fallbackDistKm = fallbackDistMeters != null
+                                ? fallbackDistMeters / 1000.0
+                                : null;
+
+                            String metricLabel;
+                            bool isUnavailable = false;
+                            bool isFallback = false;
+
+                            if (routeOk && etaMin != null && distKm != null) {
+                              // Per-member route — most accurate
+                              if (session.calculationMode == 'Time') {
+                                metricLabel = '$etaMin min  •  ${distKm.toStringAsFixed(1)} km';
+                              } else {
+                                metricLabel = '${distKm.toStringAsFixed(1)} km  •  $etaMin min';
+                              }
+                            } else if (fallbackEta != null && fallbackEta > 0) {
+                              // Aggregate fallback — shown for old session data
+                              isFallback = true;
+                              if (session.calculationMode == 'Time') {
+                                metricLabel = fallbackDistKm != null
+                                    ? '~$fallbackEta min avg  •  ${fallbackDistKm.toStringAsFixed(1)} km'
+                                    : '~$fallbackEta min avg';
+                              } else {
+                                metricLabel = fallbackDistKm != null
+                                    ? '~${fallbackDistKm.toStringAsFixed(1)} km avg  •  $fallbackEta min'
+                                    : '~$fallbackEta min avg';
+                              }
+                            } else {
+                              metricLabel = 'Route unavailable';
+                              isUnavailable = true;
+                            }
+
+                            return Row(
+                              children: [
+                                Icon(
+                                  isUnavailable
+                                      ? Icons.warning_amber_rounded
+                                      : Icons.near_me_rounded,
+                                  size: 12,
+                                  color: isUnavailable
+                                      ? Colors.grey.shade400
+                                      : isFallback
+                                          ? Colors.orange.shade400
+                                          : AppColors.teal,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  metricLabel,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: isUnavailable
+                                        ? Colors.grey.shade400
+                                        : isFallback
+                                            ? Colors.orange.shade700
+                                            : AppColors.darkSlate,
+                                  ),
+                                ),
+                              ],
+                            );
+                          }),
+                          const SizedBox(height: 6),
+                          // ── VOTES + SWIPE HINT ────────────────────────────
                           Row(
                             children: [
                               if (isTrending)
@@ -1272,16 +1398,6 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                 ),
                               ),
                               const Spacer(),
-                              // Quick Action Button
-                              Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade50,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.grey.shade200),
-                                ),
-                                child: Icon(Icons.near_me_rounded, size: 14, color: AppColors.teal),
-                              ),
                             ],
                           ),
                         ],

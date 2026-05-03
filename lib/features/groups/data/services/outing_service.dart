@@ -16,6 +16,7 @@ import '../../../../core/services/google_maps_service.dart';
 import '../models/outing_session_model.dart';
 import '../models/message_model.dart';
 import '../../../auth/data/services/fcm_service.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class OutingService {
   static final OutingService _instance = OutingService._internal();
@@ -47,6 +48,25 @@ class OutingService {
     final now = DateTime.now();
     final expiresAt = now.add(Duration(minutes: timeLimitMinutes));
 
+    int? initialEta;
+    double? initialDist;
+    if (creatorLocation != null && venue['location'] != null) {
+      try {
+        final etaResult = await GoogleMapsService().getETA(
+          originLat: creatorLocation.latitude,
+          originLng: creatorLocation.longitude,
+          destLat: (venue['location']['latitude'] as num).toDouble(),
+          destLng: (venue['location']['longitude'] as num).toDouble(),
+        );
+        if (etaResult != null) {
+          initialEta = etaResult['etaMinutes'];
+          initialDist = etaResult['distanceKm'];
+        }
+      } catch (e) {
+        debugPrint("Error fetching direct session ETA: $e");
+      }
+    }
+
     final session = OutingSessionModel(
       id: sessionRef.id,
       groupId: groupId,
@@ -63,6 +83,9 @@ class OutingService {
           joinedAt: now,
           location: creatorLocation,
           startLocation: creatorLocation,
+          etaMinutes: initialEta,
+          distanceKm: initialDist,
+          lastEtaUpdate: initialEta != null ? now : null,
         ),
       ],
       winner: venue, // Set the selected venue as winner
@@ -202,13 +225,44 @@ class OutingService {
         .collection('outings')
         .doc(sessionId);
 
+    int? initialEta;
+    double? initialDist;
+    if (location != null) {
+      try {
+        final snapshot = await sessionRef.get();
+        if (snapshot.exists) {
+          final data = snapshot.data()!;
+          if (data['winner'] != null && data['winner']['location'] != null) {
+            final destLat = (data['winner']['location']['latitude'] as num).toDouble();
+            final destLng = (data['winner']['location']['longitude'] as num).toDouble();
+            final etaResult = await GoogleMapsService().getETA(
+              originLat: location.latitude,
+              originLng: location.longitude,
+              destLat: destLat,
+              destLng: destLng,
+            );
+            if (etaResult != null) {
+              initialEta = etaResult['etaMinutes'];
+              initialDist = etaResult['distanceKm'];
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint("Error fetching join session ETA: $e");
+      }
+    }
+
+    final now = DateTime.now();
     final participant = OutingParticipant(
       uid: uid,
       name: name,
       photoUrl: photoUrl,
       location: location,
       startLocation: location,
-      joinedAt: DateTime.now(),
+      joinedAt: now,
+      etaMinutes: initialEta,
+      distanceKm: initialDist,
+      lastEtaUpdate: initialEta != null ? now : null,
     );
 
     await sessionRef.update({
@@ -384,63 +438,241 @@ class OutingService {
     final midLat = centralLat * 180 / math.pi;
     final midLng = centralLng * 180 / math.pi;
 
-    // 2. Query Google Places API
+    // 2. Query Google Places API with Adaptive Radius Loop
     final apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'];
     final category = session.category.toLowerCase();
-
-    // Use the New Places API (Text Search) for better results
     final url = Uri.parse('https://places.googleapis.com/v1/places:searchText');
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': apiKey!,
-        'X-Goog-FieldMask':
-            'places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.photos,places.location,places.id',
-      },
-      body: jsonEncode({
-        'textQuery': '$category near $midLat, $midLng',
-        'locationBias': {
-          'circle': {
-            'center': {'latitude': midLat, 'longitude': midLng},
-            'radius': 2000.0, // 2km radius
+    
+    final List<double> searchRadii = [2000.0, 4000.0, 6000.0];
+    List<Map<String, dynamic>> processedVenues = [];
+    final Set<String> seenPlaceIds = {};
+    
+    final List<LatLng> origins = participants.map<LatLng>((p) => LatLng(p.location!.latitude, p.location!.longitude)).toList();
+
+    for (double radius in searchRadii) {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': apiKey!,
+          'X-Goog-FieldMask':
+              'places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.photos,places.location,places.id,places.currentOpeningHours,places.businessStatus',
+        },
+        body: jsonEncode({
+          'textQuery': '$category near $midLat, $midLng',
+          'locationBias': {
+            'circle': {
+              'center': {'latitude': midLat, 'longitude': midLng},
+              'radius': radius,
+            },
           },
-        },
-        'maxResultCount': 8,
-      }),
-    );
+          'maxResultCount': 20,
+        }),
+      );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final List places = data['places'] ?? [];
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List rawPlaces = data['places'] ?? [];
 
-      // 3. Update session with results and move to 'voting'
-      await sessionRef.update({
-        'finalLocation': {
-          'center': {'lat': midLat, 'lng': midLng},
-          'topVenues': places
-              .map(
-                (p) => {
-                  'id': p['id'],
-                  'name': p['displayName']['text'],
-                  'address': p['formattedAddress'],
-                  'rating': p['rating'],
-                  'userRatingCount': p['userRatingCount'],
-                  'location': p['location'],
-                  'photoReference':
-                      (p['photos'] != null && p['photos'].isNotEmpty)
-                      ? p['photos'][0]['name']
-                      : null,
-                },
-              )
-              .toList(),
-        },
-        'status': OutingStatus.voting.name,
-      });
-    } else {
+        // Pre-filter candidate venues (only very basic validity)
+        List places = rawPlaces.where((p) {
+          final pId = p['id']?.toString() ?? '';
+          if (pId.isEmpty || seenPlaceIds.contains(pId)) return false;
+          if (p['location'] == null) return false;
+          if (p['businessStatus'] != null && p['businessStatus'] != 'OPERATIONAL') return false;
+          if (p['rating'] != null && (p['rating'] as num) < 3.0) return false;
+          return true;
+        }).take(15).toList();
+
+        if (places.isEmpty) continue;
+
+        // Run Google Routes Matrix API
+        final List<LatLng> destinations = places.map<LatLng>((p) => LatLng((p['location']['latitude'] as num).toDouble(), (p['location']['longitude'] as num).toDouble())).toList();
+
+        final routeMatrix = await GoogleMapsService().getRouteMatrix(
+          origins: origins,
+          destinations: destinations,
+        );
+
+        // Calculate fairness metrics
+        for (int i = 0; i < places.length; i++) {
+          final place = places[i];
+          final String placeId = place['id'].toString();
+          seenPlaceIds.add(placeId);
+          
+          final venueRoutes = routeMatrix.where((r) => r['destinationIndex'] == i).toList();
+          
+          int validRoutes = 0;
+          int failedRoutes = 0;
+          int sumEta = 0;
+          int maxEta = 0;
+          int minEta = 999999;
+          int sumDistMeters = 0;
+          int maxDistMeters = 0;
+          int minDistMeters = 99999999;
+
+          for (var r in venueRoutes) {
+            if (r['routeAvailable'] == true) {
+              validRoutes++;
+              int eta = (r['durationSeconds'] as int) ~/ 60;
+              sumEta += eta;
+              if (eta > maxEta) maxEta = eta;
+              if (eta < minEta) minEta = eta;
+
+              int dist = r['distanceMeters'] as int;
+              sumDistMeters += dist;
+              if (dist > maxDistMeters) maxDistMeters = dist;
+              if (dist < minDistMeters) minDistMeters = dist;
+            } else {
+              failedRoutes++;
+            }
+          }
+
+          double timeFairnessScore = 9999.0;
+          double distanceFairnessScore = 9999.0;
+          int avgEta = 0;
+          int avgDistMeters = 0;
+          int etaSpread = 0;
+          int distSpreadMeters = 0;
+
+          if (validRoutes > 0) {
+            avgEta = sumEta ~/ validRoutes;
+            avgDistMeters = sumDistMeters ~/ validRoutes;
+            etaSpread = maxEta - minEta;
+            distSpreadMeters = maxDistMeters - minDistMeters;
+            
+            // Time Score Formula
+            timeFairnessScore = avgEta + (etaSpread * 0.5);
+            if (maxEta > 45) {
+               timeFairnessScore += (maxEta - 45) * 1.5;
+            }
+            
+            // Distance Score Formula
+            double avgDistKm = avgDistMeters / 1000.0;
+            double maxDistKm = maxDistMeters / 1000.0;
+            double minDistKm = minDistMeters / 1000.0;
+            double distSpreadKm = distSpreadMeters / 1000.0;
+            
+            distanceFairnessScore = avgDistKm + (distSpreadKm * 0.5);
+            if (maxDistKm > 30) {
+                distanceFairnessScore += (maxDistKm - 30) * 1.2;
+            }
+          }
+
+          // Apply failed route penalties to BOTH scores
+          timeFairnessScore += failedRoutes * 999.0;
+          distanceFairnessScore += failedRoutes * 999.0;
+
+          // Select primary score based on calculation mode preference
+          double selectedFairnessScore = session.calculationMode == 'Time' ? timeFairnessScore : distanceFairnessScore;
+          String selectedFairnessMode = session.calculationMode == 'Time' ? 'time' : 'distance';
+
+          // Build per-member route map keyed by participant uid.
+          // originIndex from the matrix maps directly to participants[originIndex].
+          final Map<String, dynamic> memberRoutes = {};
+          for (var r in venueRoutes) {
+            final originIdx = r['originIndex'] as int;
+            if (originIdx < participants.length) {
+              final memberUid = participants[originIdx].uid;
+              if (r['routeAvailable'] == true) {
+                memberRoutes[memberUid] = {
+                  'etaMinutes': (r['durationSeconds'] as int) ~/ 60,
+                  'distanceKm': (r['distanceMeters'] as int) / 1000.0,
+                  'routeAvailable': true,
+                };
+              } else {
+                // Explicitly mark as unavailable so the UI can show the right message
+                memberRoutes[memberUid] = {'routeAvailable': false};
+              }
+            }
+          }
+
+          processedVenues.add({
+            'id': placeId,
+            'name': place['displayName']['text'],
+            'address': place['formattedAddress'],
+            'rating': place['rating'],
+            'userRatingCount': place['userRatingCount'],
+            'location': place['location'],
+            'photoReference': (place['photos'] != null && place['photos'].isNotEmpty)
+                ? place['photos'][0]['name']
+                : null,
+            'averageEtaMinutes': avgEta,
+            'maxEtaMinutes': maxEta,
+            'minEtaMinutes': validRoutes > 0 ? minEta : 0,
+            'etaSpreadMinutes': etaSpread,
+            'averageRouteDistanceMeters': avgDistMeters,
+            'maxRouteDistanceMeters': maxDistMeters,
+            'minRouteDistanceMeters': validRoutes > 0 ? minDistMeters : 0,
+            'routeDistanceSpreadMeters': distSpreadMeters,
+            'timeFairnessScore': timeFairnessScore,
+            'distanceFairnessScore': distanceFairnessScore,
+            'selectedFairnessScore': selectedFairnessScore,
+            'selectedFairnessMode': selectedFairnessMode,
+            'routeAvailableCount': validRoutes,
+            'failedRouteCount': failedRoutes,
+            'routeAvailable': failedRoutes == 0 && validRoutes > 0,
+            // Per-member routes for card-level transparency display
+            'memberRoutes': memberRoutes,
+          });
+        }
+      }
+      
+      // Determine if we have enough "fair" venues to stop expanding radius
+      int fairCount = 0;
+      for(var v in processedVenues) {
+         if (v['failedRouteCount'] == 0) {
+            if (session.calculationMode == 'Time' && (v['maxEtaMinutes'] as int) <= 45 && (v['etaSpreadMinutes'] as int) <= 20) {
+                fairCount++;
+            } else if (session.calculationMode == 'KM' && (v['maxRouteDistanceMeters'] as int) <= 30000 && (v['routeDistanceSpreadMeters'] as int) <= 15000) {
+                fairCount++;
+            }
+         }
+      }
+      
+      if (fairCount >= 5) {
+         break;
+      }
+    }
+
+    if (processedVenues.isEmpty) {
       // Fallback or cancel
       await updateStatus(groupId, sessionId, OutingStatus.cancelled);
+      return;
     }
+
+    // Sort by selected fairness mode
+    processedVenues.sort((a, b) {
+      if (a['routeAvailable'] != b['routeAvailable']) {
+        return (a['routeAvailable'] as bool) ? -1 : 1; // routeAvailable true comes first
+      }
+      final double scoreA = a['selectedFairnessScore'] as double;
+      final double scoreB = b['selectedFairnessScore'] as double;
+      if (scoreA != scoreB) return scoreA.compareTo(scoreB);
+      
+      if (session.calculationMode == 'Time') {
+          final int maxA = a['maxEtaMinutes'] as int;
+          final int maxB = b['maxEtaMinutes'] as int;
+          if (maxA != maxB) return maxA.compareTo(maxB);
+      } else {
+          final int maxA = a['maxRouteDistanceMeters'] as int;
+          final int maxB = b['maxRouteDistanceMeters'] as int;
+          if (maxA != maxB) return maxA.compareTo(maxB);
+      }
+      
+      final double ratingA = (a['rating'] as num?)?.toDouble() ?? 0;
+      final double ratingB = (b['rating'] as num?)?.toDouble() ?? 0;
+      return ratingB.compareTo(ratingA);
+    });
+
+    // 6. Update session
+    await sessionRef.update({
+      'finalLocation': {
+        'center': {'lat': midLat, 'lng': midLng},
+        'topVenues': processedVenues.take(8).toList(),
+      },
+      'status': OutingStatus.voting.name,
+    });
   }
 
   /// Vote for a specific venue
@@ -499,12 +731,29 @@ class OutingService {
             final votesB = (b['votes'] as List?)?.length ?? 0;
             if (votesA != votesB) return votesB.compareTo(votesA);
 
-            // Tie-breaker: Host's Choice
+            // Tie-breaker 1: Fairness
+            final scoreA = (a['selectedFairnessScore'] as num?)?.toDouble() ?? 9999.0;
+            final scoreB = (b['selectedFairnessScore'] as num?)?.toDouble() ?? 9999.0;
+            if (scoreA != scoreB) return scoreA.compareTo(scoreB);
+
+            // Tie-breaker 2: Host's Choice
             final creatorId = data['creatorId'];
             final hostVotedA = (a['votes'] as List?)?.contains(creatorId) ?? false;
             final hostVotedB = (b['votes'] as List?)?.contains(creatorId) ?? false;
             if (hostVotedA != hostVotedB) return hostVotedA ? -1 : 1;
 
+            // Tie-breaker 3: Mode Max Metric
+            if (data['calculationMode'] == 'Time') {
+                final maxA = (a['maxEtaMinutes'] as num?)?.toInt() ?? 9999;
+                final maxB = (b['maxEtaMinutes'] as num?)?.toInt() ?? 9999;
+                if (maxA != maxB) return maxA.compareTo(maxB);
+            } else {
+                final maxA = (a['maxRouteDistanceMeters'] as num?)?.toInt() ?? 999999;
+                final maxB = (b['maxRouteDistanceMeters'] as num?)?.toInt() ?? 999999;
+                if (maxA != maxB) return maxA.compareTo(maxB);
+            }
+
+            // Tie-breaker 4: Rating
             final ratingA = (a['rating'] as num?)?.toDouble() ?? 0;
             final ratingB = (b['rating'] as num?)?.toDouble() ?? 0;
             return ratingB.compareTo(ratingA);
@@ -543,18 +792,35 @@ class OutingService {
       return;
     }
 
-    // Sort by votes length descending, then by Host's choice, then by rating
+    // Sort by votes length descending, then by Fairness, then Host's choice
     topVenues.sort((a, b) {
       final votesA = (a['votes'] as List?)?.length ?? 0;
       final votesB = (b['votes'] as List?)?.length ?? 0;
       if (votesA != votesB) return votesB.compareTo(votesA);
 
-      // Tie-breaker: Host's Choice
+      // Tie-breaker 1: Fairness
+      final scoreA = (a['selectedFairnessScore'] as num?)?.toDouble() ?? 9999.0;
+      final scoreB = (b['selectedFairnessScore'] as num?)?.toDouble() ?? 9999.0;
+      if (scoreA != scoreB) return scoreA.compareTo(scoreB);
+
+      // Tie-breaker 2: Host's Choice
       final creatorId = data['creatorId'];
       final hostVotedA = (a['votes'] as List?)?.contains(creatorId) ?? false;
       final hostVotedB = (b['votes'] as List?)?.contains(creatorId) ?? false;
       if (hostVotedA != hostVotedB) return hostVotedA ? -1 : 1;
 
+      // Tie-breaker 3: Mode Max Metric
+      if (data['calculationMode'] == 'Time') {
+          final maxA = (a['maxEtaMinutes'] as num?)?.toInt() ?? 9999;
+          final maxB = (b['maxEtaMinutes'] as num?)?.toInt() ?? 9999;
+          if (maxA != maxB) return maxA.compareTo(maxB);
+      } else {
+          final maxA = (a['maxRouteDistanceMeters'] as num?)?.toInt() ?? 999999;
+          final maxB = (b['maxRouteDistanceMeters'] as num?)?.toInt() ?? 999999;
+          if (maxA != maxB) return maxA.compareTo(maxB);
+      }
+
+      // Tie-breaker 4: Rating
       final ratingA = (a['rating'] as num?)?.toDouble() ?? 0;
       final ratingB = (b['rating'] as num?)?.toDouble() ?? 0;
       return ratingB.compareTo(ratingA);

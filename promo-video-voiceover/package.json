@@ -1,0 +1,21 @@
+{
+  "name": "laween-promo-video",
+  "version": "1.0.0",
+  "description": "Laween Promo Video with Remotion",
+  "scripts": {
+    "start": "remotion studio --port 3001",
+    "build": "remotion render"
+  },
+  "dependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "remotion": "^4.0.0"
+  },
+  "devDependencies": {
+    "@remotion/cli": "^4.0.448",
+    "@remotion/eslint-config": "^4.0.0",
+    "@types/react": "^18.0.0",
+    "eslint": "^8.0.0",
+    "typescript": "^5.0.0"
+  }
+}

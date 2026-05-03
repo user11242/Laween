@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -10,7 +11,7 @@ class GoogleMapsService {
 
   final String? _apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'];
 
-  /// Fetch accurate ETA and distance from Google Distance Matrix API
+  /// Fetch accurate ETA and distance from Google Routes API (Compute Routes)
   Future<Map<String, dynamic>?> getETA({
     required double originLat,
     required double originLng,
@@ -19,35 +20,41 @@ class GoogleMapsService {
   }) async {
     if (_apiKey == null) return null;
 
-    final url = Uri.parse(
-      'https://maps.googleapis.com/maps/api/distancematrix/json'
-      '?origins=$originLat,$originLng'
-      '&destinations=$destLat,$destLng'
-      '&mode=driving'
-      '&departure_time=now' // Crucial for traffic awareness
-      '&key=$_apiKey',
-    );
+    final url = Uri.parse('https://routes.googleapis.com/directions/v2:computeRoutes');
 
     try {
-      final response = await http.get(url);
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': _apiKey!,
+          'X-Goog-FieldMask': 'routes.duration,routes.staticDuration,routes.distanceMeters',
+        },
+        body: jsonEncode({
+          'origin': {
+            'location': {'latLng': {'latitude': originLat, 'longitude': originLng}}
+          },
+          'destination': {
+            'location': {'latLng': {'latitude': destLat, 'longitude': destLng}}
+          },
+          'travelMode': 'DRIVE',
+          'routingPreference': 'TRAFFIC_AWARE',
+        }),
+      );
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['status'] == 'OK' && 
-            data['rows'].isNotEmpty && 
-            data['rows'][0]['elements'].isNotEmpty) {
+        if (data['routes'] != null && data['routes'].isNotEmpty) {
+          final route = data['routes'][0];
           
-          final element = data['rows'][0]['elements'][0];
-          if (element['status'] == 'OK') {
-            // duration_in_traffic is preferred if available (requires Premium or specific billing)
-            // but 'duration' usually includes traffic when departure_time is provided
-            final durationSeconds = element['duration']['value'] as int;
-            final distanceMeters = element['distance']['value'] as int;
+          final durationStr = route['duration'] ?? route['staticDuration'] ?? "0s";
+          final durationSeconds = int.tryParse(durationStr.replaceAll('s', '')) ?? 0;
+          final distanceMeters = route['distanceMeters'] as int? ?? 0;
 
-            return {
-              'etaMinutes': (durationSeconds / 60).ceil(),
-              'distanceKm': (distanceMeters / 1000).toDouble(),
-            };
-          }
+          return {
+            'etaMinutes': (durationSeconds / 60).ceil(),
+            'distanceKm': (distanceMeters / 1000).toDouble(),
+          };
         }
       }
       return null;
@@ -56,7 +63,95 @@ class GoogleMapsService {
     }
   }
 
-  /// Fetch the route polyline from Google Directions API
+  /// Bulk calculate distances and ETA using Compute Route Matrix
+  Future<List<Map<String, dynamic>>> getRouteMatrix({
+    required List<LatLng> origins,
+    required List<LatLng> destinations,
+  }) async {
+    if (_apiKey == null || origins.isEmpty || destinations.isEmpty) return [];
+
+    final url = Uri.parse('https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix');
+
+    final originWaypoints = origins.map((loc) => {
+      'waypoint': {
+        'location': {'latLng': {'latitude': loc.latitude, 'longitude': loc.longitude}}
+      }
+    }).toList();
+
+    final destWaypoints = destinations.map((loc) => {
+      'waypoint': {
+        'location': {'latLng': {'latitude': loc.latitude, 'longitude': loc.longitude}}
+      }
+    }).toList();
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': _apiKey!,
+          'X-Goog-FieldMask': 'originIndex,destinationIndex,status,distanceMeters,duration,staticDuration,condition',
+        },
+        body: jsonEncode({
+          'origins': originWaypoints,
+          'destinations': destWaypoints,
+          'travelMode': 'DRIVE',
+          'routingPreference': 'TRAFFIC_AWARE',
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        var body = response.body;
+
+        // 🔍 DEBUG — log first 800 chars of raw response to verify API shape
+        debugPrint('[RouteMatrix] HTTP 200. Raw body (first 800): ${body.length > 800 ? body.substring(0, 800) : body}');
+
+        // computeRouteMatrix returns a JSON array; if the body is newline-separated
+        // objects (streaming), wrap them into a proper array.
+        if (body.trim().startsWith('{')) {
+          body = '[' + body.replaceAll('}\n{', '},{') + ']';
+        }
+
+        final List data = jsonDecode(body);
+        debugPrint('[RouteMatrix] Parsed ${data.length} elements');
+
+        return data.map((item) {
+          final condition = item['condition'] as String? ?? '';
+          final durationStr = item['duration'] ?? item['staticDuration'] ?? '0s';
+          final durationSeconds = int.tryParse(durationStr.replaceAll('s', '')) ?? 0;
+          final staticDurationStr = item['staticDuration'] ?? '0s';
+          final staticDurationSeconds = int.tryParse(staticDurationStr.replaceAll('s', '')) ?? 0;
+
+          // A route is available only when condition is explicitly ROUTE_EXISTS.
+          // The previous check (status == null) was fragile — the API can return
+          // status:{code:0} (meaning OK) even for valid routes, which made every
+          // route appear unavailable.
+          final routeAvailable = condition == 'ROUTE_EXISTS';
+
+          debugPrint('[RouteMatrix] element: origin=${item['originIndex']} dest=${item['destinationIndex']} condition=$condition routeAvailable=$routeAvailable dist=${item['distanceMeters']} dur=${durationSeconds}s');
+
+          return {
+            'originIndex': item['originIndex'] ?? 0,
+            'destinationIndex': item['destinationIndex'] ?? 0,
+            'routeAvailable': routeAvailable,
+            'distanceMeters': item['distanceMeters'] as int? ?? 0,
+            'durationSeconds': durationSeconds,
+            'staticDurationSeconds': staticDurationSeconds,
+            'error': item['status']?['message'],
+            'condition': condition,
+          };
+        }).toList();
+      } else {
+        debugPrint('[RouteMatrix] HTTP ${response.statusCode}: ${response.body}');
+      }
+      return [];
+    } catch (e) {
+      debugPrint('[RouteMatrix] Exception: $e');
+      return [];
+    }
+  }
+
+  /// Fetch the route polyline from Google Routes API
   Future<List<LatLng>?> getRoutePolyline({
     required double originLat,
     required double originLng,
@@ -65,20 +160,32 @@ class GoogleMapsService {
   }) async {
     if (_apiKey == null) return null;
 
-    final url = Uri.parse(
-      'https://maps.googleapis.com/maps/api/directions/json'
-      '?origin=$originLat,$originLng'
-      '&destination=$destLat,$destLng'
-      '&mode=driving'
-      '&key=$_apiKey',
-    );
+    final url = Uri.parse('https://routes.googleapis.com/directions/v2:computeRoutes');
 
     try {
-      final response = await http.get(url);
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': _apiKey!,
+          'X-Goog-FieldMask': 'routes.polyline.encodedPolyline',
+        },
+        body: jsonEncode({
+          'origin': {
+            'location': {'latLng': {'latitude': originLat, 'longitude': originLng}}
+          },
+          'destination': {
+            'location': {'latLng': {'latitude': destLat, 'longitude': destLng}}
+          },
+          'travelMode': 'DRIVE',
+          'routingPreference': 'TRAFFIC_AWARE',
+        }),
+      );
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['status'] == 'OK' && data['routes'].isNotEmpty) {
-          final points = data['routes'][0]['overview_polyline']['points'] as String;
+        if (data['routes'] != null && data['routes'].isNotEmpty) {
+          final points = data['routes'][0]['polyline']['encodedPolyline'] as String;
           return _decodePolyline(points);
         }
       }
