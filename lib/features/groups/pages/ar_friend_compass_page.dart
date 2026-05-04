@@ -102,7 +102,10 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
           _cameraHeading = event.headingForCameraMode;
           _headingAccuracy = event.accuracy;
 
-          double newHeading = _cameraHeading ?? _rawHeading!;
+          double newHeading = _rawHeading!;
+          if (_cameraHeading != null && _cameraHeading != 0.0) {
+            newHeading = _cameraHeading!;
+          }
           
           if (_userHeading == null) {
             _userHeading = newHeading;
