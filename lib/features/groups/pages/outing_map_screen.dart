@@ -1279,90 +1279,139 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                           const SizedBox(height: 6),
                           // ── SELECTED MEMBER ROUTE METRIC ─────────────────
                           Builder(builder: (context) {
-                            // 1. Try per-member route (new sessions with memberRoutes stored)
                             final memberRoutes = venue['memberRoutes'] as Map<String, dynamic>?;
-
-                            // 🔍 DEBUG — remove after fix is confirmed
-                            debugPrint('=== VENUE: ${venue['name']} ===');
-                            debugPrint('  selectedUid: $_selectedParticipantUid');
-                            debugPrint('  memberRoutes keys: ${memberRoutes?.keys.toList()}');
-                            debugPrint('  averageEtaMinutes: ${venue['averageEtaMinutes']}');
-                            debugPrint('  averageRouteDistanceMeters: ${venue['averageRouteDistanceMeters']}');
-                            if (memberRoutes != null && _selectedParticipantUid != null) {
-                              debugPrint('  selectedRoute: ${memberRoutes[_selectedParticipantUid]}');
-                            }
-
-                            final selectedRoute = (memberRoutes != null && _selectedParticipantUid != null)
-                                ? memberRoutes[_selectedParticipantUid] as Map<String, dynamic>?
-                                : null;
-                            final routeOk = selectedRoute?['routeAvailable'] == true;
-                            final etaMin = selectedRoute?['etaMinutes'] as int?;
-                            final distKm = (selectedRoute?['distanceKm'] as num?)?.toDouble();
-
-                            // 2. Fall back to aggregate averages for old sessions
-                            //    that were computed before memberRoutes was added.
                             final fallbackEta = venue['averageEtaMinutes'] as int?;
                             final fallbackDistMeters = venue['averageRouteDistanceMeters'] as int?;
-                            final fallbackDistKm = fallbackDistMeters != null
-                                ? fallbackDistMeters / 1000.0
-                                : null;
 
-                            String metricLabel;
-                            bool isUnavailable = false;
-                            bool isFallback = false;
+                            if (memberRoutes != null) {
+                              final myUid = FirebaseAuth.instance.currentUser?.uid;
+                              
+                              // Build list of UIDs to show route metrics for
+                              List<String> uidsToShow = [];
+                              
+                              if (session.participants.length <= 3) {
+                                // Add current user first if present
+                                if (myUid != null && session.participants.any((p) => p.uid == myUid)) {
+                                  uidsToShow.add(myUid);
+                                }
+                                // Add the rest
+                                for (var p in session.participants) {
+                                  if (!uidsToShow.contains(p.uid)) {
+                                    uidsToShow.add(p.uid);
+                                  }
+                                }
+                              } else {
+                                // > 3 members: show current user + selected member
+                                if (myUid != null && session.participants.any((p) => p.uid == myUid)) {
+                                  uidsToShow.add(myUid);
+                                }
+                                if (_selectedParticipantUid != null && !uidsToShow.contains(_selectedParticipantUid)) {
+                                  uidsToShow.add(_selectedParticipantUid!);
+                                }
+                              }
 
-                            if (routeOk && etaMin != null && distKm != null) {
-                              // Per-member route — most accurate
-                              if (session.calculationMode == 'Time') {
-                                metricLabel = '$etaMin min  •  ${distKm.toStringAsFixed(1)} km';
-                              } else {
-                                metricLabel = '${distKm.toStringAsFixed(1)} km  •  $etaMin min';
-                              }
-                            } else if (fallbackEta != null && fallbackEta > 0) {
-                              // Aggregate fallback — shown for old session data
-                              isFallback = true;
-                              if (session.calculationMode == 'Time') {
-                                metricLabel = fallbackDistKm != null
-                                    ? '~$fallbackEta min avg  •  ${fallbackDistKm.toStringAsFixed(1)} km'
-                                    : '~$fallbackEta min avg';
-                              } else {
-                                metricLabel = fallbackDistKm != null
-                                    ? '~${fallbackDistKm.toStringAsFixed(1)} km avg  •  $fallbackEta min'
-                                    : '~$fallbackEta min avg';
-                              }
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: uidsToShow.map((pUid) {
+                                  final p = session.participants.firstWhere(
+                                    (p) => p.uid == pUid,
+                                    orElse: () => session.participants.first,
+                                  );
+                                  final route = memberRoutes[pUid] as Map<String, dynamic>?;
+                                  final routeOk = route?['routeAvailable'] == true;
+                                  final etaMin = route?['etaMinutes'] as int?;
+                                  final distKm = (route?['distanceKm'] as num?)?.toDouble();
+
+                                  String metricLabel;
+                                  if (routeOk && etaMin != null && distKm != null) {
+                                    if (session.calculationMode == 'Time') {
+                                      metricLabel = '$etaMin min  •  ${distKm.toStringAsFixed(1)} km';
+                                    } else {
+                                      metricLabel = '${distKm.toStringAsFixed(1)} km  •  $etaMin min';
+                                    }
+                                  } else {
+                                    metricLabel = 'Route unavailable';
+                                  }
+
+                                  final userColor = AppColors.getUserColor(pUid);
+                                  final isMe = pUid == myUid;
+
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 4.0),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 9,
+                                          backgroundColor: userColor.withValues(alpha: 0.15),
+                                          backgroundImage: p.photoUrl != null && p.photoUrl!.isNotEmpty
+                                              ? NetworkImage(p.photoUrl!)
+                                              : null,
+                                          child: (p.photoUrl == null || p.photoUrl!.isEmpty)
+                                              ? Text(
+                                                  p.name.isNotEmpty ? p.name[0].toUpperCase() : '?',
+                                                  style: GoogleFonts.outfit(
+                                                    fontSize: 9,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: userColor,
+                                                  ),
+                                                )
+                                              : null,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          metricLabel,
+                                          style: GoogleFonts.inter(
+                                            fontSize: 11,
+                                            fontWeight: isMe ? FontWeight.w700 : FontWeight.w600,
+                                            color: routeOk ? AppColors.darkSlate : Colors.grey.shade400,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                              );
                             } else {
-                              metricLabel = 'Route unavailable';
-                              isUnavailable = true;
-                            }
+                              // Fallback logic for legacy sessions without memberRoutes
+                              final fallbackDistKm = fallbackDistMeters != null ? fallbackDistMeters / 1000.0 : null;
+                              String metricLabel;
+                              bool isUnavailable = false;
 
-                            return Row(
-                              children: [
-                                Icon(
-                                  isUnavailable
-                                      ? Icons.warning_amber_rounded
-                                      : Icons.near_me_rounded,
-                                  size: 12,
-                                  color: isUnavailable
-                                      ? Colors.grey.shade400
-                                      : isFallback
-                                          ? Colors.orange.shade400
-                                          : AppColors.teal,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  metricLabel,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: isUnavailable
-                                        ? Colors.grey.shade400
-                                        : isFallback
-                                            ? Colors.orange.shade700
-                                            : AppColors.darkSlate,
+                              if (fallbackEta != null && fallbackEta > 0) {
+                                if (session.calculationMode == 'Time') {
+                                  metricLabel = fallbackDistKm != null
+                                      ? '~$fallbackEta min avg  •  ${fallbackDistKm.toStringAsFixed(1)} km'
+                                      : '~$fallbackEta min avg';
+                                } else {
+                                  metricLabel = fallbackDistKm != null
+                                      ? '~${fallbackDistKm.toStringAsFixed(1)} km avg  •  $fallbackEta min'
+                                      : '~$fallbackEta min avg';
+                                }
+                              } else {
+                                metricLabel = 'Route unavailable';
+                                isUnavailable = true;
+                              }
+
+                              return Row(
+                                children: [
+                                  Icon(
+                                    isUnavailable ? Icons.warning_amber_rounded : Icons.near_me_rounded,
+                                    size: 14,
+                                    color: isUnavailable ? Colors.grey.shade400 : Colors.orange.shade400,
                                   ),
-                                ),
-                              ],
-                            );
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    metricLabel,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: isUnavailable ? Colors.grey.shade400 : Colors.orange.shade700,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }
                           }),
                           const SizedBox(height: 6),
                           // ── VOTES + SWIPE HINT ────────────────────────────
