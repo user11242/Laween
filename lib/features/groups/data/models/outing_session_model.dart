@@ -55,6 +55,8 @@ class OutingParticipant {
     DateTime? lastEtaUpdate,
     bool? arrived,
     bool? isSosActive,
+    double? locationAccuracy,
+    DateTime? lastLocationUpdate,
   }) {
     return OutingParticipant(
       uid: uid ?? this.uid,
@@ -68,6 +70,8 @@ class OutingParticipant {
       lastEtaUpdate: lastEtaUpdate ?? this.lastEtaUpdate,
       arrived: arrived ?? this.arrived,
       isSosActive: isSosActive ?? this.isSosActive,
+      locationAccuracy: locationAccuracy ?? this.locationAccuracy,
+      lastLocationUpdate: lastLocationUpdate ?? this.lastLocationUpdate,
     );
   }
 
