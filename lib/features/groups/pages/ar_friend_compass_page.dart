@@ -198,7 +198,12 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    const double horizontalFov = 65.0; // Fixed FOV
+    double horizontalFov = 65.0;
+    if (distance <= 15 || (_userPosition != null && _userPosition!.accuracy > 15)) {
+      horizontalFov = 150.0;
+    } else if (distance <= 35) {
+      horizontalFov = 90.0;
+    }
     bool isOnScreen = relativeBearing.abs() <= horizontalFov / 2;
 
     const double safeMargin = 80.0;
@@ -398,33 +403,76 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
                 ),
               ),
             )
-          else
-            // Arrow indicators directing where to rotate
-            Positioned(
-              top: screenHeight / 2 - 40,
-              left: relativeBearing < 0 ? 24 : null,
-              right: relativeBearing > 0 ? 24 : null,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.black.withOpacity(0.8),
-                  border: Border.all(color: Colors.amber, width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.amber.withOpacity(0.3),
-                      blurRadius: 15,
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  relativeBearing < 0 ? Icons.arrow_back_rounded : Icons.arrow_forward_rounded,
-                  color: Colors.amber,
-                  size: 44,
-                ),
-              ).animate(onPlay: (c) => c.repeat(reverse: true))
-               .scale(duration: 500.ms, begin: const Offset(1, 1), end: const Offset(1.15, 1.15)),
-            ),
+          else ...[
+            if (distance <= 35) ...[
+              Positioned(
+                top: screenHeight / 2 - 40,
+                left: 24,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.black.withOpacity(0.8),
+                    border: Border.all(color: Colors.amber, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.amber.withOpacity(0.3),
+                        blurRadius: 15,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.arrow_back_rounded, color: Colors.amber, size: 44),
+                ).animate(onPlay: (c) => c.repeat(reverse: true))
+                 .scale(duration: 500.ms, begin: const Offset(1, 1), end: const Offset(1.15, 1.15)),
+              ),
+              Positioned(
+                top: screenHeight / 2 - 40,
+                right: 24,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.black.withOpacity(0.8),
+                    border: Border.all(color: Colors.amber, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.amber.withOpacity(0.3),
+                        blurRadius: 15,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.arrow_forward_rounded, color: Colors.amber, size: 44),
+                ).animate(onPlay: (c) => c.repeat(reverse: true))
+                 .scale(duration: 500.ms, begin: const Offset(1, 1), end: const Offset(1.15, 1.15)),
+              ),
+            ] else ...[
+              Positioned(
+                top: screenHeight / 2 - 40,
+                left: relativeBearing < 0 ? 24 : null,
+                right: relativeBearing > 0 ? 24 : null,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.black.withOpacity(0.8),
+                    border: Border.all(color: Colors.amber, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.amber.withOpacity(0.3),
+                        blurRadius: 15,
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    relativeBearing < 0 ? Icons.arrow_back_rounded : Icons.arrow_forward_rounded,
+                    color: Colors.amber,
+                    size: 44,
+                  ),
+                ).animate(onPlay: (c) => c.repeat(reverse: true))
+                 .scale(duration: 500.ms, begin: const Offset(1, 1), end: const Offset(1.15, 1.15)),
+              ),
+            ]
+          ],
 
           // 5. Bottom Instructions Hint
           Positioned(
