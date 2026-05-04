@@ -409,234 +409,251 @@ class OutingService {
       return;
     }
 
-    // 1. Calculate Geographic Midpoint (True Spherical Centroid)
-    double x = 0;
-    double y = 0;
-    double z = 0;
+    // 1. Calculate Geographic Midpoint (Bounding Box Center)
+    double minLat = 90.0;
+    double maxLat = -90.0;
+    double minLng = 180.0;
+    double maxLng = -180.0;
 
     for (var p in participants) {
-      // Convert to radians
-      final latRad = p.location!.latitude * math.pi / 180;
-      final lngRad = p.location!.longitude * math.pi / 180;
-
-      // Convert to Cartesian coordinates
-      x += math.cos(latRad) * math.cos(lngRad);
-      y += math.cos(latRad) * math.sin(lngRad);
-      z += math.sin(latRad);
+      final lat = p.location!.latitude;
+      final lng = p.location!.longitude;
+      if (lat < minLat) minLat = lat;
+      if (lat > maxLat) maxLat = lat;
+      if (lng < minLng) minLng = lng;
+      if (lng > maxLng) maxLng = lng;
     }
 
-    // Average the coordinates
-    x = x / participants.length;
-    y = y / participants.length;
-    z = z / participants.length;
+    final midLat = (minLat + maxLat) / 2;
+    final midLng = (minLng + maxLng) / 2;
 
-    // Convert average Cartesian back to latitude/longitude
-    final centralLng = math.atan2(y, x);
-    final centralSquareRoot = math.sqrt(x * x + y * y);
-    final centralLat = math.atan2(z, centralSquareRoot);
+    // 2. Generate Search Anchors
+    final List<LatLng> searchAnchors = [
+      LatLng(midLat, midLng), // center anchor
+      LatLng(midLat + 0.015, midLng), // north anchor (~1.65km)
+      LatLng(midLat - 0.015, midLng), // south anchor
+      LatLng(midLat, midLng + 0.015), // east anchor
+      LatLng(midLat, midLng - 0.015), // west anchor
+    ];
 
-    final midLat = centralLat * 180 / math.pi;
-    final midLng = centralLng * 180 / math.pi;
+    // Corridor anchors if exactly 2 participants
+    if (participants.length == 2) {
+      final p1 = participants[0].location!;
+      final p2 = participants[1].location!;
+      
+      searchAnchors.add(LatLng(
+        p1.latitude + 0.25 * (midLat - p1.latitude),
+        p1.longitude + 0.25 * (midLng - p1.longitude),
+      ));
+      
+      searchAnchors.add(LatLng(
+        p2.latitude + 0.25 * (midLat - p2.latitude),
+        p2.longitude + 0.25 * (midLng - p2.longitude),
+      ));
+    }
 
-    // 2. Query Google Places API with Adaptive Radius Loop
     final apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'];
     final category = session.category.toLowerCase();
     final url = Uri.parse('https://places.googleapis.com/v1/places:searchText');
     
-    final List<double> searchRadii = [2000.0, 4000.0, 6000.0];
-    List<Map<String, dynamic>> processedVenues = [];
     final Set<String> seenPlaceIds = {};
-    
-    final List<LatLng> origins = participants.map<LatLng>((p) => LatLng(p.location!.latitude, p.location!.longitude)).toList();
+    final List<Map<String, dynamic>> candidatePlaces = [];
 
-    for (double radius in searchRadii) {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Goog-Api-Key': apiKey!,
-          'X-Goog-FieldMask':
-              'places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.photos,places.location,places.id,places.currentOpeningHours,places.businessStatus',
-        },
-        body: jsonEncode({
-          'textQuery': '$category near $midLat, $midLng',
-          'locationBias': {
-            'circle': {
-              'center': {'latitude': midLat, 'longitude': midLng},
-              'radius': radius,
-            },
+    // 3. Diversified Candidate Discovery
+    for (var anchor in searchAnchors) {
+      try {
+        final response = await http.post(
+          url,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': apiKey!,
+            'X-Goog-FieldMask':
+                'places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.photos,places.location,places.id,places.currentOpeningHours,places.businessStatus',
           },
-          'maxResultCount': 20,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final List rawPlaces = data['places'] ?? [];
-
-        // Pre-filter candidate venues (only very basic validity)
-        List places = rawPlaces.where((p) {
-          final pId = p['id']?.toString() ?? '';
-          if (pId.isEmpty || seenPlaceIds.contains(pId)) return false;
-          if (p['location'] == null) return false;
-          if (p['businessStatus'] != null && p['businessStatus'] != 'OPERATIONAL') return false;
-          if (p['rating'] != null && (p['rating'] as num) < 3.0) return false;
-          return true;
-        }).take(15).toList();
-
-        if (places.isEmpty) continue;
-
-        // Run Google Routes Matrix API
-        final List<LatLng> destinations = places.map<LatLng>((p) => LatLng((p['location']['latitude'] as num).toDouble(), (p['location']['longitude'] as num).toDouble())).toList();
-
-        final routeMatrix = await GoogleMapsService().getRouteMatrix(
-          origins: origins,
-          destinations: destinations,
+          body: jsonEncode({
+            'textQuery': category,
+            'locationBias': {
+              'circle': {
+                'center': {'latitude': anchor.latitude, 'longitude': anchor.longitude},
+                'radius': 3000.0,
+              },
+            },
+            'maxResultCount': 20,
+          }),
         );
 
-        // Calculate fairness metrics
-        for (int i = 0; i < places.length; i++) {
-          final place = places[i];
-          final String placeId = place['id'].toString();
-          seenPlaceIds.add(placeId);
-          
-          final venueRoutes = routeMatrix.where((r) => r['destinationIndex'] == i).toList();
-          
-          int validRoutes = 0;
-          int failedRoutes = 0;
-          int sumEta = 0;
-          int maxEta = 0;
-          int minEta = 999999;
-          int sumDistMeters = 0;
-          int maxDistMeters = 0;
-          int minDistMeters = 99999999;
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          final List rawPlaces = data['places'] ?? [];
 
-          for (var r in venueRoutes) {
-            if (r['routeAvailable'] == true) {
-              validRoutes++;
-              int eta = (r['durationSeconds'] as int) ~/ 60;
-              sumEta += eta;
-              if (eta > maxEta) maxEta = eta;
-              if (eta < minEta) minEta = eta;
+          for (var p in rawPlaces) {
+            final pId = p['id']?.toString() ?? '';
+            if (pId.isEmpty || seenPlaceIds.contains(pId)) continue;
+            if (p['location'] == null) continue;
+            if (p['displayName'] == null || p['displayName']['text'] == null) continue;
 
-              int dist = r['distanceMeters'] as int;
-              sumDistMeters += dist;
-              if (dist > maxDistMeters) maxDistMeters = dist;
-              if (dist < minDistMeters) minDistMeters = dist;
-            } else {
-              failedRoutes++;
-            }
+            // Rating below 3.0 only if rating exists
+            if (p['rating'] != null && (p['rating'] as num) < 3.0) continue;
+            if (p['businessStatus'] != null && p['businessStatus'] != 'OPERATIONAL') continue;
+
+            seenPlaceIds.add(pId);
+            candidatePlaces.add(p);
           }
+        }
+      } catch (_) {}
+    }
 
-          double timeFairnessScore = 9999.0;
-          double distanceFairnessScore = 9999.0;
-          int avgEta = 0;
-          int avgDistMeters = 0;
-          int etaSpread = 0;
-          int distSpreadMeters = 0;
+    if (candidatePlaces.isEmpty) {
+      await updateStatus(groupId, sessionId, OutingStatus.cancelled);
+      return;
+    }
 
-          if (validRoutes > 0) {
-            avgEta = sumEta ~/ validRoutes;
-            avgDistMeters = sumDistMeters ~/ validRoutes;
-            etaSpread = maxEta - minEta;
-            distSpreadMeters = maxDistMeters - minDistMeters;
-            
-            // Time Score Formula
-            timeFairnessScore = avgEta + (etaSpread * 0.5);
-            if (maxEta > 45) {
-               timeFairnessScore += (maxEta - 45) * 1.5;
-            }
-            
-            // Distance Score Formula
-            double avgDistKm = avgDistMeters / 1000.0;
-            double maxDistKm = maxDistMeters / 1000.0;
-            double minDistKm = minDistMeters / 1000.0;
-            double distSpreadKm = distSpreadMeters / 1000.0;
-            
-            distanceFairnessScore = avgDistKm + (distSpreadKm * 0.5);
-            if (maxDistKm > 30) {
-                distanceFairnessScore += (maxDistKm - 30) * 1.2;
-            }
-          }
+    // 4. Candidate Limit before routing
+    int maxCandidatesForRouting = 25;
+    if (participants.length <= 3) {
+      maxCandidatesForRouting = 25;
+    } else if (participants.length <= 5) {
+      maxCandidatesForRouting = 20;
+    } else {
+      maxCandidatesForRouting = 12;
+    }
 
-          // Apply failed route penalties to BOTH scores
-          timeFairnessScore += failedRoutes * 999.0;
-          distanceFairnessScore += failedRoutes * 999.0;
+    final List<Map<String, dynamic>> limitedPlaces = candidatePlaces.take(maxCandidatesForRouting).toList();
+    final List<LatLng> origins = participants.map<LatLng>((p) => LatLng(p.location!.latitude, p.location!.longitude)).toList();
+    final List<LatLng> destinations = limitedPlaces.map<LatLng>((p) => LatLng((p['location']['latitude'] as num).toDouble(), (p['location']['longitude'] as num).toDouble())).toList();
 
-          // Select primary score based on calculation mode preference
-          double selectedFairnessScore = session.calculationMode == 'Time' ? timeFairnessScore : distanceFairnessScore;
-          String selectedFairnessMode = session.calculationMode == 'Time' ? 'time' : 'distance';
+    // 5. Compute Route Matrix
+    final routeMatrix = await GoogleMapsService().getRouteMatrix(
+      origins: origins,
+      destinations: destinations,
+    );
 
-          // Build per-member route map keyed by participant uid.
-          // originIndex from the matrix maps directly to participants[originIndex].
-          final Map<String, dynamic> memberRoutes = {};
-          for (var r in venueRoutes) {
-            final originIdx = r['originIndex'] as int;
-            if (originIdx < participants.length) {
-              final memberUid = participants[originIdx].uid;
-              if (r['routeAvailable'] == true) {
-                memberRoutes[memberUid] = {
-                  'etaMinutes': (r['durationSeconds'] as int) ~/ 60,
-                  'distanceKm': (r['distanceMeters'] as int) / 1000.0,
-                  'routeAvailable': true,
-                };
-              } else {
-                // Explicitly mark as unavailable so the UI can show the right message
-                memberRoutes[memberUid] = {'routeAvailable': false};
-              }
-            }
-          }
+    List<Map<String, dynamic>> processedVenues = [];
 
-          processedVenues.add({
-            'id': placeId,
-            'name': place['displayName']['text'],
-            'address': place['formattedAddress'],
-            'rating': place['rating'],
-            'userRatingCount': place['userRatingCount'],
-            'location': place['location'],
-            'photoReference': (place['photos'] != null && place['photos'].isNotEmpty)
-                ? place['photos'][0]['name']
-                : null,
-            'averageEtaMinutes': avgEta,
-            'maxEtaMinutes': maxEta,
-            'minEtaMinutes': validRoutes > 0 ? minEta : 0,
-            'etaSpreadMinutes': etaSpread,
-            'averageRouteDistanceMeters': avgDistMeters,
-            'maxRouteDistanceMeters': maxDistMeters,
-            'minRouteDistanceMeters': validRoutes > 0 ? minDistMeters : 0,
-            'routeDistanceSpreadMeters': distSpreadMeters,
-            'timeFairnessScore': timeFairnessScore,
-            'distanceFairnessScore': distanceFairnessScore,
-            'selectedFairnessScore': selectedFairnessScore,
-            'selectedFairnessMode': selectedFairnessMode,
-            'routeAvailableCount': validRoutes,
-            'failedRouteCount': failedRoutes,
-            'routeAvailable': failedRoutes == 0 && validRoutes > 0,
-            // Per-member routes for card-level transparency display
-            'memberRoutes': memberRoutes,
-          });
+    for (int i = 0; i < limitedPlaces.length; i++) {
+      final place = limitedPlaces[i];
+      final String placeId = place['id'].toString();
+      
+      final venueRoutes = routeMatrix.where((r) => r['destinationIndex'] == i).toList();
+      
+      int validRoutes = 0;
+      int failedRoutes = 0;
+      int sumEta = 0;
+      int maxEta = 0;
+      int minEta = 999999;
+      int sumDistMeters = 0;
+      int maxDistMeters = 0;
+      int minDistMeters = 99999999;
+
+      for (var r in venueRoutes) {
+        if (r['routeAvailable'] == true) {
+          validRoutes++;
+          int eta = (r['durationSeconds'] as int) ~/ 60;
+          sumEta += eta;
+          if (eta > maxEta) maxEta = eta;
+          if (eta < minEta) minEta = eta;
+
+          int dist = r['distanceMeters'] as int;
+          sumDistMeters += dist;
+          if (dist > maxDistMeters) maxDistMeters = dist;
+          if (dist < minDistMeters) minDistMeters = dist;
+        } else {
+          failedRoutes++;
         }
       }
-      
-      // Determine if we have enough "fair" venues to stop expanding radius
-      int fairCount = 0;
-      for(var v in processedVenues) {
-         if (v['failedRouteCount'] == 0) {
-            if (session.calculationMode == 'Time' && (v['maxEtaMinutes'] as int) <= 45 && (v['etaSpreadMinutes'] as int) <= 20) {
-                fairCount++;
-            } else if (session.calculationMode == 'KM' && (v['maxRouteDistanceMeters'] as int) <= 30000 && (v['routeDistanceSpreadMeters'] as int) <= 15000) {
-                fairCount++;
-            }
-         }
+
+      double timeFairnessScore = 9999.0;
+      double distanceFairnessScore = 9999.0;
+      int avgEta = 0;
+      int avgDistMeters = 0;
+      int etaSpread = 0;
+      int distSpreadMeters = 0;
+
+      if (validRoutes > 0) {
+        avgEta = sumEta ~/ validRoutes;
+        avgDistMeters = sumDistMeters ~/ validRoutes;
+        etaSpread = maxEta - minEta;
+        distSpreadMeters = maxDistMeters - minDistMeters;
+        
+        // Stricter time score with penalties
+        timeFairnessScore = avgEta + (etaSpread * 1.0);
+        if (etaSpread > 10) {
+          timeFairnessScore += (etaSpread - 10) * 2.0;
+        }
+        if (maxEta > 30) {
+          timeFairnessScore += (maxEta - 30) * 1.5;
+        }
+        
+        // Distance score with penalties
+        double avgDistKm = avgDistMeters / 1000.0;
+        double maxDistKm = maxDistMeters / 1000.0;
+        double distSpreadKm = distSpreadMeters / 1000.0;
+        
+        distanceFairnessScore = avgDistKm + (distSpreadKm * 1.0);
+        if (distSpreadKm > 5) {
+          distanceFairnessScore += (distSpreadKm - 5) * 1.5;
+        }
+        if (maxDistKm > 20) {
+          distanceFairnessScore += (maxDistKm - 20) * 1.2;
+        }
       }
-      
-      if (fairCount >= 5) {
-         break;
+
+      // Add failure penalties to BOTH scores
+      timeFairnessScore += failedRoutes * 999.0;
+      distanceFairnessScore += failedRoutes * 999.0;
+
+      // Select primary score based on calculation mode preference
+      double selectedFairnessScore = session.calculationMode == 'Time' ? timeFairnessScore : distanceFairnessScore;
+      String selectedFairnessMode = session.calculationMode == 'Time' ? 'time' : 'distance';
+
+      // Build per-member route map keyed by participant uid.
+      final Map<String, dynamic> memberRoutes = {};
+      for (var r in venueRoutes) {
+        final originIdx = r['originIndex'] as int;
+        if (originIdx < participants.length) {
+          final memberUid = participants[originIdx].uid;
+          if (r['routeAvailable'] == true) {
+            memberRoutes[memberUid] = {
+              'etaMinutes': (r['durationSeconds'] as int) ~/ 60,
+              'distanceKm': (r['distanceMeters'] as int) / 1000.0,
+              'routeAvailable': true,
+            };
+          } else {
+            memberRoutes[memberUid] = {'routeAvailable': false};
+          }
+        }
       }
+
+      processedVenues.add({
+        'id': placeId,
+        'name': place['displayName']['text'],
+        'address': place['formattedAddress'],
+        'rating': place['rating'],
+        'userRatingCount': place['userRatingCount'],
+        'location': place['location'],
+        'photoReference': (place['photos'] != null && place['photos'].isNotEmpty)
+            ? place['photos'][0]['name']
+            : null,
+        'averageEtaMinutes': avgEta,
+        'maxEtaMinutes': maxEta,
+        'minEtaMinutes': validRoutes > 0 ? minEta : 0,
+        'etaSpreadMinutes': etaSpread,
+        'averageRouteDistanceMeters': avgDistMeters,
+        'maxRouteDistanceMeters': maxDistMeters,
+        'minRouteDistanceMeters': validRoutes > 0 ? minDistMeters : 0,
+        'routeDistanceSpreadMeters': distSpreadMeters,
+        'timeFairnessScore': timeFairnessScore,
+        'distanceFairnessScore': distanceFairnessScore,
+        'selectedFairnessScore': selectedFairnessScore,
+        'selectedFairnessMode': selectedFairnessMode,
+        'routeAvailableCount': validRoutes,
+        'failedRouteCount': failedRoutes,
+        'routeAvailable': failedRoutes == 0 && validRoutes > 0,
+        'memberRoutes': memberRoutes,
+      });
     }
 
     if (processedVenues.isEmpty) {
-      // Fallback or cancel
       await updateStatus(groupId, sessionId, OutingStatus.cancelled);
       return;
     }
@@ -644,20 +661,28 @@ class OutingService {
     // Sort by selected fairness mode
     processedVenues.sort((a, b) {
       if (a['routeAvailable'] != b['routeAvailable']) {
-        return (a['routeAvailable'] as bool) ? -1 : 1; // routeAvailable true comes first
+        return (a['routeAvailable'] as bool) ? -1 : 1; 
       }
       final double scoreA = a['selectedFairnessScore'] as double;
       final double scoreB = b['selectedFairnessScore'] as double;
       if (scoreA != scoreB) return scoreA.compareTo(scoreB);
       
       if (session.calculationMode == 'Time') {
-          final int maxA = a['maxEtaMinutes'] as int;
-          final int maxB = b['maxEtaMinutes'] as int;
-          if (maxA != maxB) return maxA.compareTo(maxB);
+        final int spreadA = a['etaSpreadMinutes'] as int;
+        final int spreadB = b['etaSpreadMinutes'] as int;
+        if (spreadA != spreadB) return spreadA.compareTo(spreadB);
+
+        final int maxA = a['maxEtaMinutes'] as int;
+        final int maxB = b['maxEtaMinutes'] as int;
+        if (maxA != maxB) return maxA.compareTo(maxB);
       } else {
-          final int maxA = a['maxRouteDistanceMeters'] as int;
-          final int maxB = b['maxRouteDistanceMeters'] as int;
-          if (maxA != maxB) return maxA.compareTo(maxB);
+        final int spreadMetersA = a['routeDistanceSpreadMeters'] as int;
+        final int spreadMetersB = b['routeDistanceSpreadMeters'] as int;
+        if (spreadMetersA != spreadMetersB) return spreadMetersA.compareTo(spreadMetersB);
+
+        final int maxA = a['maxRouteDistanceMeters'] as int;
+        final int maxB = b['maxRouteDistanceMeters'] as int;
+        if (maxA != maxB) return maxA.compareTo(maxB);
       }
       
       final double ratingA = (a['rating'] as num?)?.toDouble() ?? 0;

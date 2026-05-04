@@ -144,7 +144,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context, listen: true)!;
 
     return Scaffold(
       body: Stack(

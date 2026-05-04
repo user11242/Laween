@@ -27,7 +27,7 @@ class GoogleMapsService {
         url,
         headers: {
           'Content-Type': 'application/json',
-          'X-Goog-Api-Key': _apiKey!,
+          'X-Goog-Api-Key': _apiKey,
           'X-Goog-FieldMask': 'routes.duration,routes.staticDuration,routes.distanceMeters',
         },
         body: jsonEncode({

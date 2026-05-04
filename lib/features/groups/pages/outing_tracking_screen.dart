@@ -46,6 +46,25 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
   final Map<String, List<LatLng>> _cachedRoutes = {};
 
 
+  LatLng _getInitialTarget() {
+    final session = widget.initialSession;
+    if (session != null) {
+      final winner = session.winner;
+      if (winner != null && winner['location'] != null) {
+        return LatLng(
+          (winner['location']['latitude'] as num).toDouble(),
+          (winner['location']['longitude'] as num).toDouble(),
+        );
+      }
+      for (var p in session.participants) {
+        if (p.location != null) {
+          return LatLng(p.location!.latitude, p.location!.longitude);
+        }
+      }
+    }
+    return const LatLng(25.2048, 55.2708); // absolute fallback
+  }
+
   @override
   void initState() {
     super.initState();
@@ -297,7 +316,18 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
     if (_isDisposed || !mounted) return;
     
     // Guard against infinite rebuild loops
-    bool markersChanged = newMarkers.length != _markers.length || !_markers.containsAll(newMarkers);
+    bool markersChanged = false;
+    if (newMarkers.length != _markers.length) {
+      markersChanged = true;
+    } else {
+      for (var newM in newMarkers) {
+        final oldM = _markers.where((m) => m.markerId == newM.markerId).firstOrNull;
+        if (oldM == null || oldM.position != newM.position) {
+          markersChanged = true;
+          break;
+        }
+      }
+    }
     bool polylinesChanged = newPolylines.length != _polylines.length;
 
     if (markersChanged || polylinesChanged) {
@@ -418,8 +448,8 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
             children: [
               // --- 1. THE MAP ---
               GoogleMap(
-                initialCameraPosition: const CameraPosition(
-                  target: LatLng(25.2048, 55.2708), // Fallback map init
+                initialCameraPosition: CameraPosition(
+                  target: _getInitialTarget(),
                   zoom: 12,
                 ),
                 myLocationEnabled: false,
@@ -431,6 +461,16 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                 onMapCreated: (controller) {
                   if (!_controller.isCompleted) {
                     _controller.complete(controller);
+                  }
+                  Future.delayed(const Duration(milliseconds: 300), () {
+                    if (mounted) _fitBounds();
+                  });
+                },
+                onCameraMoveStarted: () {
+                  if (_shouldFollow) {
+                    setState(() {
+                      _shouldFollow = false;
+                    });
                   }
                 },
               ),

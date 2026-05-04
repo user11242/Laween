@@ -556,32 +556,6 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     }
   }
 
-  Future<void> _fitParticipants() async {
-    if (_isDisposed || !mounted || !_controller.isCompleted) return;
-    final controller = await _controller.future;
-    
-    double? minLat, maxLat, minLng, maxLng;
-    int count = 0;
-    for (var m in _markers) {
-      if (m.markerId.value.startsWith('p_')) {
-        count++;
-        final pos = m.position;
-        if (minLat == null || pos.latitude < minLat) minLat = pos.latitude;
-        if (maxLat == null || pos.latitude > maxLat) maxLat = pos.latitude;
-        if (minLng == null || pos.longitude < minLng) minLng = pos.longitude;
-        if (maxLng == null || pos.longitude > maxLng) maxLng = pos.longitude;
-      }
-    }
-
-    if (count > 0 && minLat != null) {
-      final bounds = LatLngBounds(
-        southwest: LatLng(minLat, minLng!),
-        northeast: LatLng(maxLat!, maxLng!),
-      );
-      controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 120));
-    }
-  }
-
   Future<void> _fitBounds() async {
     if (_isDisposed || !mounted || !_controller.isCompleted) return;
 
@@ -715,11 +689,6 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     _buildMapControl(
-                                    icon: Icons.people_alt_rounded,
-                                    onTap: () => _fitParticipants(),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  _buildMapControl(
                                     icon: Icons.my_location_rounded,
                                     onTap: () => _fitBounds(),
                                   ),
@@ -1099,10 +1068,25 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     final votesCount = (venue['votes'] as List?)?.length ?? 0;
 
     final isOpen = _openSwipeIndex == index;
+    
+    // Calculate dynamic height to prevent overflow
+    final memberRoutes = venue['memberRoutes'] as Map<String, dynamic>?;
+    int itemsCount = 1;
+    if (memberRoutes != null) {
+      if (session.participants.length <= 3) {
+        itemsCount = session.participants.length;
+      } else {
+        int count = 0;
+        if (uid != null && session.participants.any((p) => p.uid == uid)) count++;
+        if (_selectedParticipantUid != null && _selectedParticipantUid != uid) count++;
+        itemsCount = count > 0 ? count : 1;
+      }
+    }
+    final double cardHeight = 120.0 + (itemsCount * 24.0);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      height: 150, // Increased to fit per-member route metric row
+      height: cardHeight,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
