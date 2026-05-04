@@ -128,6 +128,7 @@ class LocationService {
             // 1. Update User Document
             FirebaseFirestore.instance.collection('users').doc(userId).update({
               'location': loc,
+              'locationAccuracy': position.accuracy,
               'lastLocationUpdate': FieldValue.serverTimestamp(),
             });
 
@@ -138,6 +139,7 @@ class LocationService {
                 sessionId: _activeSessionId!,
                 uid: userId,
                 location: loc,
+                locationAccuracy: position.accuracy,
               );
             }
           },

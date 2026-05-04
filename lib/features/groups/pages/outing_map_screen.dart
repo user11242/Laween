@@ -1958,6 +1958,8 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                                                 friendLng: p.location!.longitude,
                                                                 friendName: p.name,
                                                                 friendImageUrl: p.photoUrl,
+                                                                friendAccuracy: p.locationAccuracy,
+                                                                friendLastUpdate: p.lastLocationUpdate,
                                                               ),
                                                             ),
                                                           );

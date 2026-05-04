@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_compass/flutter_compass.dart';
@@ -6,13 +7,14 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../../core/theme/colors.dart';
 
 class ArFriendCompassPage extends StatefulWidget {
   final double friendLat;
   final double friendLng;
   final String friendName;
   final String? friendImageUrl;
+  final double? friendAccuracy;
+  final DateTime? friendLastUpdate;
 
   const ArFriendCompassPage({
     super.key,
@@ -20,6 +22,8 @@ class ArFriendCompassPage extends StatefulWidget {
     required this.friendLng,
     required this.friendName,
     this.friendImageUrl,
+    this.friendAccuracy,
+    this.friendLastUpdate,
   });
 
   @override
@@ -29,11 +33,19 @@ class ArFriendCompassPage extends StatefulWidget {
 class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
   CameraController? _cameraController;
   bool _isCameraReady = false;
+  
+  double? _rawHeading;
+  double? _cameraHeading;
   double? _userHeading;
+  double? _headingAccuracy;
+  
   Position? _userPosition;
   StreamSubscription? _compassSubscription;
   StreamSubscription? _positionSubscription;
-  bool _isInvertedDirection = false;
+  
+  // Debug mode toggle
+  final bool _showDebugOverlay = const bool.fromEnvironment('dart.vm.product') == false;
+  final double _cameraHeadingOffset = 0.0; // Configurable constant for testing
 
   @override
   void initState() {
@@ -85,12 +97,17 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
     // 4. Track compass updates
     _compassSubscription = FlutterCompass.events!.listen((event) {
       if (mounted && event.heading != null) {
-        final double newHeading = event.headingForCameraMode ?? event.heading!;
         setState(() {
+          _rawHeading = event.heading;
+          _cameraHeading = event.headingForCameraMode;
+          _headingAccuracy = event.accuracy;
+
+          double newHeading = _cameraHeading ?? _rawHeading!;
+          
           if (_userHeading == null) {
             _userHeading = newHeading;
           } else {
-            _userHeading = _userHeading! * 0.7 + newHeading * 0.3;
+            _userHeading = _smoothAngle(_userHeading!, newHeading, 0.20);
           }
         });
       }
@@ -105,6 +122,20 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
     super.dispose();
   }
 
+  double _normalizeTo360(double angle) {
+    return (angle % 360.0 + 360.0) % 360.0;
+  }
+
+  double _normalizeTo180(double angle) {
+    double normalized = _normalizeTo360(angle);
+    return normalized > 180.0 ? normalized - 360.0 : normalized;
+  }
+
+  double _smoothAngle(double oldAngle, double newAngle, double alpha) {
+    double diff = _normalizeTo180(newAngle - oldAngle);
+    return _normalizeTo360(oldAngle + alpha * diff);
+  }
+
   double _calculateBearing() {
     if (_userPosition == null) return 0.0;
     final bearing = Geolocator.bearingBetween(
@@ -113,33 +144,24 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
       widget.friendLat,
       widget.friendLng,
     );
-    return (bearing + 360.0) % 360.0;
+    return _normalizeTo360(bearing);
   }
 
   double _calculateDistance() {
     if (_userPosition == null) return 0.0;
-    double rawDistance = Geolocator.distanceBetween(
+    return Geolocator.distanceBetween(
       _userPosition!.latitude,
       _userPosition!.longitude,
       widget.friendLat,
       widget.friendLng,
     );
-    
-    double userAcc = _userPosition!.accuracy;
-    if (userAcc > 20) userAcc = 20;
+  }
 
-    // Advanced filtering for short range (e.g., indoor testing or immediate proximity)
-    if (rawDistance < 12) {
-      return 2.0;
-    } else if (rawDistance < 35) {
-      // Apply noise deduction first
-      rawDistance -= userAcc * 0.5;
-      // Then scale it down for indoor drift
-      rawDistance = rawDistance * 0.35;
-      if (rawDistance < 2.0) rawDistance = 2.0;
+  String _formatDistance(double distance) {
+    if (distance >= 100) {
+      return "${(distance / 5).round() * 5}m";
     }
-    
-    return rawDistance;
+    return "${distance.round()}m";
   }
 
   @override
@@ -166,26 +188,49 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
     final bearing = _calculateBearing();
     final distance = _calculateDistance();
     
-    // Relative heading = bearing - heading.
-    // Wrap to -180 to 180
-    double relativeBearing = ((bearing - _userHeading! + 540) % 360) - 180;
-    if (_isInvertedDirection) {
-      relativeBearing = -relativeBearing;
-    }
+    // Calculate Relative Bearing: 0 = straight ahead, + = right, - = left
+    double relativeBearing = _normalizeTo180(bearing - _userHeading! - _cameraHeadingOffset);
 
+    // Screen Mapping logic
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    // Dynamic FOV half angle based on proximity
-    double fovHalfAngle = 30.0;
-    if (distance <= 12) {
-      fovHalfAngle = 75.0;
-    } else if (distance <= 25) {
-      fovHalfAngle = 45.0;
+    const double horizontalFov = 65.0; // Fixed FOV
+    bool isOnScreen = relativeBearing.abs() <= horizontalFov / 2;
+
+    const double safeMargin = 80.0;
+    final double usableHalfWidth = (screenWidth / 2) - safeMargin;
+    
+    double screenX = (screenWidth / 2) + (relativeBearing / (horizontalFov / 2)) * usableHalfWidth;
+    // Final safety clamp just in case
+    screenX = screenX.clamp(safeMargin, screenWidth - safeMargin);
+
+    // Accuracy and freshness logic
+    String? warningMessage;
+    
+    if (widget.friendLastUpdate != null) {
+      final age = DateTime.now().difference(widget.friendLastUpdate!);
+      if (age.inMinutes >= 2) {
+        warningMessage = "Waiting for updated friend location.";
+      } else if (age.inSeconds >= 30) {
+        warningMessage = "Friend location may be outdated.";
+      }
     }
 
-    bool isOnScreen = relativeBearing.abs() <= fovHalfAngle;
-    double normalizedX = relativeBearing / fovHalfAngle;
+    if (warningMessage == null && _headingAccuracy != null && _headingAccuracy! > 30) {
+      warningMessage = "Move phone in a figure-8 to calibrate compass.";
+    }
+
+    if (warningMessage == null && widget.friendAccuracy != null) {
+      double combinedAccuracy = math.sqrt(math.pow(_userPosition!.accuracy, 2) + math.pow(widget.friendAccuracy!, 2));
+      if (combinedAccuracy > distance || combinedAccuracy > 15) {
+        warningMessage = "Location accuracy is weak indoors.";
+      }
+    }
+
+    if (warningMessage == null && distance < 12) {
+      warningMessage = "Nearby — GPS may be inaccurate indoors.";
+    }
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -222,17 +267,7 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
                           ),
                         ),
                       ),
-                      IconButton(
-                        icon: Icon(
-                          _isInvertedDirection ? Icons.swap_horiz_rounded : Icons.sync_alt_rounded,
-                          color: _isInvertedDirection ? Colors.amber : Colors.white70,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _isInvertedDirection = !_isInvertedDirection;
-                          });
-                        },
-                      ),
+                      const SizedBox(width: 48), // Balancing width for back button
                     ],
                   ),
                 ),
@@ -252,7 +287,7 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
                       const Icon(Icons.navigation_rounded, color: Colors.amber, size: 20),
                       const SizedBox(width: 10),
                       Text(
-                        "${distance.toStringAsFixed(0)}m",
+                        _formatDistance(distance),
                         style: GoogleFonts.outfit(
                           color: Colors.amber,
                           fontWeight: FontWeight.bold,
@@ -271,6 +306,25 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
                     ],
                   ),
                 ),
+
+                if (warningMessage != null)
+                  Container(
+                    margin: const EdgeInsets.only(top: 8, left: 24, right: 24),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.redAccent.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      warningMessage,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -278,7 +332,7 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
           // 4. Central AR Target / Guidance Indicators
           if (isOnScreen)
             Positioned(
-              left: (screenWidth / 2) + (normalizedX * (screenWidth / 2)) - 80,
+              left: screenX - 80, // Center the 160px wide widget
               top: screenHeight / 2 - 80,
               child: SizedBox(
                 width: 160,
@@ -371,7 +425,7 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
 
           // 5. Bottom Instructions Hint
           Positioned(
-            bottom: 40,
+            bottom: _showDebugOverlay ? 220 : 40,
             left: 24,
             right: 24,
             child: Container(
@@ -382,15 +436,13 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
                 border: Border.all(color: Colors.white10),
               ),
               child: Text(
-                distance <= 12 && isOnScreen
-                    ? "✨ You are extremely close to ${widget.friendName}! Look around you."
-                    : distance <= 12 && !isOnScreen
-                        ? "🔄 Turn towards ${widget.friendName}!"
-                        : isOnScreen
-                            ? "✨ Match centered! Point directly at ${widget.friendName}."
-                            : relativeBearing.abs() > 150
-                                ? "🔄 ${widget.friendName} is behind you. Turn around!"
-                                : "🔄 Rotate your phone to follow the glowing arrow.",
+                isOnScreen
+                    ? "✨ Point directly at ${widget.friendName}."
+                    : relativeBearing.abs() > 135
+                        ? "🔄 ${widget.friendName} is behind you. Turn around."
+                        : relativeBearing > 0 
+                            ? "🔄 Turn right to find ${widget.friendName}."
+                            : "🔄 Turn left to find ${widget.friendName}.",
                 textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
                   color: isOnScreen ? Colors.green.shade300 : Colors.amber.shade300,
@@ -400,6 +452,33 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
               ),
             ),
           ),
+
+          // 6. Dev Debug Overlay
+          if (_showDebugOverlay)
+            Positioned(
+              bottom: 20,
+              left: 10,
+              right: 10,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                color: Colors.black.withOpacity(0.8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("DEBUG MODE", style: TextStyle(color: Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                    Text("U_Lat: ${_userPosition?.latitude.toStringAsFixed(6)} | U_Lng: ${_userPosition?.longitude.toStringAsFixed(6)}", style: TextStyle(color: Colors.white70, fontSize: 10)),
+                    Text("F_Lat: ${widget.friendLat.toStringAsFixed(6)} | F_Lng: ${widget.friendLng.toStringAsFixed(6)}", style: TextStyle(color: Colors.white70, fontSize: 10)),
+                    Text("Raw Dist: ${distance.toStringAsFixed(2)}m | U_Acc: ${_userPosition?.accuracy.toStringAsFixed(1)} | F_Acc: ${widget.friendAccuracy?.toStringAsFixed(1) ?? 'N/A'}", style: TextStyle(color: Colors.white70, fontSize: 10)),
+                    Text("Bearing: ${bearing.toStringAsFixed(2)}° | Rel Bear: ${relativeBearing.toStringAsFixed(2)}°", style: TextStyle(color: Colors.white70, fontSize: 10)),
+                    Text("Raw Hd: ${_rawHeading?.toStringAsFixed(2)} | Cam Hd: ${_cameraHeading?.toStringAsFixed(2)}", style: TextStyle(color: Colors.white70, fontSize: 10)),
+                    Text("Final Hd: ${_userHeading?.toStringAsFixed(2)} | Hd Acc: ${_headingAccuracy?.toStringAsFixed(1)}", style: TextStyle(color: Colors.white70, fontSize: 10)),
+                    Text("FOV: $horizontalFov | Screen: $isOnScreen | x: ${screenX.toStringAsFixed(1)}", style: TextStyle(color: Colors.white70, fontSize: 10)),
+                    Text("F_Age: ${widget.friendLastUpdate != null ? DateTime.now().difference(widget.friendLastUpdate!).inSeconds.toString() + 's' : 'N/A'}", style: TextStyle(color: Colors.white70, fontSize: 10)),
+                  ],
+                ),
+              ),
+            ),
         ],
       ),
     );

@@ -865,6 +865,7 @@ class OutingService {
     required String sessionId,
     required String uid,
     required GeoPoint location,
+    double? locationAccuracy,
   }) async {
     final sessionRef = _firestore
         .collection('groups')
@@ -918,6 +919,8 @@ class OutingService {
         for (var i = 0; i < participants.length; i++) {
           if (participants[i]['uid'] == uid) {
             participants[i]['location'] = location;
+            participants[i]['locationAccuracy'] = locationAccuracy;
+            participants[i]['lastLocationUpdate'] = Timestamp.now();
             if (shouldUpdateEta) {
               participants[i]['etaMinutes'] = realEta;
               participants[i]['distanceKm'] = realDist;
@@ -938,6 +941,8 @@ class OutingService {
             if (freshSession.participants[i].uid == uid) {
               freshSession.participants[i] = freshSession.participants[i].copyWith(
                 location: location,
+                locationAccuracy: locationAccuracy,
+                lastLocationUpdate: DateTime.now(),
                 etaMinutes: shouldUpdateEta ? realEta : freshSession.participants[i].etaMinutes,
                 distanceKm: shouldUpdateEta ? realDist : freshSession.participants[i].distanceKm,
                 lastEtaUpdate: shouldUpdateEta ? DateTime.now() : freshSession.participants[i].lastEtaUpdate,

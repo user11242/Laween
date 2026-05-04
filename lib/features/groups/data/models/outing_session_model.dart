@@ -24,6 +24,8 @@ class OutingParticipant {
   final DateTime? lastEtaUpdate; // Throttling field
   final bool arrived;
   final bool isSosActive;
+  final double? locationAccuracy;
+  final DateTime? lastLocationUpdate;
 
   OutingParticipant({
     required this.uid,
@@ -37,6 +39,8 @@ class OutingParticipant {
     this.lastEtaUpdate,
     this.arrived = false,
     this.isSosActive = false,
+    this.locationAccuracy,
+    this.lastLocationUpdate,
   });
 
   OutingParticipant copyWith({
@@ -80,6 +84,8 @@ class OutingParticipant {
       'lastEtaUpdate': lastEtaUpdate != null ? Timestamp.fromDate(lastEtaUpdate!) : null,
       'arrived': arrived,
       'isSosActive': isSosActive,
+      'locationAccuracy': locationAccuracy,
+      'lastLocationUpdate': lastLocationUpdate != null ? Timestamp.fromDate(lastLocationUpdate!) : null,
     };
   }
 
@@ -96,6 +102,8 @@ class OutingParticipant {
       lastEtaUpdate: (map['lastEtaUpdate'] as Timestamp?)?.toDate(),
       arrived: map['arrived'] ?? false,
       isSosActive: map['isSosActive'] ?? false,
+      locationAccuracy: (map['locationAccuracy'] as num?)?.toDouble(),
+      lastLocationUpdate: (map['lastLocationUpdate'] as Timestamp?)?.toDate(),
     );
   }
 }
