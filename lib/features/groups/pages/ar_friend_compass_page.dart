@@ -7,6 +7,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:sensors_plus/sensors_plus.dart';
+import 'package:geomag/geomag.dart';
 
 class ArFriendCompassPage extends StatefulWidget {
   final double friendLat;
@@ -34,14 +36,18 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
   CameraController? _cameraController;
   bool _isCameraReady = false;
   
-  double? _rawHeading;
-  double? _cameraHeading;
   double? _userHeading;
-  double? _headingAccuracy;
   
   Position? _userPosition;
   StreamSubscription? _compassSubscription;
   StreamSubscription? _positionSubscription;
+  StreamSubscription? _accelSubscription;
+  StreamSubscription? _magSubscription;
+  
+  // Sensor Fusion State
+  double _magneticDeclination = 0.0;
+  List<double> _accel = [0, 0, 9.8];
+  List<double> _mag = [0, 0, 0];
   
   // Debug mode toggle
   final bool _showDebugOverlay = const bool.fromEnvironment('dart.vm.product') == false;
@@ -74,14 +80,25 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
       debugPrint("Camera initialization error: $e");
     }
 
-    // 2. Initial position
+    // 2. Initial position & Magnetic Declination
     try {
       _userPosition = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.bestForNavigation,
       );
+      
+      // Calculate exact Magnetic Declination for this spot
+      final geoMag = GeoMag();
+      final result = geoMag.calculate(
+        _userPosition!.latitude, 
+        _userPosition!.longitude, 
+        _userPosition!.altitude,
+        DateTime.now(),
+      );
+      _magneticDeclination = result.dec;
+      
       if (mounted) setState(() {});
     } catch (e) {
-      debugPrint("Geolocator position error: $e");
+      debugPrint("Geolocator/GeoMag error: $e");
     }
 
     // 3. Track location updates
@@ -94,27 +111,73 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
       if (mounted) setState(() => _userPosition = pos);
     });
 
-    // 4. Track compass updates
+    // 4. Raw Sensor Streams for Tilt-Compensated Compass
+    _accelSubscription = accelerometerEventStream().listen((event) {
+      _accel = [event.x, event.y, event.z];
+      _updateFusedHeading();
+    });
+
+    _magSubscription = magnetometerEventStream().listen((event) {
+      _mag = [event.x, event.y, event.z];
+      _updateFusedHeading();
+    });
+
+    // 5. Fallback/Standard Compass (for accuracy and debug)
     _compassSubscription = FlutterCompass.events!.listen((event) {
       if (mounted && event.heading != null) {
         setState(() {
-          _rawHeading = event.heading;
-          _cameraHeading = event.headingForCameraMode;
-          _headingAccuracy = event.accuracy;
-
-          double newHeading = _rawHeading!;
-          if (_cameraHeading != null && _cameraHeading != 0.0) {
-            newHeading = _cameraHeading!;
-          }
-          
-          if (_userHeading == null) {
-            _userHeading = newHeading;
-          } else {
-            _userHeading = _smoothAngle(_userHeading!, newHeading, 0.20);
-          }
+          // Keep internal heading tracking for debug if needed, 
+          // but we rely on _updateFusedHeading now
         });
       }
     });
+  }
+
+  void _updateFusedHeading() {
+    if (_accel.isEmpty || _mag.isEmpty) return;
+
+    // Calculate Tilt-Compensated Heading
+    // Standard Formula for Magnetic Heading using Rotation Matrix
+    final ax = _accel[0];
+    final ay = _accel[1];
+    final az = _accel[2];
+    
+    final mx = _mag[0];
+    final my = _mag[1];
+    final mz = _mag[2];
+
+    // 1. Calculate Pitch and Roll
+    final roll = math.atan2(ay, az);
+    final pitch = math.atan2(-ax, math.sqrt(ay * ay + az * az));
+
+    // 2. Compensate Magnetometer for Tilt
+    final cosRoll = math.cos(roll);
+    final sinRoll = math.sin(roll);
+    final cosPitch = math.cos(pitch);
+    final sinPitch = math.sin(pitch);
+
+    final xh = mx * cosPitch + mz * sinPitch;
+    final yh = mx * sinRoll * sinPitch + my * cosRoll - mz * sinRoll * cosPitch;
+
+    // 3. Calculate Magnetic Heading
+    double magneticHeading = math.atan2(-yh, xh) * 180.0 / math.pi;
+    magneticHeading = _normalizeTo360(magneticHeading);
+
+    // 4. Convert to TRUE Heading using calculated Declination
+    // True Heading = Magnetic Heading + Declination
+    final double trueHeading = _normalizeTo360(magneticHeading + _magneticDeclination);
+
+    if (mounted) {
+      setState(() {
+        if (_userHeading == null) {
+          _userHeading = trueHeading;
+        } else {
+          // Weighted filter for smoothness
+          _userHeading = _smoothAngle(_userHeading!, trueHeading, 0.15);
+        }
+        _lastTrueHeading = trueHeading;
+      });
+    }
   }
 
   @override
@@ -122,6 +185,8 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
     _cameraController?.dispose();
     _compassSubscription?.cancel();
     _positionSubscription?.cancel();
+    _accelSubscription?.cancel();
+    _magSubscription?.cancel();
     super.dispose();
   }
 
@@ -517,15 +582,15 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("DEBUG MODE", style: TextStyle(color: Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                    Text("DEBUG MODE (SENSOR FUSION)", style: TextStyle(color: Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold)),
                     Text("U_Lat: ${_userPosition?.latitude.toStringAsFixed(6)} | U_Lng: ${_userPosition?.longitude.toStringAsFixed(6)}", style: TextStyle(color: Colors.white70, fontSize: 10)),
-                    Text("F_Lat: ${widget.friendLat.toStringAsFixed(6)} | F_Lng: ${widget.friendLng.toStringAsFixed(6)}", style: TextStyle(color: Colors.white70, fontSize: 10)),
-                    Text("Raw Dist: ${distance.toStringAsFixed(2)}m | U_Acc: ${_userPosition?.accuracy.toStringAsFixed(1)} | F_Acc: ${widget.friendAccuracy?.toStringAsFixed(1) ?? 'N/A'}", style: TextStyle(color: Colors.white70, fontSize: 10)),
+                    Text("Declination: ${_magneticDeclination.toStringAsFixed(2)}°", style: TextStyle(color: Colors.cyanAccent, fontSize: 10)),
+                    Text("Raw Dist: ${distance.toStringAsFixed(2)}m | U_Acc: ${_userPosition?.accuracy.toStringAsFixed(1)}", style: TextStyle(color: Colors.white70, fontSize: 10)),
                     Text("Bearing: ${bearing.toStringAsFixed(2)}° | Rel Bear: ${relativeBearing.toStringAsFixed(2)}°", style: TextStyle(color: Colors.white70, fontSize: 10)),
-                    Text("Raw Hd: ${_rawHeading?.toStringAsFixed(2)} | Cam Hd: ${_cameraHeading?.toStringAsFixed(2)}", style: TextStyle(color: Colors.white70, fontSize: 10)),
-                    Text("Final Hd: ${_userHeading?.toStringAsFixed(2)} | Hd Acc: ${_headingAccuracy?.toStringAsFixed(1)}", style: TextStyle(color: Colors.white70, fontSize: 10)),
-                    Text("FOV: $horizontalFov | Screen: $isOnScreen | x: ${screenX.toStringAsFixed(1)}", style: TextStyle(color: Colors.white70, fontSize: 10)),
-                    Text("F_Age: ${widget.friendLastUpdate != null ? DateTime.now().difference(widget.friendLastUpdate!).inSeconds.toString() + 's' : 'N/A'}", style: TextStyle(color: Colors.white70, fontSize: 10)),
+                    Text("Accel: ${_accel.map((e) => e.toStringAsFixed(1)).toList()}", style: TextStyle(color: Colors.white70, fontSize: 10)),
+                    Text("Fused Hd: ${_userHeading?.toStringAsFixed(2)}°", style: TextStyle(color: Colors.amberAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                    Text("FOV: $horizontalFov | Screen: $isOnScreen", style: TextStyle(color: Colors.white70, fontSize: 10)),
+                    Text("F_Age: ${widget.friendLastUpdate != null ? "${DateTime.now().difference(widget.friendLastUpdate!).inSeconds}s" : 'N/A'}", style: TextStyle(color: Colors.white70, fontSize: 10)),
                   ],
                 ),
               ),
