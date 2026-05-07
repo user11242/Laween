@@ -98,12 +98,12 @@ class _GlobalSosListenerState extends State<GlobalSosListener> {
                   userName: activeSosUser.name,
                   onStopAlarm: () {
                     setState(() {
-                      _dismissedSosUids.add(activeSosUser!.uid);
+                      _dismissedSosUids.add(activeSosUser.uid);
                     });
                   },
                   onSeeMap: () async {
                     setState(() {
-                      _dismissedSosUids.add(activeSosUser!.uid);
+                      _dismissedSosUids.add(activeSosUser.uid);
                     });
                     
                     try {

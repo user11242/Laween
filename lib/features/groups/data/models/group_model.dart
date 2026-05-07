@@ -1,6 +1,5 @@
 // lib/features/groups/data/models/group_model.dart
 
-import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class GroupModel {

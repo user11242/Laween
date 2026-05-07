@@ -13,7 +13,7 @@ class AboutPage extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.getBackground(context),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
@@ -21,17 +21,21 @@ class AboutPage extends StatelessWidget {
           SliverAppBar(
             expandedHeight: 0,
             floating: true,
-            backgroundColor: Colors.white,
+            backgroundColor: AppColors.getBackground(context),
             elevation: 0,
             centerTitle: true,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
+              icon: Icon(
+                Icons.arrow_back_ios,
+                color: AppColors.getTextPrimary(context),
+                size: 20,
+              ),
               onPressed: () => Navigator.pop(context),
             ),
             title: Text(
               l10n.aboutLaween,
               style: GoogleFonts.inter(
-                color: Colors.black,
+                color: AppColors.getTextPrimary(context),
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
               ),
@@ -80,8 +84,8 @@ class AboutPage extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.teal.withOpacity(0.05),
-            Colors.white,
+            AppColors.teal.withValues(alpha: 0.05),
+            AppColors.getBackground(context),
           ],
         ),
       ),
@@ -94,10 +98,10 @@ class AboutPage extends StatelessWidget {
               height: 80,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
-                color: Colors.white,
+                color: AppColors.getSurfaceElevated(context),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.teal.withOpacity(0.1),
+                    color: AppColors.teal.withValues(alpha: 0.1),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -116,7 +120,7 @@ class AboutPage extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 32,
               fontWeight: FontWeight.w900,
-              color: AppColors.primary,
+              color: AppColors.getTextPrimary(context),
               height: 1.2,
               letterSpacing: -1,
             ),
@@ -129,7 +133,7 @@ class AboutPage extends StatelessWidget {
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 16,
-                color: AppColors.slate,
+                color: AppColors.getTextSecondary(context),
                 height: 1.6,
                 fontWeight: FontWeight.w500,
               ),
@@ -150,7 +154,7 @@ class AboutPage extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 24,
               fontWeight: FontWeight.w800,
-              color: AppColors.primary,
+              color: AppColors.getTextPrimary(context),
             ),
           ).animate().fadeIn().slideX(begin: -0.1),
           const SizedBox(height: 32),
@@ -163,6 +167,7 @@ class AboutPage extends StatelessWidget {
             childAspectRatio: 0.85,
             children: [
               _buildFeatureCard(
+                context,
                 l10n.fairForAllTitle,
                 l10n.fairForAllDesc,
                 Icons.balance_rounded,
@@ -170,6 +175,7 @@ class AboutPage extends StatelessWidget {
                 0,
               ),
               _buildFeatureCard(
+                context,
                 l10n.easyToUseTitle,
                 l10n.easyToUseDesc,
                 Icons.touch_app_rounded,
@@ -177,6 +183,7 @@ class AboutPage extends StatelessWidget {
                 1,
               ),
               _buildFeatureCard(
+                context,
                 l10n.discoverPlacesTitle,
                 l10n.discoverPlacesDesc,
                 Icons.explore_rounded,
@@ -184,6 +191,7 @@ class AboutPage extends StatelessWidget {
                 2,
               ),
               _buildFeatureCard(
+                context,
                 l10n.perfectForGroupsTitle,
                 l10n.perfectForGroupsDesc,
                 Icons.groups_rounded,
@@ -198,6 +206,7 @@ class AboutPage extends StatelessWidget {
   }
 
   Widget _buildFeatureCard(
+    BuildContext context,
     String title,
     String desc,
     IconData icon,
@@ -205,64 +214,65 @@ class AboutPage extends StatelessWidget {
     int index,
   ) {
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.slate.withOpacity(0.1)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: GoogleFonts.inter(
-              fontWeight: FontWeight.w800,
-              fontSize: 15,
-              color: AppColors.primary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: Text(
-              desc,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                color: AppColors.slate,
-                height: 1.5,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.getSurfaceElevated(context),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: AppColors.getBorder(context)),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.getShadow(context).withValues(alpha: 0.03),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
               ),
-              maxLines: 4,
-              overflow: TextOverflow.ellipsis,
-            ),
+            ],
           ),
-        ],
-      ),
-    ).animate().fadeIn(delay: (index * 100).ms).scale(begin: const Offset(0.95, 0.95));
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                  color: AppColors.getTextPrimary(context),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: Text(
+                  desc,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: AppColors.getTextSecondary(context),
+                    height: 1.5,
+                  ),
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        )
+        .animate()
+        .fadeIn(delay: (index * 100).ms)
+        .scale(begin: const Offset(0.95, 0.95));
   }
 
   Widget _buildStepsSection(BuildContext context, AppLocalizations l10n) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 64, horizontal: 24),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.02),
-      ),
+      decoration: BoxDecoration(color: AppColors.getSurface(context)),
       child: Column(
         children: [
           Text(
@@ -270,23 +280,29 @@ class AboutPage extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 24,
               fontWeight: FontWeight.w800,
-              color: AppColors.primary,
+              color: AppColors.getTextPrimary(context),
             ),
           ),
           const SizedBox(height: 48),
-          _buildStepRow(l10n.step1Title, l10n.step1Desc, "1", true),
+          _buildStepRow(context, l10n.step1Title, l10n.step1Desc, "1", true),
           _buildStepDivider(),
-          _buildStepRow(l10n.step2Title, l10n.step2Desc, "2", false),
+          _buildStepRow(context, l10n.step2Title, l10n.step2Desc, "2", false),
           _buildStepDivider(),
-          _buildStepRow(l10n.step3Title, l10n.step3Desc, "3", true),
+          _buildStepRow(context, l10n.step3Title, l10n.step3Desc, "3", true),
           _buildStepDivider(),
-          _buildStepRow(l10n.step4Title, l10n.step4Desc, "4", false),
+          _buildStepRow(context, l10n.step4Title, l10n.step4Desc, "4", false),
         ],
       ),
     );
   }
 
-  Widget _buildStepRow(String title, String desc, String num, bool isLeft) {
+  Widget _buildStepRow(
+    BuildContext context,
+    String title,
+    String desc,
+    String num,
+    bool isLeft,
+  ) {
     return Row(
       children: [
         Container(
@@ -317,7 +333,7 @@ class AboutPage extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.primary,
+                  color: AppColors.getTextPrimary(context),
                 ),
               ),
               const SizedBox(height: 4),
@@ -325,7 +341,7 @@ class AboutPage extends StatelessWidget {
                 desc,
                 style: GoogleFonts.inter(
                   fontSize: 14,
-                  color: AppColors.slate,
+                  color: AppColors.getTextSecondary(context),
                   height: 1.5,
                 ),
               ),
@@ -341,7 +357,7 @@ class AboutPage extends StatelessWidget {
       margin: const EdgeInsets.only(left: 20, top: 8, bottom: 8),
       height: 30,
       width: 2,
-      color: AppColors.teal.withOpacity(0.2),
+      color: AppColors.teal.withValues(alpha: 0.2),
     );
   }
 
@@ -357,7 +373,7 @@ class AboutPage extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 24,
               fontWeight: FontWeight.w800,
-              color: AppColors.primary,
+              color: AppColors.getTextPrimary(context),
             ),
           ),
           const SizedBox(height: 16),
@@ -366,7 +382,7 @@ class AboutPage extends StatelessWidget {
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
               fontSize: 16,
-              color: AppColors.slate,
+              color: AppColors.getTextSecondary(context),
               height: 1.6,
               fontStyle: FontStyle.italic,
             ),
@@ -382,9 +398,9 @@ class AboutPage extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
-          color: AppColors.lightSlate,
+          color: AppColors.getSurface(context),
           borderRadius: BorderRadius.circular(32),
-          border: Border.all(color: AppColors.slate.withOpacity(0.1)),
+          border: Border.all(color: AppColors.getBorder(context)),
         ),
         child: Column(
           children: [
@@ -394,7 +410,7 @@ class AboutPage extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: AppColors.primary,
+                color: AppColors.getTextPrimary(context),
               ),
             ),
             const SizedBox(height: 24),
@@ -410,7 +426,10 @@ class AboutPage extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.teal,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),

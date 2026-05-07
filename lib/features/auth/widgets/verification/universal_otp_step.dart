@@ -1,15 +1,12 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/colors.dart';
 import '../../../../core/utils/numeric_utils.dart';
 import '../../../../core/message/app_messenger.dart';
-import '../../data/services/otp_auth_service.dart';
 import '../../data/services/auth_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../material_pin_field.dart';
 
 class UniversalOtpStep extends StatefulWidget {

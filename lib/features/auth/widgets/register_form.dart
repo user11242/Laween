@@ -173,11 +173,12 @@ class _RegisterFormState extends State<RegisterForm>
     if (value.length < 3 ||
         value.length > 30 ||
         !RegExp(r'[a-zA-Z\u0600-\u06FF]').hasMatch(value)) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _isNameChecking = false;
           _nameError = l10n.invalidUsername;
         });
+      }
       return;
     }
     final isTaken = await _authService.isNameTaken(value);
@@ -213,11 +214,12 @@ class _RegisterFormState extends State<RegisterForm>
     });
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(value)) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _isEmailChecking = false;
           _emailError = l10n.invalidEmail;
         });
+      }
       return;
     }
     final isTaken = await _authService.isEmailTaken(value);
@@ -252,11 +254,12 @@ class _RegisterFormState extends State<RegisterForm>
     });
     try {
       if (_fullPhoneNumber.length < 8) {
-        if (mounted)
+        if (mounted) {
           setState(() {
             _isPhoneChecking = false;
             _phoneError = l10n.invalidMobileNumber;
           });
+        }
         return;
       }
       bool isValidFormat = false;
@@ -288,11 +291,12 @@ class _RegisterFormState extends State<RegisterForm>
         });
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _isPhoneChecking = false;
           _phoneError = null;
         });
+      }
     }
   }
 
@@ -334,8 +338,9 @@ class _RegisterFormState extends State<RegisterForm>
         _isPasswordValid = false;
         _passwordError = l10n.weakPassword;
       }
-      if (_confirmPasswordController.text.isNotEmpty)
+      if (_confirmPasswordController.text.isNotEmpty) {
         _validateConfirmPassword();
+      }
     });
   }
 
@@ -385,8 +390,9 @@ class _RegisterFormState extends State<RegisterForm>
   String _localizeError(String error, AppLocalizations l10n) {
     if (error.contains("Username is already taken")) return l10n.nameTaken;
     if (error.contains("Email is already registered")) return l10n.emailTaken;
-    if (error.contains("Phone number is already in use"))
+    if (error.contains("Phone number is already in use")) {
       return l10n.phoneTaken;
+    }
     if (error.contains("weak-password")) return l10n.weakPassword;
     if (error.contains("email-already-in-use")) return l10n.emailTaken;
     return error;

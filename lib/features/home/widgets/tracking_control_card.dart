@@ -20,8 +20,9 @@ class TrackingControlCard extends StatelessWidget {
           .doc(user.uid)
           .snapshots(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData || !snapshot.data!.exists)
+        if (!snapshot.hasData || !snapshot.data!.exists) {
           return const SizedBox.shrink();
+        }
 
         final data = snapshot.data!.data() as Map<String, dynamic>;
         final bool isTrackingActive = data['isTrackingActive'] ?? false;

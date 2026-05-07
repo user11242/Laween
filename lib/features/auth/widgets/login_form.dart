@@ -200,13 +200,14 @@ class _LoginFormState extends State<LoginForm> {
         );
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         AppMessenger.showSnackBar(
           context,
           title: l10n.error,
           message: e.toString(),
           type: MessengerType.error,
         );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -231,8 +232,9 @@ class _LoginFormState extends State<LoginForm> {
       final result = await _authService.loginWithBiometrics();
       if (!mounted) return;
       if (result == null) {
-        if (mounted)
+        if (mounted) {
           Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+        }
       } else if (result == "SOCIAL_LOGIN_REQUIRED") {
         await _performGoogleLogin(silent: true);
       } else if (result == "NO_SAVED_CREDENTIALS") {
@@ -253,13 +255,14 @@ class _LoginFormState extends State<LoginForm> {
         );
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         AppMessenger.showSnackBar(
           context,
           title: l10n.error,
           message: e.toString(),
           type: MessengerType.error,
         );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -381,8 +384,9 @@ class _LoginFormState extends State<LoginForm> {
         ),
       ),
     ).then((_) {
-      if (mounted)
+      if (mounted) {
         Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+      }
     });
   }
 
@@ -421,13 +425,14 @@ class _LoginFormState extends State<LoginForm> {
         );
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         AppMessenger.showSnackBar(
           context,
           title: l10n.error,
           message: e.toString(),
           type: MessengerType.error,
         );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

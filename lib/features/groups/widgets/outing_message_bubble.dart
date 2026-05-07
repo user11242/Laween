@@ -261,14 +261,14 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
             margin: const EdgeInsets.symmetric(vertical: 8),
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.getSurfaceElevated(context),
               borderRadius: BorderRadius.circular(28),
               border: isCelebration
                   ? Border.all(color: const Color(0xFFFFD700), width: 2)
-                  : null,
+                  : Border.all(color: AppColors.getBorder(context)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: AppColors.getShadow(context).withValues(alpha: 0.1),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -298,7 +298,7 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
                         style: GoogleFonts.inter(
                           fontSize: 18,
                           fontWeight: FontWeight.w900,
-                          color: Colors.black,
+                          color: AppColors.getTextPrimary(context),
                           letterSpacing: -0.5,
                         ),
                       ),
@@ -320,7 +320,7 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
                       Text(
                         "  •  ",
                         style: TextStyle(
-                          color: Colors.grey.shade400,
+                          color: AppColors.getTextSecondary(context),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -328,7 +328,7 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
                         AppLocalizations.of(context)!.minRemaining(_remaining.inMinutes),
                         style: GoogleFonts.inter(
                           fontSize: 13,
-                          color: Colors.grey.shade600,
+                          color: AppColors.getTextSecondary(context),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -377,7 +377,7 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
                   ],
                 ),
                 const SizedBox(height: 12),
-                Divider(height: 1, color: Colors.grey.shade200),
+                Divider(height: 1, color: AppColors.getBorder(context)),
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,

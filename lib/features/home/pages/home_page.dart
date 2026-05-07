@@ -79,7 +79,7 @@ class _HomePageState extends State<HomePage> {
       body: IndexedStack(index: _currentIndex, children: pages),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1F1F1F) : Colors.white,
+          color: AppColors.getBottomNavBackground(context),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
@@ -96,7 +96,7 @@ class _HomePageState extends State<HomePage> {
             });
           },
           type: BottomNavigationBarType.fixed,
-          backgroundColor: isDark ? const Color(0xFF1F1F1F) : Colors.white,
+          backgroundColor: AppColors.getBottomNavBackground(context),
           selectedItemColor: AppColors.teal,
           unselectedItemColor: const Color(0xFF94A3B8),
           selectedLabelStyle: GoogleFonts.inter(
@@ -166,7 +166,7 @@ class _HomePageState extends State<HomePage> {
                   height: 300,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFF6366F1).withOpacity(0.08),
+                    color: const Color(0xFF6366F1).withValues(alpha: 0.08),
                   ),
                 ),
               )
@@ -182,7 +182,7 @@ class _HomePageState extends State<HomePage> {
               height: 250,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.teal.withOpacity(0.05),
+                color: AppColors.teal.withValues(alpha: 0.05),
               ),
             ),
           ).animate().fadeIn(delay: 500.ms, duration: 2.seconds),
@@ -205,14 +205,14 @@ class _HomePageState extends State<HomePage> {
                   const LiveTrackingDashboardWidget(),
 
                   // 4. QUICK ACTIONS GRID (2x2)
-                  Text(
-                    l10n.quickActions,
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : AppColors.primary,
-                    ),
-                  ).animate().fadeIn(delay: 200.ms).slideX(begin: -0.1),
+                    Text(
+                      l10n.quickActions,
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.getTextPrimary(context),
+                      ),
+                    ).animate().fadeIn(delay: 200.ms).slideX(begin: -0.1),
 
                   const SizedBox(height: 16),
                   _buildQuickActionsGrid(),
@@ -223,14 +223,14 @@ class _HomePageState extends State<HomePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        l10n.recentActivity,
-                        style: GoogleFonts.inter(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : AppColors.primary,
+                        Text(
+                          l10n.recentActivity,
+                          style: GoogleFonts.inter(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.getTextPrimary(context),
+                          ),
                         ),
-                      ),
                       TextButton(
                         onPressed: () => setState(() => _currentIndex = 1),
                         child: Text(
@@ -317,7 +317,7 @@ class _HomePageState extends State<HomePage> {
                 onTap: () => setState(() => _currentIndex = 3),
                 child: CircleAvatar(
                   radius: 26,
-                  backgroundColor: AppColors.lightSlate,
+                  backgroundColor: AppColors.getInputBackground(context),
                   backgroundImage:
                       (photoUrl != null && photoUrl.startsWith('http'))
                       ? CachedNetworkImageProvider(photoUrl)
@@ -411,15 +411,15 @@ class _HomePageState extends State<HomePage> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.getSurfaceElevated(context),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: AppColors.slate.withOpacity(0.1),
+                color: AppColors.getBorder(context),
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: AppColors.getShadow(context).withValues(alpha: 0.05),
                   blurRadius: 15,
                   offset: const Offset(0, 5),
                 ),
@@ -432,7 +432,7 @@ class _HomePageState extends State<HomePage> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: (action['color'] as Color).withOpacity(0.15),
+                    color: (action['color'] as Color).withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -441,14 +441,14 @@ class _HomePageState extends State<HomePage> {
                     size: 22,
                   ),
                 ),
-                Text(
-                  action['title'] as String,
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: AppColors.primary,
+                  Text(
+                    action['title'] as String,
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: AppColors.getTextPrimary(context),
+                    ),
                   ),
-                ),
               ],
             ),
           ),

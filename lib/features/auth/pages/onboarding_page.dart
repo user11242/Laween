@@ -32,8 +32,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
           : "This account is already registered with a different sign-in method. Please use email and password.";
     }
     if (error.toLowerCase().contains("canceled") ||
-        error.toLowerCase().contains("cancel"))
+        error.toLowerCase().contains("cancel")) {
       return "";
+    }
     return error;
   }
 

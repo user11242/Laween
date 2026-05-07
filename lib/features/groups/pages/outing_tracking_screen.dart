@@ -14,7 +14,6 @@ import '../../../core/theme/colors.dart';
 import '../data/models/outing_session_model.dart';
 import '../data/services/outing_service.dart';
 import '../../../core/services/location_service.dart';
-import '../widgets/sos_alarm_overlay.dart';
 import 'package:laween/l10n/app_localizations.dart';
 
 class OutingTrackingScreen extends StatefulWidget {
@@ -301,7 +300,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
           final color = AppColors.getUserColor(selectedP.uid);
           newPolylines.add(
             Polyline(
-              polylineId: PolylineId('route_${_selectedParticipantUid}'),
+              polylineId: PolylineId('route_$_selectedParticipantUid'),
               points: route,
               color: color,
               width: 5,

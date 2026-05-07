@@ -11,11 +11,9 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
-import '../../../../core/services/location_service.dart';
 import '../../../../core/services/google_maps_service.dart';
 import '../models/outing_session_model.dart';
 import '../models/message_model.dart';
-import '../../../auth/data/services/fcm_service.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class OutingService {

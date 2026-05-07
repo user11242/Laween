@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 class GroupModel {
   String name;
@@ -40,7 +39,7 @@ class GroupModel {
 }
 
 void main() {
-  var map = { 'name': String.fromCharCode(0xD83D) + "E" };
+  var map = { 'name': "${String.fromCharCode(0xD83D)}E" };
   var group = GroupModel.fromMap(map);
   print(group.name.codeUnits.map((u) => u.toRadixString(16)).toList());
 }

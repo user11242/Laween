@@ -35,13 +35,12 @@ class _SplashPageState extends State<SplashPage> {
     Widget nextScreen = const OnboardingPage(); // Default
 
     final user = FirebaseAuth.instance.currentUser;
-
+    
     if (user != null) {
       // User is logged in, check app lock
-      final isLocked = await BiometricService().isAppLocked().timeout(
-        const Duration(seconds: 2),
-        onTimeout: () => false,
-      );
+      final isLocked = await BiometricService()
+          .isAppLocked()
+          .timeout(const Duration(seconds: 2), onTimeout: () => false);
 
       if (!isLocked) {
         // Not locked, check profile
@@ -78,22 +77,22 @@ class _SplashPageState extends State<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
+    // Set system status bar color for the splash screen
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: AppColors.teal,
-        systemNavigationBarIconBrightness: Brightness.light,
       ),
-      child: Scaffold(
-        body: Container(
-          width: double.infinity,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: AppColors.tealGradient,
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-            ),
+    );
+
+    return Scaffold(
+      body: Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: AppColors.tealGradient,
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
           ),
         ),
         child: Stack(
@@ -109,10 +108,12 @@ class _SplashPageState extends State<SplashPage> {
                         height: 300,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.lightGold.withValues(alpha: 0.15),
+                          color: AppColors.lightGold.withOpacity(0.15),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.lightGold.withValues(alpha: 0.15),
+                              color: AppColors.lightGold.withValues(
+                                alpha: 0.15,
+                              ),
                               blurRadius: 40,
                               spreadRadius: 10,
                             ),
@@ -140,10 +141,10 @@ class _SplashPageState extends State<SplashPage> {
                         height: 400,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.1),
+                          color: Colors.white.withOpacity(0.1),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.white.withValues(alpha: 0.1),
+                              color: Colors.white.withOpacity(0.1),
                               blurRadius: 50,
                               spreadRadius: 10,
                             ),
@@ -192,7 +193,7 @@ class _SplashPageState extends State<SplashPage> {
                     .then(delay: 200.ms)
                     .shimmer(
                       duration: 1500.ms,
-                      color: Colors.white.withValues(alpha: 0.8),
+                      color: Colors.white.withOpacity(0.8),
                       angle: 0.5,
                     )
                     // And add a very slow, continuous floating effect
@@ -253,7 +254,7 @@ class _SplashPageState extends State<SplashPage> {
                         style: GoogleFonts.inter(
                           fontSize: 18,
                           fontWeight: FontWeight.w300,
-                          color: Colors.white.withValues(alpha: 0.9),
+                          color: Colors.white.withOpacity(0.9),
                           letterSpacing: 1.0,
                         ),
                       ),
@@ -271,7 +272,6 @@ class _SplashPageState extends State<SplashPage> {
               ],
             ),
           ],
-          ),
         ),
       ),
     );

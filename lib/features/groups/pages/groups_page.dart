@@ -568,8 +568,9 @@ class _GroupCard extends StatelessWidget {
                                         final diff = now
                                             .difference(ts.toDate())
                                             .inSeconds;
-                                        if (diff > 5)
+                                        if (diff > 5) {
                                           return false; // 🛡️ 5 second TTL
+                                        }
                                       }
                                       return isTyping;
                                     }

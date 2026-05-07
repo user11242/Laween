@@ -89,7 +89,7 @@ class GoogleMapsService {
         url,
         headers: {
           'Content-Type': 'application/json',
-          'X-Goog-Api-Key': _apiKey!,
+          'X-Goog-Api-Key': _apiKey,
           'X-Goog-FieldMask': 'originIndex,destinationIndex,status,distanceMeters,duration,staticDuration,condition',
         },
         body: jsonEncode({
@@ -109,7 +109,7 @@ class GoogleMapsService {
         // computeRouteMatrix returns a JSON array; if the body is newline-separated
         // objects (streaming), wrap them into a proper array.
         if (body.trim().startsWith('{')) {
-          body = '[' + body.replaceAll('}\n{', '},{') + ']';
+          body = '[${body.replaceAll('}\n{', '},{')}]';
         }
 
         final List data = jsonDecode(body);
@@ -167,7 +167,7 @@ class GoogleMapsService {
         url,
         headers: {
           'Content-Type': 'application/json',
-          'X-Goog-Api-Key': _apiKey!,
+          'X-Goog-Api-Key': _apiKey,
           'X-Goog-FieldMask': 'routes.polyline.encodedPolyline',
         },
         body: jsonEncode({
@@ -249,7 +249,7 @@ class GoogleMapsService {
         url,
         headers: {
           'Content-Type': 'application/json',
-          'X-Goog-Api-Key': _apiKey!,
+          'X-Goog-Api-Key': _apiKey,
           'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.photos,places.location,places.id,places.businessStatus',
         },
         body: jsonEncode({

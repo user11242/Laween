@@ -26,7 +26,7 @@ class GoogleHintDialog extends StatelessWidget {
               Text(
                 AppLocalizations.of(context)!.continueRegistrationWithGoogle,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: AppColors.getTextPrimary(context),

@@ -15,18 +15,18 @@ class LanguagePage extends StatelessWidget {
     final currentLanguageCode = localeProvider.locale.languageCode;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.getBackground(context),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.getBackground(context),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
+          icon: Icon(Icons.arrow_back_ios, color: AppColors.getTextPrimary(context), size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           l10n.selectLanguage,
           style: GoogleFonts.inter(
-            color: Colors.black,
+            color: AppColors.getTextPrimary(context),
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
@@ -71,11 +71,11 @@ class LanguagePage extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.teal.withOpacity(0.05)
-              : Colors.grey.shade50,
+              ? AppColors.teal.withValues(alpha: 0.05)
+              : AppColors.getSurface(context),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.teal : Colors.grey.shade200,
+            color: isSelected ? AppColors.teal : AppColors.getBorder(context),
             width: 2,
           ),
         ),
@@ -90,7 +90,7 @@ class LanguagePage extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: isSelected ? AppColors.teal : Colors.black87,
+                      color: isSelected ? AppColors.teal : AppColors.getTextPrimary(context),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -98,7 +98,7 @@ class LanguagePage extends StatelessWidget {
                     subtitle,
                     style: GoogleFonts.inter(
                       fontSize: 14,
-                      color: Colors.grey.shade500,
+                      color: AppColors.getTextSecondary(context),
                     ),
                   ),
                 ],
@@ -109,7 +109,7 @@ class LanguagePage extends StatelessWidget {
             else
               Icon(
                 Icons.circle_outlined,
-                color: Colors.grey.shade300,
+                color: AppColors.getBorder(context),
                 size: 28,
               ),
           ],

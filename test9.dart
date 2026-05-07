@@ -1,5 +1,5 @@
 void main() {
-  String str = String.fromCharCode(0xD83D) + "E";
+  String str = "${String.fromCharCode(0xD83D)}E";
   List<int> cleanUnits = [];
   for (int i = 0; i < str.length; i++) {
     int c = str.codeUnitAt(i);

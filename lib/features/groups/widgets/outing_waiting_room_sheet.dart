@@ -86,10 +86,10 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
       filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.9),
+          color: AppColors.getSurfaceElevated(context).withValues(alpha: 0.9),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
           border: Border.all(
-            color: Colors.white.withOpacity(0.5),
+            color: AppColors.getBorder(context),
             width: 1.5,
           ),
         ),
@@ -229,7 +229,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                             style: GoogleFonts.outfit(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.darkSlate,
+                              color: AppColors.getTextPrimary(context),
                               letterSpacing: -0.5,
                             ),
                           ),
@@ -280,7 +280,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                       horizontal: 24,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.getSurface(context),
                       borderRadius: BorderRadius.circular(36),
                       border: Border.all(
                         color: Colors.black.withOpacity(0.05),
@@ -327,7 +327,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                                   style: GoogleFonts.outfit(
                                     fontSize: 62,
                                     fontWeight: FontWeight.bold,
-                                    color: AppColors.darkSlate,
+                                    color: AppColors.getTextPrimary(context),
                                     letterSpacing: -3,
                                     shadows: [
                                       Shadow(
@@ -384,7 +384,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.getSurface(context),
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
                           color: AppColors.teal.withOpacity(0.3),
@@ -431,7 +431,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                                   style: GoogleFonts.outfit(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: AppColors.darkSlate,
+                                    color: AppColors.getTextPrimary(context),
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -589,7 +589,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                                       fontWeight: isMe
                                           ? FontWeight.bold
                                           : FontWeight.w600,
-                                      color: AppColors.darkSlate,
+                                      color: AppColors.getTextPrimary(context),
                                     ),
                                   ),
                                 ],
@@ -810,7 +810,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.9),
+                  color: AppColors.getSurfaceElevated(context).withValues(alpha: 0.9),
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(40),
                   ),
@@ -832,7 +832,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                       style: GoogleFonts.outfit(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.darkSlate,
+                        color: AppColors.getTextPrimary(context),
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -861,7 +861,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                                 style: GoogleFonts.outfit(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: isSelected ? Colors.white : AppColors.darkSlate,
+                                  color: isSelected ? Colors.white : AppColors.getTextPrimary(context),
                                 ),
                               ),
                             ),
@@ -878,9 +878,9 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.getSurface(context),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Colors.black.withOpacity(0.05)),
+            border: Border.all(color: AppColors.getBorder(context)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.03),
@@ -916,7 +916,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                 style: GoogleFonts.outfit(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.darkSlate,
+                  color: AppColors.getTextPrimary(context),
                 ),
               ),
             ],

@@ -311,10 +311,10 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.9),
+          color: AppColors.getSurfaceElevated(context).withValues(alpha: 0.9),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
           border: Border.all(
-            color: Colors.white.withOpacity(0.5),
+            color: AppColors.getBorder(context),
             width: 1.5,
           ),
           boxShadow: [
@@ -343,7 +343,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                 width: 45,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.2),
+                  color: AppColors.getBorder(context),
                   borderRadius: BorderRadius.circular(3),
                 ),
               ),
@@ -374,7 +374,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                       style: GoogleFonts.outfit(
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.darkSlate,
+                        color: AppColors.getTextPrimary(context),
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -386,7 +386,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                               "Find the perfect mid-point"),
                       style: GoogleFonts.inter(
                         fontSize: 13,
-                        color: Colors.grey.shade500,
+                        color: AppColors.getTextSecondary(context),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -500,7 +500,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
+            color: isSelected ? AppColors.getSurface(context) : Colors.transparent,
             borderRadius: BorderRadius.circular(15),
             boxShadow: isSelected
                 ? [
@@ -527,8 +527,8 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: isSelected
-                      ? AppColors.darkSlate
-                      : Colors.grey.shade400,
+                      ? AppColors.getTextPrimary(context)
+                      : AppColors.getTextSecondary(context),
                 ),
               ),
             ],
@@ -550,8 +550,8 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
         margin: const EdgeInsets.only(right: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? Colors.white
-              : Colors.white.withOpacity(0.5),
+              ? AppColors.getSurface(context)
+              : AppColors.getSurface(context).withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? AppColors.teal : Colors.transparent,
@@ -584,7 +584,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
               style: GoogleFonts.outfit(
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: AppColors.darkSlate,
+                color: AppColors.getTextPrimary(context),
               ),
             ),
           ],
@@ -605,12 +605,12 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
               margin: EdgeInsets.only(right: t == 10 ? 0 : 12),
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.darkSlate : Colors.white,
+                color: isSelected ? AppColors.teal : AppColors.getSurface(context),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: isSelected
-                      ? AppColors.darkSlate
-                      : Colors.grey.shade200,
+                      ? AppColors.teal
+                      : AppColors.getBorder(context),
                   width: 1.5,
                 ),
                 boxShadow: isSelected
@@ -629,7 +629,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                   style: GoogleFonts.outfit(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: isSelected ? Colors.white : Colors.grey.shade600,
+                    color: isSelected ? Colors.white : AppColors.getTextSecondary(context),
                   ),
                 ),
               ),
@@ -643,7 +643,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
   Widget _buildSearchBar() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.getSurface(context),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -706,7 +706,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
       margin: const EdgeInsets.only(top: 8),
       constraints: const BoxConstraints(maxHeight: 280),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.getSurface(context),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -958,15 +958,15 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.getSurface(context),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: _isScheduled ? AppColors.teal.withOpacity(0.4) : Colors.grey.shade200,
+          color: _isScheduled ? AppColors.teal.withValues(alpha: 0.4) : AppColors.getBorder(context),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: AppColors.getShadow(context).withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -1000,7 +1000,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                         style: GoogleFonts.outfit(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.darkSlate,
+                          color: AppColors.getTextPrimary(context),
                         ),
                       ),
                       Text(
@@ -1009,7 +1009,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                             : (AppLocalizations.of(context)?.offStartNow ?? "Off - Start the session now"),
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          color: Colors.grey.shade500,
+                          color: AppColors.getTextSecondary(context),
                         ),
                       ),
                     ],
@@ -1045,10 +1045,8 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                   builder: (context, child) {
                     return Theme(
                       data: Theme.of(context).copyWith(
-                        colorScheme: const ColorScheme.light(
+                        colorScheme: Theme.of(context).colorScheme.copyWith(
                           primary: AppColors.teal,
-                          onPrimary: Colors.white,
-                          onSurface: AppColors.darkSlate,
                         ),
                       ),
                       child: child!,
@@ -1062,10 +1060,8 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                     builder: (context, child) {
                       return Theme(
                         data: Theme.of(context).copyWith(
-                          colorScheme: const ColorScheme.light(
+                          colorScheme: Theme.of(context).colorScheme.copyWith(
                             primary: AppColors.teal,
-                            onPrimary: Colors.white,
-                            onSurface: AppColors.darkSlate,
                           ),
                         ),
                         child: child!,

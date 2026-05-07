@@ -25,8 +25,9 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
   final _phoneUtil = lib_phone.PhoneNumberUtil();
 
   String _localizeError(String error, AppLocalizations l10n) {
-    if (error.contains("Not signed in"))
+    if (error.contains("Not signed in")) {
       return l10n.isAr ? "لم يتم تسجيل الدخول" : "Not signed in";
+    }
     return error;
   }
 

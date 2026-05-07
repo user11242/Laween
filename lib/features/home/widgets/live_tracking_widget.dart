@@ -127,11 +127,11 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
         margin: const EdgeInsets.fromLTRB(20, 0, 20, 24),
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.getSurfaceElevated(context),
           borderRadius: BorderRadius.circular(32),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: AppColors.getShadow(context).withValues(alpha: 0.06),
               blurRadius: 30,
               offset: const Offset(0, 12),
             ),
@@ -182,7 +182,7 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
                         style: GoogleFonts.outfit(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.darkSlate,
+                          color: AppColors.getTextPrimary(context),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -211,7 +211,7 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
                       height: 4,
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
+                        color: AppColors.getBorder(context),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -236,17 +236,17 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppColors.getSurface(context),
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: AppColors.getShadow(context).withValues(alpha: 0.1),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               )
                             ],
                             border: Border.all(
-                              color: p.arrived ? AppColors.teal : Colors.white,
+                              color: p.arrived ? AppColors.teal : AppColors.getSurface(context),
                               width: 2,
                             ),
                           ),
@@ -288,7 +288,7 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.darkSlate.withOpacity(0.6),
+                    color: AppColors.getTextSecondary(context),
                   ),
                 ),
                 Text(

@@ -410,8 +410,9 @@ class AuthService {
 
       // 2. Get pending credential
       final googleCred = _googleAuth.pendingGoogleCredential;
-      if (googleCred == null)
+      if (googleCred == null) {
         throw Exception("No pending Google credential found");
+      }
 
       // 3. Link
       await userCred.user!.linkWithCredential(googleCred);

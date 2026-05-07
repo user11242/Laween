@@ -21,7 +21,6 @@ import '../data/services/outing_service.dart';
 import '../data/services/chat_service.dart';
 import '../../../core/services/location_service.dart';
 import '../../../core/services/google_maps_service.dart';
-import '../widgets/sos_alarm_overlay.dart';
 import 'ar_friend_compass_page.dart';
 import 'receipt_splitter_screen.dart';
 import 'package:laween/l10n/app_localizations.dart';
@@ -49,7 +48,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
   int? _openSwipeIndex;
   bool _isDisposed = false;
   final bool _isTrackingMode = false;
-  bool _showWinnerDetails = true;
+  final bool _showWinnerDetails = true;
   bool _showChat = false; // toggle between Suggested Places and Mini Chat
   // Global selected member — drives which member's ETA/distance is shown in every venue card.
   // Defaults to the current logged-in user on first load.
@@ -513,7 +512,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     final Set<Polyline> newPolylines = {};
     if (_selectedParticipantUid != null) {
       final p = session.participants.firstWhere((p) => p.uid == _selectedParticipantUid);
-      final dest = session.winner != null ? session.winner! : (session.finalLocation != null ? session.finalLocation : null);
+      final dest = session.winner != null ? session.winner! : (session.finalLocation);
       final destLoc = dest?['location'];
       
       if (p.location != null && destLoc != null) {
