@@ -119,7 +119,7 @@ class _ExploreMapPageState extends State<ExploreMapPage> {
     final l10n = AppLocalizations.of(context)!;
     
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.getBackground(context),
       body: Stack(
         children: [
           // 1. THE MAP
@@ -131,7 +131,11 @@ class _ExploreMapPageState extends State<ExploreMapPage> {
               ),
               onMapCreated: (controller) {
                 _controller.complete(controller);
-                controller.setMapStyle(_darkMapStyle);
+                if (AppColors.isDark(context)) {
+                  controller.setMapStyle(_darkMapStyle);
+                } else {
+                  controller.setMapStyle(null);
+                }
               },
               markers: _markers,
               myLocationEnabled: true,
@@ -157,9 +161,11 @@ class _ExploreMapPageState extends State<ExploreMapPage> {
                   child: Row(
                     children: [
                       CircleAvatar(
-                        backgroundColor: Colors.white,
+                        backgroundColor: AppColors.getSurfaceElevated(context),
                         child: IconButton(
-                          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black, size: 18),
+                          icon: Icon(Icons.arrow_back_ios_new_rounded,
+                              color: AppColors.getTextPrimary(context),
+                              size: 18),
                           onPressed: () => Navigator.pop(context),
                         ),
                       ),
@@ -169,20 +175,25 @@ class _ExploreMapPageState extends State<ExploreMapPage> {
                           height: 50,
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppColors.getSurfaceElevated(context),
                             borderRadius: BorderRadius.circular(25),
                             boxShadow: [
-                              BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4))
+                              BoxShadow(
+                                  color: AppColors.getShadow(context)
+                                      .withValues(alpha: 0.1),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4))
                             ],
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.search_rounded, color: Colors.grey),
+                              const Icon(Icons.search_rounded, color: AppColors.teal),
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
                                   l10n.isAr ? "ابحث عن أماكن..." : "Search for places...",
-                                  style: GoogleFonts.inter(color: Colors.grey),
+                                  style: GoogleFonts.inter(
+                                      color: AppColors.getTextMuted(context)),
                                 ),
                               ),
                               if (_isLoading)
@@ -215,10 +226,12 @@ class _ExploreMapPageState extends State<ExploreMapPage> {
                               if (_currentCenter != null) _fetchPlaces(_currentCenter!);
                             }
                           },
-                          backgroundColor: Colors.black87,
+                          backgroundColor: AppColors.getSurfaceElevated(context),
                           selectedColor: AppColors.teal,
                           labelStyle: GoogleFonts.inter(
-                            color: isSelected ? Colors.white : Colors.white70,
+                            color: isSelected
+                                ? Colors.white
+                                : AppColors.getTextSecondary(context),
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
@@ -255,10 +268,14 @@ class _ExploreMapPageState extends State<ExploreMapPage> {
                         width: 300,
                         margin: const EdgeInsets.only(right: 16),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.getSurfaceElevated(context),
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
-                            BoxShadow(color: Colors.black26, blurRadius: 15, offset: Offset(0, 5))
+                            BoxShadow(
+                                color: AppColors.getShadow(context)
+                                    .withValues(alpha: 0.1),
+                                blurRadius: 15,
+                                offset: const Offset(0, 5))
                           ],
                         ),
                         child: Row(
@@ -272,7 +289,8 @@ class _ExploreMapPageState extends State<ExploreMapPage> {
                                       height: 180,
                                       fit: BoxFit.cover,
                                     )
-                                  : Container(width: 100, color: Colors.grey.shade200),
+                                  : Container(
+                                      width: 100, color: AppColors.getSurface(context)),
                             ),
                             Expanded(
                               child: Padding(
@@ -286,6 +304,7 @@ class _ExploreMapPageState extends State<ExploreMapPage> {
                                       style: GoogleFonts.outfit(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
+                                        color: AppColors.getTextPrimary(context),
                                       ),
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
@@ -297,14 +316,20 @@ class _ExploreMapPageState extends State<ExploreMapPage> {
                                         const SizedBox(width: 4),
                                         Text(
                                           "${p['rating'] ?? 'N/A'} (${p['userRatingCount'] ?? 0})",
-                                          style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
+                                          style: GoogleFonts.inter(
+                                              fontSize: 12,
+                                              color: AppColors.getTextSecondary(
+                                                  context)),
                                         ),
                                       ],
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
                                       p['formattedAddress'] ?? "",
-                                      style: GoogleFonts.inter(fontSize: 11, color: Colors.grey),
+                                      style: GoogleFonts.inter(
+                                          fontSize: 11,
+                                          color: AppColors.getTextSecondary(
+                                              context)),
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
