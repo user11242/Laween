@@ -665,7 +665,6 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
           onChanged: (value) => _onPinChanged(value, index),
         ),
       ),
-      ),
     );
   }
 }

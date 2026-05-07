@@ -817,13 +817,8 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                             CircleAvatar(
                               radius: 24,
                               backgroundColor: isOnApp
-<<<<<<< HEAD
-                                  ? AppColors.teal.withOpacity(0.1)
-                                  : Colors.grey.shade100,
-=======
                                   ? AppColors.teal.withValues(alpha: 0.1)
                                   : AppColors.getSurface(context),
->>>>>>> user-work
                               child: Text(
                                 contact.displayName.isNotEmpty
                                     ? contact.displayName[0].toUpperCase()
