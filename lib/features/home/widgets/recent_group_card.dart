@@ -26,19 +26,12 @@ class RecentGroupCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Theme.of(context).brightness == Brightness.dark
-              ? const Color(0xFF1E1E1E)
-              : Colors.white,
+          color: AppColors.getSurface(context),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.white.withValues(alpha: 0.05)
-                : AppColors.slate.withValues(alpha: 0.1),
-            width: 1,
-          ),
+          border: Border.all(color: AppColors.getDivider(context), width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
+              color: AppColors.getShadow(context).withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -61,9 +54,7 @@ class RecentGroupCard extends StatelessWidget {
                           style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white
-                                : AppColors.primary,
+                            color: AppColors.getTextPrimary(context),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -74,7 +65,7 @@ class RecentGroupCard extends StatelessWidget {
                           _formatTime(context, group.lastMessageTime!),
                           style: GoogleFonts.inter(
                             fontSize: 11,
-                            color: AppColors.slate,
+                            color: AppColors.getTextSecondary(context),
                           ),
                         ),
                     ],
@@ -87,13 +78,13 @@ class RecentGroupCard extends StatelessWidget {
                           group.lastMessage ?? "No messages yet",
                           style: GoogleFonts.inter(
                             fontSize: 13,
-                            color: AppColors.slate,
+                            color: AppColors.getTextSecondary(context),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      _buildMemberAvatars(),
+                      _buildMemberAvatars(context),
                     ],
                   ),
                 ],
@@ -106,17 +97,13 @@ class RecentGroupCard extends StatelessWidget {
   }
 
   Widget _buildGroupAvatar(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: 52,
       height: 52,
       decoration: BoxDecoration(
         color: AppColors.teal.withValues(alpha: 0.15),
         shape: BoxShape.circle,
-        border: Border.all(
-          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          width: 2,
-        ),
+        border: Border.all(color: AppColors.getSurface(context), width: 2),
         boxShadow: [
           BoxShadow(
             color: AppColors.teal.withValues(alpha: 0.2),
@@ -144,7 +131,7 @@ class RecentGroupCard extends StatelessWidget {
       // Using .characters to safely extract the first grapheme cluster without splitting emojis!
       firstChar = group.name.characters.first.toUpperCase();
     }
-    
+
     return Center(
       child: Text(
         firstChar,
@@ -157,7 +144,7 @@ class RecentGroupCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMemberAvatars() {
+  Widget _buildMemberAvatars(BuildContext context) {
     return SizedBox(
       height: 20,
       width: 45,
@@ -170,11 +157,18 @@ class RecentGroupCard extends StatelessWidget {
               width: 18,
               height: 18,
               decoration: BoxDecoration(
-                color: AppColors.lightSlate,
+                color: AppColors.getSurfaceElevated(context),
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 1.5),
+                border: Border.all(
+                  color: AppColors.getSurface(context),
+                  width: 1.5,
+                ),
               ),
-              child: const Icon(Icons.person, size: 10, color: AppColors.slate),
+              child: Icon(
+                Icons.person,
+                size: 10,
+                color: AppColors.getTextSecondary(context),
+              ),
             ),
           ),
         ),

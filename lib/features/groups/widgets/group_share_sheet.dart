@@ -36,7 +36,9 @@ class GroupShareSheet extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.85),
+            color: AppColors.getSurfaceElevated(
+              context,
+            ).withValues(alpha: 0.85),
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(30),
               topRight: Radius.circular(30),
@@ -52,7 +54,7 @@ class GroupShareSheet extends StatelessWidget {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 20),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.3),
+                    color: AppColors.getDivider(context),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -64,7 +66,7 @@ class GroupShareSheet extends StatelessWidget {
                   style: GoogleFonts.outfit(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.darkSlate,
+                    color: AppColors.getTextPrimary(context),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -73,7 +75,9 @@ class GroupShareSheet extends StatelessWidget {
                       ? "شارك هذا الكود أو رمز الاستجابة السريعة للسماح للآخرين بالانضمام"
                       : "Share this code or QR to let others join",
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(color: Colors.grey.shade600),
+                  style: GoogleFonts.inter(
+                    color: AppColors.getTextSecondary(context),
+                  ),
                 ),
 
                 const SizedBox(height: 30),
@@ -82,11 +86,13 @@ class GroupShareSheet extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.getSurface(context),
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
+                        color: AppColors.getShadow(
+                          context,
+                        ).withValues(alpha: 0.05),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -96,9 +102,9 @@ class GroupShareSheet extends StatelessWidget {
                     data: shareLink,
                     version: QrVersions.auto,
                     size: 200.0,
-                    eyeStyle: const QrEyeStyle(
+                    eyeStyle: QrEyeStyle(
                       eyeShape: QrEyeShape.circle,
-                      color: AppColors.darkSlate,
+                      color: AppColors.getTextPrimary(context),
                     ),
                     dataModuleStyle: const QrDataModuleStyle(
                       dataModuleShape: QrDataModuleShape.circle,

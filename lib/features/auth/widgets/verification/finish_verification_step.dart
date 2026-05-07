@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:laween/l10n/app_localizations.dart';
+import '../../../../core/theme/colors.dart';
 
 class FinishVerificationStep extends StatelessWidget {
   const FinishVerificationStep({super.key});
@@ -14,7 +15,10 @@ class FinishVerificationStep extends StatelessWidget {
           Text(
             l10n.allVerified,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.black87, fontSize: 16),
+            style: TextStyle(
+              color: AppColors.getTextPrimary(context),
+              fontSize: 16,
+            ),
           ),
         ],
       ),

@@ -33,8 +33,7 @@ class ProfilePage extends StatelessWidget {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor:
-          Colors.grey.shade50, // Slightly off-white for premium card contrast
+      backgroundColor: AppColors.getBackground(context),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('users')
@@ -108,11 +107,13 @@ class ProfilePage extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: AppColors.getSurfaceElevated(context),
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
+                                  color: AppColors.getShadow(
+                                    context,
+                                  ).withValues(alpha: 0.1),
                                   blurRadius: 15,
                                   spreadRadius: 2,
                                   offset: const Offset(0, 8),
@@ -154,7 +155,7 @@ class ProfilePage extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF2D3748),
+                    color: AppColors.getTextPrimary(context),
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -164,7 +165,7 @@ class ProfilePage extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
+                    color: AppColors.getDivider(context),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -172,7 +173,7 @@ class ProfilePage extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade600,
+                      color: AppColors.getTextSecondary(context),
                     ),
                   ),
                 ),
@@ -192,18 +193,20 @@ class ProfilePage extends StatelessWidget {
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade500,
+                            color: AppColors.getTextMuted(context),
                             letterSpacing: 1.2,
                           ),
                         ),
                       ),
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.getSurfaceElevated(context),
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.03),
+                              color: AppColors.getShadow(
+                                context,
+                              ).withValues(alpha: 0.03),
                               blurRadius: 10,
                               spreadRadius: 0,
                               offset: const Offset(0, 4),
@@ -213,6 +216,7 @@ class ProfilePage extends StatelessWidget {
                         child: Column(
                           children: [
                             _buildPremiumMenuItem(
+                              context: context,
                               icon: Icons.person_outline,
                               iconBgColor: Colors.blue.withValues(alpha: 0.15),
                               iconColor: Colors.blue.shade700,
@@ -224,12 +228,13 @@ class ProfilePage extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            const Divider(
+                            Divider(
                               height: 1,
                               indent: 64,
-                              color: Color(0xFFEDF2F7),
+                              color: AppColors.getDivider(context),
                             ),
                             _buildPremiumMenuItem(
+                              context: context,
                               icon: Icons.favorite_border,
                               iconBgColor: Colors.pink.withValues(alpha: 0.15),
                               iconColor: Colors.pink.shade600,
@@ -254,18 +259,20 @@ class ProfilePage extends StatelessWidget {
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade500,
+                            color: AppColors.getTextMuted(context),
                             letterSpacing: 1.2,
                           ),
                         ),
                       ),
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.getSurfaceElevated(context),
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.03),
+                              color: AppColors.getShadow(
+                                context,
+                              ).withValues(alpha: 0.03),
                               blurRadius: 10,
                               spreadRadius: 0,
                               offset: const Offset(0, 4),
@@ -275,6 +282,7 @@ class ProfilePage extends StatelessWidget {
                         child: Column(
                           children: [
                             _buildPremiumMenuItem(
+                              context: context,
                               icon: Icons.language,
                               iconBgColor: AppColors.teal.withValues(
                                 alpha: 0.15,
@@ -289,12 +297,13 @@ class ProfilePage extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            const Divider(
+                            Divider(
                               height: 1,
                               indent: 64,
-                              color: Color(0xFFEDF2F7),
+                              color: AppColors.getDivider(context),
                             ),
                             _buildPremiumMenuItem(
+                              context: context,
                               icon: Icons.settings_outlined,
                               iconBgColor: Colors.purple.withValues(
                                 alpha: 0.15,
@@ -308,12 +317,13 @@ class ProfilePage extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            const Divider(
+                            Divider(
                               height: 1,
                               indent: 64,
-                              color: Color(0xFFEDF2F7),
+                              color: AppColors.getDivider(context),
                             ),
                             _buildPremiumMenuItem(
+                              context: context,
                               icon: Icons.info_outline,
                               iconBgColor: Colors.orange.withValues(
                                 alpha: 0.15,
@@ -336,7 +346,7 @@ class ProfilePage extends StatelessWidget {
                       // --- 4. Standalone Logout Action ---
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.getSurfaceElevated(context),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: Colors.red.withValues(alpha: 0.1),
@@ -351,6 +361,7 @@ class ProfilePage extends StatelessWidget {
                           ],
                         ),
                         child: _buildPremiumMenuItem(
+                          context: context,
                           icon: Icons.logout,
                           iconBgColor: Colors.red.withValues(alpha: 0.1),
                           iconColor: Colors.red.shade600,
@@ -374,6 +385,7 @@ class ProfilePage extends StatelessWidget {
   }
 
   Widget _buildPremiumMenuItem({
+    required BuildContext context,
     required IconData icon,
     required Color iconBgColor,
     required Color iconColor,
@@ -410,7 +422,7 @@ class ProfilePage extends StatelessWidget {
                     fontWeight: isDestructive
                         ? FontWeight.w600
                         : FontWeight.w500,
-                    color: textColor ?? const Color(0xFF2D3748),
+                    color: textColor ?? AppColors.getTextPrimary(context),
                   ),
                 ),
               ),
@@ -430,7 +442,7 @@ class ProfilePage extends StatelessWidget {
                 size: 14,
                 color: isDestructive
                     ? Colors.red.withValues(alpha: 0.3)
-                    : Colors.grey.shade400,
+                    : AppColors.getTextMuted(context),
               ),
             ],
           ),

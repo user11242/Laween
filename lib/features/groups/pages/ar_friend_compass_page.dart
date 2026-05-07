@@ -33,18 +33,19 @@ class ArFriendCompassPage extends StatefulWidget {
 class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
   CameraController? _cameraController;
   bool _isCameraReady = false;
-  
+
   double? _rawHeading;
   double? _cameraHeading;
   double? _userHeading;
   double? _headingAccuracy;
-  
+
   Position? _userPosition;
   StreamSubscription? _compassSubscription;
   StreamSubscription? _positionSubscription;
-  
+
   // Debug mode toggle
-  final bool _showDebugOverlay = const bool.fromEnvironment('dart.vm.product') == false;
+  final bool _showDebugOverlay =
+      const bool.fromEnvironment('dart.vm.product') == false;
   final double _cameraHeadingOffset = 0.0; // Configurable constant for testing
 
   @override
@@ -85,14 +86,15 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
     }
 
     // 3. Track location updates
-    _positionSubscription = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 0,
-      ),
-    ).listen((pos) {
-      if (mounted) setState(() => _userPosition = pos);
-    });
+    _positionSubscription =
+        Geolocator.getPositionStream(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.bestForNavigation,
+            distanceFilter: 0,
+          ),
+        ).listen((pos) {
+          if (mounted) setState(() => _userPosition = pos);
+        });
 
     // 4. Track compass updates
     _compassSubscription = FlutterCompass.events!.listen((event) {
@@ -106,7 +108,7 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
           if (_cameraHeading != null && _cameraHeading != 0.0) {
             newHeading = _cameraHeading!;
           }
-          
+
           if (_userHeading == null) {
             _userHeading = newHeading;
           } else {
@@ -190,16 +192,19 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
 
     final bearing = _calculateBearing();
     final distance = _calculateDistance();
-    
+
     // Calculate Relative Bearing: 0 = straight ahead, + = right, - = left
-    double relativeBearing = _normalizeTo180(bearing - _userHeading! - _cameraHeadingOffset);
+    double relativeBearing = _normalizeTo180(
+      bearing - _userHeading! - _cameraHeadingOffset,
+    );
 
     // Screen Mapping logic
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
     double horizontalFov = 65.0;
-    if (distance <= 15 || (_userPosition != null && _userPosition!.accuracy > 15)) {
+    if (distance <= 15 ||
+        (_userPosition != null && _userPosition!.accuracy > 15)) {
       horizontalFov = 150.0;
     } else if (distance <= 35) {
       horizontalFov = 90.0;
@@ -208,14 +213,16 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
 
     const double safeMargin = 80.0;
     final double usableHalfWidth = (screenWidth / 2) - safeMargin;
-    
-    double screenX = (screenWidth / 2) + (relativeBearing / (horizontalFov / 2)) * usableHalfWidth;
+
+    double screenX =
+        (screenWidth / 2) +
+        (relativeBearing / (horizontalFov / 2)) * usableHalfWidth;
     // Final safety clamp just in case
     screenX = screenX.clamp(safeMargin, screenWidth - safeMargin);
 
     // Accuracy and freshness logic
     String? warningMessage;
-    
+
     if (widget.friendLastUpdate != null) {
       final age = DateTime.now().difference(widget.friendLastUpdate!);
       if (age.inMinutes >= 2) {
@@ -225,12 +232,17 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
       }
     }
 
-    if (warningMessage == null && _headingAccuracy != null && _headingAccuracy! > 30) {
+    if (warningMessage == null &&
+        _headingAccuracy != null &&
+        _headingAccuracy! > 30) {
       warningMessage = "Move phone in a figure-8 to calibrate compass.";
     }
 
     if (warningMessage == null && widget.friendAccuracy != null) {
-      double combinedAccuracy = math.sqrt(math.pow(_userPosition!.accuracy, 2) + math.pow(widget.friendAccuracy!, 2));
+      double combinedAccuracy = math.sqrt(
+        math.pow(_userPosition!.accuracy, 2) +
+            math.pow(widget.friendAccuracy!, 2),
+      );
       if (combinedAccuracy > distance || combinedAccuracy > 15) {
         warningMessage = "Location accuracy is weak indoors.";
       }
@@ -256,11 +268,17 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   child: Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+                        icon: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white,
+                        ),
                         onPressed: () => Navigator.pop(context),
                       ),
                       Expanded(
@@ -275,15 +293,23 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 48), // Balancing width for back button
+                      const SizedBox(
+                        width: 48,
+                      ), // Balancing width for back button
                     ],
                   ),
                 ),
 
                 // Distance display card
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 8,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.6),
                     borderRadius: BorderRadius.circular(24),
@@ -292,7 +318,11 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.navigation_rounded, color: Colors.amber, size: 20),
+                      const Icon(
+                        Icons.navigation_rounded,
+                        color: Colors.amber,
+                        size: 20,
+                      ),
                       const SizedBox(width: 10),
                       Text(
                         _formatDistance(distance),
@@ -318,7 +348,10 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
                 if (warningMessage != null)
                   Container(
                     margin: const EdgeInsets.only(top: 8, left: 24, right: 24),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.redAccent.withOpacity(0.8),
                       borderRadius: BorderRadius.circular(12),
@@ -349,41 +382,55 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
                   children: [
                     // Glow animation circle
                     Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.2),
-                        border: Border.all(color: Colors.amber, width: 2),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.amber.withOpacity(0.4),
-                            blurRadius: 25,
-                            spreadRadius: 3,
-                          ),
-                        ],
-                      ),
-                      child: ClipOval(
-                        child: widget.friendImageUrl != null && widget.friendImageUrl!.isNotEmpty
-                            ? CachedNetworkImage(
-                                imageUrl: widget.friendImageUrl!,
-                                width: 80,
-                                height: 80,
-                                fit: BoxFit.cover,
-                              )
-                            : Container(
-                                width: 80,
-                                height: 80,
-                                color: Colors.grey.shade300,
-                                child: const Icon(Icons.person, size: 40, color: Colors.grey),
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withOpacity(0.2),
+                            border: Border.all(color: Colors.amber, width: 2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.amber.withOpacity(0.4),
+                                blurRadius: 25,
+                                spreadRadius: 3,
                               ),
-                      ),
-                    ).animate(onPlay: (c) => c.repeat(reverse: true))
-                     .scale(duration: 800.ms, begin: const Offset(1, 1), end: const Offset(1.08, 1.08)),
+                            ],
+                          ),
+                          child: ClipOval(
+                            child:
+                                widget.friendImageUrl != null &&
+                                    widget.friendImageUrl!.isNotEmpty
+                                ? CachedNetworkImage(
+                                    imageUrl: widget.friendImageUrl!,
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Container(
+                                    width: 80,
+                                    height: 80,
+                                    color: Colors.grey.shade300,
+                                    child: const Icon(
+                                      Icons.person,
+                                      size: 40,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                          ),
+                        )
+                        .animate(onPlay: (c) => c.repeat(reverse: true))
+                        .scale(
+                          duration: 800.ms,
+                          begin: const Offset(1, 1),
+                          end: const Offset(1.08, 1.08),
+                        ),
 
                     const SizedBox(height: 12),
 
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.75),
                         borderRadius: BorderRadius.circular(16),
@@ -408,70 +455,98 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
               Positioned(
                 top: screenHeight / 2 - 40,
                 left: 24,
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.black.withOpacity(0.8),
-                    border: Border.all(color: Colors.amber, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.amber.withOpacity(0.3),
-                        blurRadius: 15,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(Icons.arrow_back_rounded, color: Colors.amber, size: 44),
-                ).animate(onPlay: (c) => c.repeat(reverse: true))
-                 .scale(duration: 500.ms, begin: const Offset(1, 1), end: const Offset(1.15, 1.15)),
+                child:
+                    Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.black.withOpacity(0.8),
+                            border: Border.all(color: Colors.amber, width: 2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.amber.withOpacity(0.3),
+                                blurRadius: 15,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back_rounded,
+                            color: Colors.amber,
+                            size: 44,
+                          ),
+                        )
+                        .animate(onPlay: (c) => c.repeat(reverse: true))
+                        .scale(
+                          duration: 500.ms,
+                          begin: const Offset(1, 1),
+                          end: const Offset(1.15, 1.15),
+                        ),
               ),
               Positioned(
                 top: screenHeight / 2 - 40,
                 right: 24,
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.black.withOpacity(0.8),
-                    border: Border.all(color: Colors.amber, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.amber.withOpacity(0.3),
-                        blurRadius: 15,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(Icons.arrow_forward_rounded, color: Colors.amber, size: 44),
-                ).animate(onPlay: (c) => c.repeat(reverse: true))
-                 .scale(duration: 500.ms, begin: const Offset(1, 1), end: const Offset(1.15, 1.15)),
+                child:
+                    Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.black.withOpacity(0.8),
+                            border: Border.all(color: Colors.amber, width: 2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.amber.withOpacity(0.3),
+                                blurRadius: 15,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.arrow_forward_rounded,
+                            color: Colors.amber,
+                            size: 44,
+                          ),
+                        )
+                        .animate(onPlay: (c) => c.repeat(reverse: true))
+                        .scale(
+                          duration: 500.ms,
+                          begin: const Offset(1, 1),
+                          end: const Offset(1.15, 1.15),
+                        ),
               ),
             ] else ...[
               Positioned(
                 top: screenHeight / 2 - 40,
                 left: relativeBearing < 0 ? 24 : null,
                 right: relativeBearing > 0 ? 24 : null,
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.black.withOpacity(0.8),
-                    border: Border.all(color: Colors.amber, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.amber.withOpacity(0.3),
-                        blurRadius: 15,
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    relativeBearing < 0 ? Icons.arrow_back_rounded : Icons.arrow_forward_rounded,
-                    color: Colors.amber,
-                    size: 44,
-                  ),
-                ).animate(onPlay: (c) => c.repeat(reverse: true))
-                 .scale(duration: 500.ms, begin: const Offset(1, 1), end: const Offset(1.15, 1.15)),
+                child:
+                    Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.black.withOpacity(0.8),
+                            border: Border.all(color: Colors.amber, width: 2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.amber.withOpacity(0.3),
+                                blurRadius: 15,
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            relativeBearing < 0
+                                ? Icons.arrow_back_rounded
+                                : Icons.arrow_forward_rounded,
+                            color: Colors.amber,
+                            size: 44,
+                          ),
+                        )
+                        .animate(onPlay: (c) => c.repeat(reverse: true))
+                        .scale(
+                          duration: 500.ms,
+                          begin: const Offset(1, 1),
+                          end: const Offset(1.15, 1.15),
+                        ),
               ),
-            ]
+            ],
           ],
 
           // 5. Bottom Instructions Hint
@@ -490,13 +565,15 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
                 isOnScreen
                     ? "✨ Point directly at ${widget.friendName}."
                     : relativeBearing.abs() > 135
-                        ? "🔄 ${widget.friendName} is behind you. Turn around."
-                        : relativeBearing > 0 
-                            ? "🔄 Turn right to find ${widget.friendName}."
-                            : "🔄 Turn left to find ${widget.friendName}.",
+                    ? "🔄 ${widget.friendName} is behind you. Turn around."
+                    : relativeBearing > 0
+                    ? "🔄 Turn right to find ${widget.friendName}."
+                    : "🔄 Turn left to find ${widget.friendName}.",
                 textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
-                  color: isOnScreen ? Colors.green.shade300 : Colors.amber.shade300,
+                  color: isOnScreen
+                      ? Colors.green.shade300
+                      : Colors.amber.shade300,
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                 ),
@@ -517,15 +594,46 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("DEBUG MODE", style: TextStyle(color: Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold)),
-                    Text("U_Lat: ${_userPosition?.latitude.toStringAsFixed(6)} | U_Lng: ${_userPosition?.longitude.toStringAsFixed(6)}", style: TextStyle(color: Colors.white70, fontSize: 10)),
-                    Text("F_Lat: ${widget.friendLat.toStringAsFixed(6)} | F_Lng: ${widget.friendLng.toStringAsFixed(6)}", style: TextStyle(color: Colors.white70, fontSize: 10)),
-                    Text("Raw Dist: ${distance.toStringAsFixed(2)}m | U_Acc: ${_userPosition?.accuracy.toStringAsFixed(1)} | F_Acc: ${widget.friendAccuracy?.toStringAsFixed(1) ?? 'N/A'}", style: TextStyle(color: Colors.white70, fontSize: 10)),
-                    Text("Bearing: ${bearing.toStringAsFixed(2)}° | Rel Bear: ${relativeBearing.toStringAsFixed(2)}°", style: TextStyle(color: Colors.white70, fontSize: 10)),
-                    Text("Raw Hd: ${_rawHeading?.toStringAsFixed(2)} | Cam Hd: ${_cameraHeading?.toStringAsFixed(2)}", style: TextStyle(color: Colors.white70, fontSize: 10)),
-                    Text("Final Hd: ${_userHeading?.toStringAsFixed(2)} | Hd Acc: ${_headingAccuracy?.toStringAsFixed(1)}", style: TextStyle(color: Colors.white70, fontSize: 10)),
-                    Text("FOV: $horizontalFov | Screen: $isOnScreen | x: ${screenX.toStringAsFixed(1)}", style: TextStyle(color: Colors.white70, fontSize: 10)),
-                    Text("F_Age: ${widget.friendLastUpdate != null ? DateTime.now().difference(widget.friendLastUpdate!).inSeconds.toString() + 's' : 'N/A'}", style: TextStyle(color: Colors.white70, fontSize: 10)),
+                    Text(
+                      "DEBUG MODE",
+                      style: TextStyle(
+                        color: Colors.redAccent,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      "U_Lat: ${_userPosition?.latitude.toStringAsFixed(6)} | U_Lng: ${_userPosition?.longitude.toStringAsFixed(6)}",
+                      style: TextStyle(color: Colors.white70, fontSize: 10),
+                    ),
+                    Text(
+                      "F_Lat: ${widget.friendLat.toStringAsFixed(6)} | F_Lng: ${widget.friendLng.toStringAsFixed(6)}",
+                      style: TextStyle(color: Colors.white70, fontSize: 10),
+                    ),
+                    Text(
+                      "Raw Dist: ${distance.toStringAsFixed(2)}m | U_Acc: ${_userPosition?.accuracy.toStringAsFixed(1)} | F_Acc: ${widget.friendAccuracy?.toStringAsFixed(1) ?? 'N/A'}",
+                      style: TextStyle(color: Colors.white70, fontSize: 10),
+                    ),
+                    Text(
+                      "Bearing: ${bearing.toStringAsFixed(2)}° | Rel Bear: ${relativeBearing.toStringAsFixed(2)}°",
+                      style: TextStyle(color: Colors.white70, fontSize: 10),
+                    ),
+                    Text(
+                      "Raw Hd: ${_rawHeading?.toStringAsFixed(2)} | Cam Hd: ${_cameraHeading?.toStringAsFixed(2)}",
+                      style: TextStyle(color: Colors.white70, fontSize: 10),
+                    ),
+                    Text(
+                      "Final Hd: ${_userHeading?.toStringAsFixed(2)} | Hd Acc: ${_headingAccuracy?.toStringAsFixed(1)}",
+                      style: TextStyle(color: Colors.white70, fontSize: 10),
+                    ),
+                    Text(
+                      "FOV: $horizontalFov | Screen: $isOnScreen | x: ${screenX.toStringAsFixed(1)}",
+                      style: TextStyle(color: Colors.white70, fontSize: 10),
+                    ),
+                    Text(
+                      "F_Age: ${widget.friendLastUpdate != null ? DateTime.now().difference(widget.friendLastUpdate!).inSeconds.toString() + 's' : 'N/A'}",
+                      style: TextStyle(color: Colors.white70, fontSize: 10),
+                    ),
                   ],
                 ),
               ),

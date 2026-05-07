@@ -10,13 +10,11 @@ import '../data/services/outing_service.dart';
 class OutingMemoryUploadScreen extends StatefulWidget {
   final OutingSessionModel session;
 
-  const OutingMemoryUploadScreen({
-    super.key,
-    required this.session,
-  });
+  const OutingMemoryUploadScreen({super.key, required this.session});
 
   @override
-  State<OutingMemoryUploadScreen> createState() => _OutingMemoryUploadScreenState();
+  State<OutingMemoryUploadScreen> createState() =>
+      _OutingMemoryUploadScreenState();
 }
 
 class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
@@ -55,7 +53,7 @@ class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
 
   Future<void> _finishAndSave() async {
     if (_isUploading) return;
-    
+
     // Allow closing without photos if that's what the user wants
     if (_selectedImages.isEmpty) {
       Navigator.pop(context);
@@ -72,15 +70,19 @@ class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
       if (mounted) {
         Navigator.pop(context); // Go back to Group room
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Memories uploaded! They will appear in the history soon.')),
+          const SnackBar(
+            content: Text(
+              'Memories uploaded! They will appear in the history soon.',
+            ),
+          ),
         );
       }
     } catch (e) {
       setState(() => _isUploading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving memory: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving memory: $e')));
       }
     }
   }
@@ -90,16 +92,17 @@ class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
     final venueName = widget.session.winner?['name'] ?? widget.session.category;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.getBackground(context),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.getSurface(context),
         elevation: 0,
         centerTitle: true,
-        leading: const SizedBox.shrink(), // No back button physically hiding, forced to finish
+        leading:
+            const SizedBox.shrink(), // No back button physically hiding, forced to finish
         title: Text(
           "Save the Memory",
           style: GoogleFonts.outfit(
-            color: AppColors.darkSlate,
+            color: AppColors.getTextPrimary(context),
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
@@ -119,7 +122,7 @@ class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 28,
                         fontWeight: FontWeight.w900,
-                        color: AppColors.darkSlate,
+                        color: AppColors.getTextPrimary(context),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -127,7 +130,7 @@ class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
                       "Everyone in the squad has 24 hours to add photos to this session! After that, our AI will piece together the 'Roast & Hype' recap for the group history.",
                       style: GoogleFonts.inter(
                         fontSize: 16,
-                        color: Colors.grey.shade600,
+                        color: AppColors.getTextSecondary(context),
                         height: 1.5,
                       ),
                     ),
@@ -143,27 +146,38 @@ class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
                             style: GoogleFonts.outfit(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.darkSlate,
+                              color: AppColors.getTextPrimary(context),
                             ),
                           ),
                           if (_selectedImages.length < _maxImages)
                             TextButton.icon(
                               onPressed: _pickImages,
-                              icon: const Icon(Icons.add_a_photo_rounded, size: 16, color: AppColors.teal),
-                              label: Text("Add More", style: GoogleFonts.inter(color: AppColors.teal, fontWeight: FontWeight.bold)),
-                            )
+                              icon: const Icon(
+                                Icons.add_a_photo_rounded,
+                                size: 16,
+                                color: AppColors.teal,
+                              ),
+                              label: Text(
+                                "Add More",
+                                style: GoogleFonts.inter(
+                                  color: AppColors.teal,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                       const SizedBox(height: 12),
                       GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          childAspectRatio: 1,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                        ),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                              childAspectRatio: 1,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                            ),
                         itemCount: _selectedImages.length,
                         itemBuilder: (context, index) {
                           return Stack(
@@ -177,10 +191,12 @@ class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.1),
+                                      color: AppColors.getShadow(
+                                        context,
+                                      ).withValues(alpha: 0.1),
                                       blurRadius: 4,
                                       offset: const Offset(0, 2),
-                                    )
+                                    ),
                                   ],
                                 ),
                               ),
@@ -192,15 +208,25 @@ class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
                                   child: Container(
                                     padding: const EdgeInsets.all(4),
                                     decoration: BoxDecoration(
-                                      color: Colors.black.withValues(alpha: 0.5),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.5,
+                                      ),
                                       shape: BoxShape.circle,
                                     ),
-                                    child: const Icon(Icons.close, size: 14, color: Colors.white),
+                                    child: const Icon(
+                                      Icons.close,
+                                      size: 14,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
                               ),
                             ],
-                          ).animate().scale(delay: (index * 50).ms, duration: 200.ms, curve: Curves.easeOutBack);
+                          ).animate().scale(
+                            delay: (index * 50).ms,
+                            duration: 200.ms,
+                            curve: Curves.easeOutBack,
+                          );
                         },
                       ),
                     ] else ...[
@@ -213,7 +239,11 @@ class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
                           decoration: BoxDecoration(
                             color: AppColors.teal.withValues(alpha: 0.05),
                             borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: AppColors.teal.withValues(alpha: 0.3), width: 2, style: BorderStyle.solid),
+                            border: Border.all(
+                              color: AppColors.teal.withValues(alpha: 0.3),
+                              width: 2,
+                              style: BorderStyle.solid,
+                            ),
                           ),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -224,7 +254,11 @@ class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
                                   color: AppColors.teal.withValues(alpha: 0.1),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.add_photo_alternate_rounded, size: 48, color: AppColors.teal),
+                                child: const Icon(
+                                  Icons.add_photo_alternate_rounded,
+                                  size: 48,
+                                  color: AppColors.teal,
+                                ),
                               ),
                               const SizedBox(height: 16),
                               Text(
@@ -239,20 +273,20 @@ class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
                           ),
                         ),
                       ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1),
-                    ]
+                    ],
                   ],
                 ),
               ),
             ),
-            
+
             // Bottom Action Bar
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.getSurfaceElevated(context),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: AppColors.getShadow(context).withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, -4),
                   ),
@@ -273,7 +307,7 @@ class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
                           style: GoogleFonts.outfit(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade500,
+                            color: AppColors.getTextSecondary(context),
                           ),
                         ),
                       ),
@@ -296,10 +330,15 @@ class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
                             ? const SizedBox(
                                 height: 24,
                                 width: 24,
-                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
                               )
                             : Text(
-                                _selectedImages.isEmpty ? "Close Details" : "Upload & AI Recap",
+                                _selectedImages.isEmpty
+                                    ? "Close Details"
+                                    : "Upload & AI Recap",
                                 style: GoogleFonts.outfit(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -311,7 +350,7 @@ class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
                   ],
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),

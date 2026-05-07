@@ -11,18 +11,22 @@ class AboutPage extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.getBackground(context),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.getBackground(context),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
+          icon: Icon(
+            Icons.arrow_back_ios,
+            color: AppColors.getTextPrimary(context),
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           l10n.aboutLaween,
           style: GoogleFonts.inter(
-            color: Colors.black,
+            color: AppColors.getTextPrimary(context),
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
@@ -37,7 +41,10 @@ class AboutPage extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               "About Laween coming soon",
-              style: GoogleFonts.inter(fontSize: 18, color: Colors.grey),
+              style: GoogleFonts.inter(
+                fontSize: 18,
+                color: AppColors.getTextSecondary(context),
+              ),
             ),
           ],
         ),

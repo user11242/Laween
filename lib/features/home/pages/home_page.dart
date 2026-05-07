@@ -39,7 +39,7 @@ class _HomePageState extends State<HomePage> {
       _totalUnreadStream = Stream.value(0);
       return;
     }
-    
+
     _totalUnreadStream = FirebaseFirestore.instance
         .collection('groups')
         .where('memberIds', arrayContains: user.uid)
@@ -62,7 +62,6 @@ class _HomePageState extends State<HomePage> {
     final user = FirebaseAuth.instance.currentUser;
     final l10n = AppLocalizations.of(context)!;
 
-
     final List<Widget> pages = [
       _buildHomeContent(user),
       const GroupsPage(),
@@ -70,83 +69,88 @@ class _HomePageState extends State<HomePage> {
       const ProfilePage(),
     ];
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: IndexedStack(index: _currentIndex, children: pages),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1F1F1F) : Colors.white,
+          color: AppColors.getBottomNavBackground(context),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
+              color: AppColors.getShadow(context),
               blurRadius: 10,
               offset: const Offset(0, -5),
             ),
           ],
         ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: isDark ? const Color(0xFF1F1F1F) : Colors.white,
-          selectedItemColor: AppColors.teal,
-          unselectedItemColor: const Color(0xFF94A3B8),
-          selectedLabelStyle: GoogleFonts.inter(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+        child: SafeArea(
+          top: false,
+          child: BottomNavigationBar(
+            currentIndex: _currentIndex,
+            onTap: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: AppColors.getBottomNavBackground(context),
+            selectedItemColor: AppColors.teal,
+            unselectedItemColor: AppColors.getTextSecondary(context),
+            selectedLabelStyle: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+            unselectedLabelStyle: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+            ),
+            elevation: 0,
+            items: [
+              BottomNavigationBarItem(
+                icon: Icon(
+                  _currentIndex == 0 ? Icons.home : Icons.home_outlined,
+                ),
+                label: l10n.home,
+              ),
+              BottomNavigationBarItem(
+                icon: StreamBuilder<int>(
+                  stream: _totalUnreadStream,
+                  builder: (context, snapshot) {
+                    final count = snapshot.data ?? 0;
+                    return Badge(
+                      label: Text(count.toString()),
+                      isLabelVisible: count > 0,
+                      backgroundColor: Colors.redAccent,
+                      child: Icon(
+                        _currentIndex == 1
+                            ? Icons.people
+                            : Icons.people_outline,
+                      ),
+                    );
+                  },
+                ),
+                label: l10n.groups,
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(
+                  _currentIndex == 2 ? Icons.favorite : Icons.favorite_border,
+                ),
+                label: l10n.favorite,
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(
+                  _currentIndex == 3 ? Icons.person : Icons.person_outline,
+                ),
+                label: l10n.profile,
+              ),
+            ],
           ),
-          unselectedLabelStyle: GoogleFonts.inter(
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
-          ),
-          elevation: 0,
-          items: [
-            BottomNavigationBarItem(
-              icon: Icon(_currentIndex == 0 ? Icons.home : Icons.home_outlined),
-              label: l10n.home,
-            ),
-            BottomNavigationBarItem(
-              icon: StreamBuilder<int>(
-                stream: _totalUnreadStream,
-                builder: (context, snapshot) {
-                  final count = snapshot.data ?? 0;
-                  return Badge(
-                    label: Text(count.toString()),
-                    isLabelVisible: count > 0,
-                    backgroundColor: Colors.redAccent,
-                    child: Icon(
-                      _currentIndex == 1 ? Icons.people : Icons.people_outline,
-                    ),
-                  );
-                },
-              ),
-              label: l10n.groups,
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                _currentIndex == 2 ? Icons.favorite : Icons.favorite_border,
-              ),
-              label: l10n.favorite,
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                _currentIndex == 3 ? Icons.person : Icons.person_outline,
-              ),
-              label: l10n.profile,
-            ),
-          ],
         ),
       ),
     );
   }
 
   Widget _buildHomeContent(User? user) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
@@ -207,7 +211,7 @@ class _HomePageState extends State<HomePage> {
                     style: GoogleFonts.inter(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : AppColors.primary,
+                      color: AppColors.getTextPrimary(context),
                     ),
                   ).animate().fadeIn(delay: 200.ms).slideX(begin: -0.1),
 
@@ -225,7 +229,7 @@ class _HomePageState extends State<HomePage> {
                         style: GoogleFonts.inter(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : AppColors.primary,
+                          color: AppColors.getTextPrimary(context),
                         ),
                       ),
                       TextButton(
@@ -279,7 +283,7 @@ class _HomePageState extends State<HomePage> {
                   _getGreeting(l10n),
                   style: GoogleFonts.inter(
                     fontSize: 14,
-                    color: AppColors.slate,
+                    color: AppColors.getTextSecondary(context),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -288,7 +292,7 @@ class _HomePageState extends State<HomePage> {
                   style: GoogleFonts.inter(
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.primary,
+                    color: AppColors.getTextPrimary(context),
                     letterSpacing: -0.5,
                   ),
                 ),
@@ -299,12 +303,12 @@ class _HomePageState extends State<HomePage> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: AppColors.slate.withValues(alpha: 0.1),
+                  color: AppColors.getBorder(context),
                   width: 2,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: AppColors.getShadow(context),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -314,15 +318,15 @@ class _HomePageState extends State<HomePage> {
                 onTap: () => setState(() => _currentIndex = 3),
                 child: CircleAvatar(
                   radius: 26,
-                  backgroundColor: AppColors.lightSlate,
+                  backgroundColor: AppColors.getSurfaceElevated(context),
                   backgroundImage:
                       (photoUrl != null && photoUrl.startsWith('http'))
                       ? CachedNetworkImageProvider(photoUrl)
                       : null,
                   child: (photoUrl == null || !photoUrl.startsWith('http'))
-                      ? const Icon(
+                      ? Icon(
                           Icons.person,
-                          color: AppColors.slate,
+                          color: AppColors.getTextSecondary(context),
                           size: 30,
                         )
                       : null,
@@ -374,7 +378,9 @@ class _HomePageState extends State<HomePage> {
         "onTap": () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const GlobalOutingsHistoryPage()),
+            MaterialPageRoute(
+              builder: (context) => const GlobalOutingsHistoryPage(),
+            ),
           );
         },
       },
@@ -403,15 +409,12 @@ class _HomePageState extends State<HomePage> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.getSurface(context),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: AppColors.slate.withValues(alpha: 0.1),
-                width: 1,
-              ),
+              border: Border.all(color: AppColors.getBorder(context), width: 1),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
+                  color: AppColors.getShadow(context),
                   blurRadius: 15,
                   offset: const Offset(0, 5),
                 ),
@@ -438,7 +441,7 @@ class _HomePageState extends State<HomePage> {
                   style: GoogleFonts.inter(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
-                    color: AppColors.primary,
+                    color: AppColors.getTextPrimary(context),
                   ),
                 ),
               ],
@@ -469,12 +472,14 @@ class _HomePageState extends State<HomePage> {
                 Icon(
                   Icons.chat_bubble_outline_rounded,
                   size: 48,
-                  color: AppColors.slate.withValues(alpha: 0.3),
+                  color: AppColors.getDivider(context),
                 ),
                 const SizedBox(height: 12),
                 Text(
                   "No recent activity",
-                  style: GoogleFonts.inter(color: AppColors.slate),
+                  style: GoogleFonts.inter(
+                    color: AppColors.getTextSecondary(context),
+                  ),
                 ),
               ],
             ),

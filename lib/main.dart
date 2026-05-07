@@ -21,13 +21,11 @@ import 'package:laween/features/auth/pages/create_new_password_page.dart';
 import 'package:laween/features/auth/pages/login_page.dart';
 import 'package:laween/features/auth/pages/register_page.dart';
 import 'package:laween/features/groups/providers/wallpaper_provider.dart';
+import 'package:laween/core/providers/theme_provider.dart';
 import 'package:laween/core/theme/colors.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:flutter_callkit_incoming/entities/entities.dart';
-import 'package:flutter/foundation.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 import 'firebase_options.dart';
 import 'package:laween/core/services/location_service.dart';
@@ -89,14 +87,15 @@ Future<void> showSosCallkit({
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   debugPrint("Handling a background message: ${message.messageId}");
-  
-  final isSos = message.data['type'] == 'sos' || 
-               (message.notification?.title?.contains('SOS') ?? false) || 
-               (message.notification?.body?.contains('SOS') ?? false);
-               
+
+  final isSos =
+      message.data['type'] == 'sos' ||
+      (message.notification?.title?.contains('SOS') ?? false) ||
+      (message.notification?.body?.contains('SOS') ?? false);
+
   final groupId = message.data['groupId'];
   final sessionId = message.data['sessionId'];
-  
+
   if (isSos && groupId != null) {
     // Try to update Firestore so the app wakes up with the correct active group AND session
     try {
@@ -106,14 +105,17 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
           'activeGroupId': groupId,
           'activeSessionId': sessionId ?? '',
         });
-        debugPrint("🚨 Background SOS: Updated activeGroupId to $groupId, session to $sessionId");
+        debugPrint(
+          "🚨 Background SOS: Updated activeGroupId to $groupId, session to $sessionId",
+        );
       }
     } catch (e) {
       debugPrint("Error updating activeGroupId in background: $e");
     }
 
     // 🔥 SHOW FULL-SCREEN CALLKIT ALERT (works on lock screen!)
-    final senderName = message.data['title'] ?? message.notification?.title ?? 'Someone';
+    final senderName =
+        message.data['title'] ?? message.notification?.title ?? 'Someone';
     await showSosCallkit(
       callerName: senderName,
       groupId: groupId,
@@ -127,9 +129,12 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 🔥 Global system UI style is now managed dynamically in MaterialApp.builder
+
   await initializeDateFormatting('en', null);
   await initializeDateFormatting('ar', null);
-  
+
   FlutterError.onError = (FlutterErrorDetails details) {
     debugPrint("🔴🔴🔴 GLOBAL FLUTTER ERROR 🔴🔴🔴");
     debugPrint(details.exceptionAsString());
@@ -142,7 +147,7 @@ void main() async {
 
   // Initialize FCM Notification Handlers
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  
+
   // 🔥 DIAGNOSTIC FIX: Disable offline persistence entirely to bypass corrupted cache locks
   try {
     FirebaseFirestore.instance.settings = const Settings(
@@ -166,12 +171,20 @@ void main() async {
           if (i + 1 < str.length) {
             int n = str.codeUnitAt(i + 1);
             if (n >= 0xDC00 && n <= 0xDFFF) {
-              cleanUnits.add(c); cleanUnits.add(n); i++;
-            } else { cleanUnits.add(0xFFFD); }
-          } else { cleanUnits.add(0xFFFD); }
+              cleanUnits.add(c);
+              cleanUnits.add(n);
+              i++;
+            } else {
+              cleanUnits.add(0xFFFD);
+            }
+          } else {
+            cleanUnits.add(0xFFFD);
+          }
         } else if (c >= 0xDC00 && c <= 0xDFFF) {
           cleanUnits.add(0xFFFD);
-        } else { cleanUnits.add(c); }
+        } else {
+          cleanUnits.add(c);
+        }
       }
       return String.fromCharCodes(cleanUnits);
     }
@@ -182,13 +195,14 @@ void main() async {
       final uDoc = await firestore.collection('users').doc(uid).get();
       if (uDoc.exists) {
         final data = uDoc.data()!;
-        if (data['name'] != null && sanitizeData(data['name']) != data['name']) {
+        if (data['name'] != null &&
+            sanitizeData(data['name']) != data['name']) {
           await uDoc.reference.update({'name': sanitizeData(data['name'])});
           debugPrint("✅ Repaired corrupt user name in DB!");
         }
       }
     }
-    
+
     final gQuery = await firestore.collection('groups').get();
     for (var doc in gQuery.docs) {
       final data = doc.data();
@@ -196,10 +210,13 @@ void main() async {
       if (data['name'] != null && sanitizeData(data['name']) != data['name']) {
         updates['name'] = sanitizeData(data['name']);
       }
-      if (data['lastMessage'] != null && sanitizeData(data['lastMessage']) != data['lastMessage']) {
+      if (data['lastMessage'] != null &&
+          sanitizeData(data['lastMessage']) != data['lastMessage']) {
         updates['lastMessage'] = sanitizeData(data['lastMessage']);
       }
-      if (data['lastMessageSender'] != null && sanitizeData(data['lastMessageSender']) != data['lastMessageSender']) {
+      if (data['lastMessageSender'] != null &&
+          sanitizeData(data['lastMessageSender']) !=
+              data['lastMessageSender']) {
         updates['lastMessageSender'] = sanitizeData(data['lastMessageSender']);
       }
       if (updates.isNotEmpty) {
@@ -213,22 +230,24 @@ void main() async {
   }
 
   // 🎵 GLOBAL AUDIO CONFIG: Ensure sound plays even in silent mode (iOS/macOS)
-  AudioPlayer.global.setAudioContext(AudioContext(
-    iOS: AudioContextIOS(
-      category: AVAudioSessionCategory.playAndRecord,
-      options: {
-        AVAudioSessionOptions.mixWithOthers,
-        AVAudioSessionOptions.defaultToSpeaker,
-      },
+  AudioPlayer.global.setAudioContext(
+    AudioContext(
+      iOS: AudioContextIOS(
+        category: AVAudioSessionCategory.playAndRecord,
+        options: {
+          AVAudioSessionOptions.mixWithOthers,
+          AVAudioSessionOptions.defaultToSpeaker,
+        },
+      ),
+      android: const AudioContextAndroid(
+        isSpeakerphoneOn: true,
+        stayAwake: true,
+        contentType: AndroidContentType.music,
+        usageType: AndroidUsageType.media,
+        audioFocus: AndroidAudioFocus.gain,
+      ),
     ),
-    android: const AudioContextAndroid(
-      isSpeakerphoneOn: true,
-      stayAwake: true,
-      contentType: AndroidContentType.music,
-      usageType: AndroidUsageType.media,
-      audioFocus: AndroidAudioFocus.gain,
-    ),
-  ));
+  );
 
   await FcmService.instance.initialize();
 
@@ -249,16 +268,18 @@ void main() async {
         if (callId != null) {
           await FlutterCallkitIncoming.endCall(callId);
         }
-        
+
         final groupId = data['extra']?['groupId'] ?? data['groupId'];
         final sessionId = data['extra']?['sessionId'] ?? data['sessionId'];
-        
-        debugPrint('🚨 CallKit ACCEPTED - groupId: $groupId, sessionId: $sessionId');
-        
+
+        debugPrint(
+          '🚨 CallKit ACCEPTED - groupId: $groupId, sessionId: $sessionId',
+        );
+
         if (groupId != null && groupId.toString().isNotEmpty) {
           // Update Firestore so GlobalSosListener picks it up instantly
           LocationService().setActiveSession(groupId, sessionId);
-          
+
           // Navigate directly to the group chat where SOS overlay will show
           try {
             final doc = await FirebaseFirestore.instance
@@ -297,11 +318,11 @@ void main() async {
             debugPrint("✅ Safely extracted VoIP Token from event: $voipToken");
             final uid = FirebaseAuth.instance.currentUser?.uid;
             if (uid != null) {
-               FirebaseFirestore.instance.collection('users').doc(uid).set({
-                 'voipToken': voipToken,
-                 'tokenDiagnostics': {'voipToken': voipToken}
-               }, SetOptions(merge: true));
-               debugPrint("💾 Saved VoIP Token to Firestore Profile.");
+              FirebaseFirestore.instance.collection('users').doc(uid).set({
+                'voipToken': voipToken,
+                'tokenDiagnostics': {'voipToken': voipToken},
+              }, SetOptions(merge: true));
+              debugPrint("💾 Saved VoIP Token to Firestore Profile.");
             }
           }
         } catch (e) {
@@ -321,6 +342,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ChangeNotifierProvider(create: (_) => WallpaperProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
       child: const MyApp(),
     ),
@@ -338,29 +360,147 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Laween',
       debugShowCheckedModeBanner: false,
+      locale: localeProvider.locale,
+      themeMode: context.watch<ThemeProvider>().themeMode,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: AppColors.teal,
           brightness: Brightness.light,
+          primary: AppColors.teal,
+          secondary: AppColors.tealLight,
+          surface: Colors.white,
+          error: Colors.redAccent,
         ),
-        scaffoldBackgroundColor: const Color(0xFFF8F9FA),
+        scaffoldBackgroundColor: const Color(
+          0xFFF8F9FB,
+        ), // Modern light mode background
+        cardTheme: CardThemeData(
+          color: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFFF8F9FB),
+          elevation: 0,
+          centerTitle: true,
+          iconTheme: IconThemeData(color: Color(0xFF1A1D2E)),
+          titleTextStyle: TextStyle(
+            color: Color(0xFF1A1D2E),
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          backgroundColor: Colors.white,
+          selectedItemColor: AppColors.teal,
+          unselectedItemColor: Color(0xFF94A3B8),
+          elevation: 0,
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFFF1F5F9),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+        ),
+        bottomSheetTheme: const BottomSheetThemeData(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+        ),
+        dialogTheme: DialogThemeData(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: AppColors.teal,
           brightness: Brightness.dark,
-          surface: const Color(0xFF1A1A1A),
+          primary: AppColors.teal,
+          secondary: AppColors.tealLight,
+          surface: const Color(0xFF1F1F1F),
+          error: Colors.redAccent,
         ),
-        scaffoldBackgroundColor: const Color(0xFF121212),
+        scaffoldBackgroundColor: const Color(
+          0xFF121212,
+        ), // Deep dark mode background
+        cardTheme: CardThemeData(
+          color: const Color(0xFF2C2C2C),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF121212),
+          elevation: 0,
+          centerTitle: true,
+          iconTheme: IconThemeData(color: Colors.white),
+          titleTextStyle: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          backgroundColor: Color(0xFF1F1F1F),
+          selectedItemColor: AppColors.teal,
+          unselectedItemColor: Color(0xFF94A3B8),
+          elevation: 0,
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFF1F1F1F),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF2D3748), width: 1),
+          ),
+        ),
+        bottomSheetTheme: const BottomSheetThemeData(
+          backgroundColor: Color(0xFF1F1F1F),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+        ),
+        dialogTheme: DialogThemeData(
+          backgroundColor: const Color(0xFF1F1F1F),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
         useMaterial3: true,
       ),
-      themeMode: ThemeMode.system,
       navigatorKey: navigatorKey,
-      builder: (context, child) => Directionality(
-        textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
-        child: GlobalSosListener(child: child!),
-      ),
+      builder: (context, child) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: isDark
+                ? Brightness.light
+                : Brightness.dark,
+            statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+            systemNavigationBarColor: isDark
+                ? const Color(0xFF121212)
+                : const Color(0xFFF8F9FB),
+            systemNavigationBarIconBrightness: isDark
+                ? Brightness.light
+                : Brightness.dark,
+          ),
+          child: Directionality(
+            textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+            child: GlobalSosListener(child: child!),
+          ),
+        );
+      },
       home: const SplashPage(),
       routes: {
         '/home': (context) => const HomePage(),

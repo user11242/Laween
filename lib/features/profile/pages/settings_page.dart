@@ -8,6 +8,8 @@ import 'package:laween/core/services/biometric_service.dart';
 import 'package:laween/core/message/app_messenger.dart';
 import '../widgets/biometric_auth_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:laween/core/providers/theme_provider.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -153,18 +155,22 @@ class _SettingsPageState extends State<SettingsPage> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.getBackground(context),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.getSurface(context),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
+          icon: Icon(
+            Icons.arrow_back_ios,
+            color: AppColors.getTextPrimary(context),
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           l10n.settings,
           style: GoogleFonts.inter(
-            color: Colors.black,
+            color: AppColors.getTextPrimary(context),
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
@@ -200,9 +206,172 @@ class _SettingsPageState extends State<SettingsPage> {
                       value: _biometricEnabled,
                       onChanged: _toggleBiometric,
                     ),
+                  const SizedBox(height: 16),
+                  _buildAppearanceTile(context),
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildAppearanceTile(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isAr = AppLocalizations.of(context)!.isAr;
+
+    return InkWell(
+      onTap: () => _showThemeSelector(context),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.getSurfaceElevated(context),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.getBorder(context)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.teal.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                themeProvider.themeMode == ThemeMode.system
+                    ? Icons.brightness_auto_outlined
+                    : themeProvider.themeMode == ThemeMode.dark
+                        ? Icons.dark_mode_outlined
+                        : Icons.light_mode_outlined,
+                color: AppColors.teal,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isAr ? "المظهر" : "Appearance",
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.getTextPrimary(context),
+                    ),
+                  ),
+                  Text(
+                    themeProvider.getThemeModeNameLocalized(isAr),
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: AppColors.getTextSecondary(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.getTextSecondary(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showThemeSelector(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final isAr = AppLocalizations.of(context)!.isAr;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.getSurface(context),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.getDivider(context),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                isAr ? "اختر المظهر" : "Choose Appearance",
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.getTextPrimary(context),
+                ),
+              ),
+              const SizedBox(height: 20),
+              _buildThemeOption(
+                context,
+                title: isAr ? "تلقائي (حسب النظام)" : "System default",
+                mode: ThemeMode.system,
+                currentMode: themeProvider.themeMode,
+                icon: Icons.brightness_auto_outlined,
+              ),
+              _buildThemeOption(
+                context,
+                title: isAr ? "فاتح" : "Light",
+                mode: ThemeMode.light,
+                currentMode: themeProvider.themeMode,
+                icon: Icons.light_mode_outlined,
+              ),
+              _buildThemeOption(
+                context,
+                title: isAr ? "داكن" : "Dark",
+                mode: ThemeMode.dark,
+                currentMode: themeProvider.themeMode,
+                icon: Icons.dark_mode_outlined,
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildThemeOption(
+    BuildContext context, {
+    required String title,
+    required ThemeMode mode,
+    required ThemeMode currentMode,
+    required IconData icon,
+  }) {
+    final isSelected = mode == currentMode;
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+
+    return ListTile(
+      onTap: () {
+        themeProvider.setThemeMode(mode);
+        Navigator.pop(context);
+      },
+      leading: Icon(
+        icon,
+        color: isSelected ? AppColors.teal : AppColors.getTextSecondary(context),
+      ),
+      title: Text(
+        title,
+        style: GoogleFonts.inter(
+          fontSize: 16,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          color: isSelected ? AppColors.teal : AppColors.getTextPrimary(context),
+        ),
+      ),
+      trailing: isSelected
+          ? const Icon(Icons.check_circle_rounded, color: AppColors.teal)
+          : null,
     );
   }
 
@@ -227,9 +396,9 @@ class _SettingsPageState extends State<SettingsPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: AppColors.getSurfaceElevated(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade100),
+        border: Border.all(color: AppColors.getBorder(context)),
       ),
       child: Row(
         children: [
@@ -248,7 +417,7 @@ class _SettingsPageState extends State<SettingsPage> {
               style: GoogleFonts.inter(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF2D3748),
+                color: AppColors.getTextPrimary(context),
               ),
             ),
           ),

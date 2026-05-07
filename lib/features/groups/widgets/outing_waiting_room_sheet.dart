@@ -84,10 +84,10 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
       filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.9),
+          color: AppColors.getSurfaceElevated(context).withValues(alpha: 0.9),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.5),
+            color: AppColors.getBorder(context).withValues(alpha: 0.5),
             width: 1.5,
           ),
         ),
@@ -139,7 +139,9 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
             if (session.status == OutingStatus.cancelled) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted && _errorMessage == null) {
-                  _showError("Session cancelled: Not enough participants joined.");
+                  _showError(
+                    "Session cancelled: Not enough participants joined.",
+                  );
                   // Delay closure so user can read the message
                   Future.delayed(const Duration(seconds: 3), () {
                     if (context.mounted && Navigator.canPop(context)) {
@@ -176,7 +178,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                   height: 5,
                   margin: const EdgeInsets.only(bottom: 24),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.2),
+                    color: AppColors.getDivider(context),
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
@@ -187,575 +189,612 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         // Header
-                Row(
-                  children: [
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Container(
-                            width: 14,
-                            height: 14,
-                            decoration: BoxDecoration(
-                              color: Colors.redAccent.withValues(alpha: 0.3),
-                              shape: BoxShape.circle,
-                            ),
-                          )
-                              .animate(onPlay: (c) => c.repeat())
-                              .scale(
-                                duration: 1.5.seconds,
-                                begin: const Offset(1, 1),
-                                end: const Offset(2.5, 2.5),
-                                curve: Curves.easeOut,
-                              )
-                              .fadeOut(),
-                          Container(
-                            width: 10,
-                            height: 10,
-                            decoration: const BoxDecoration(
-                              color: Colors.redAccent,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Outing Waiting Room",
-                            style: GoogleFonts.outfit(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.darkSlate,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.redAccent.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  "LIVE",
-                                  style: GoogleFonts.inter(
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.w900,
+                        Row(
+                          children: [
+                            Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Container(
+                                      width: 14,
+                                      height: 14,
+                                      decoration: BoxDecoration(
+                                        color: Colors.redAccent.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                        shape: BoxShape.circle,
+                                      ),
+                                    )
+                                    .animate(onPlay: (c) => c.repeat())
+                                    .scale(
+                                      duration: 1.5.seconds,
+                                      begin: const Offset(1, 1),
+                                      end: const Offset(2.5, 2.5),
+                                      curve: Curves.easeOut,
+                                    )
+                                    .fadeOut(),
+                                Container(
+                                  width: 10,
+                                  height: 10,
+                                  decoration: const BoxDecoration(
                                     color: Colors.redAccent,
-                                    letterSpacing: 1,
+                                    shape: BoxShape.circle,
                                   ),
                                 ),
+                              ],
+                            ),
+                            const SizedBox(width: 16),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Outing Waiting Room",
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.getTextPrimary(context),
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.redAccent.withValues(
+                                          alpha: 0.1,
+                                        ),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        "LIVE",
+                                        style: GoogleFonts.inter(
+                                          fontSize: 8,
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.redAccent,
+                                          letterSpacing: 1,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      "Session #${widget.sessionId.substring(0, 4).toUpperCase()}",
+                                      style: GoogleFonts.inter(
+                                        fontSize: 12,
+                                        color: AppColors.getTextMuted(context),
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Timer Visualization (Glassmorphic)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 32,
+                            horizontal: 24,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.getSurfaceElevated(context),
+                            borderRadius: BorderRadius.circular(36),
+                            border: Border.all(
+                              color: AppColors.getBorder(
+                                context,
+                              ).withValues(alpha: 0.5),
+                              width: 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.getShadow(
+                                  context,
+                                ).withValues(alpha: 0.05),
+                                blurRadius: 30,
+                                offset: const Offset(0, 15),
                               ),
-                              const SizedBox(width: 8),
-                              Text(
-                                "Session #${widget.sessionId.substring(0, 4).toUpperCase()}",
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade400,
-                                  fontWeight: FontWeight.bold,
+                              BoxShadow(
+                                color: AppColors.teal.withValues(alpha: 0.03),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  // Subtle pulse ring
+                                  Container(
+                                        width: 160,
+                                        height: 160,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: AppColors.teal.withValues(
+                                            alpha: 0.02,
+                                          ),
+                                        ),
+                                      )
+                                      .animate(onPlay: (c) => c.repeat())
+                                      .scale(
+                                        duration: 2.seconds,
+                                        begin: const Offset(0.8, 0.8),
+                                        end: const Offset(1.2, 1.2),
+                                      )
+                                      .fadeOut(),
+                                  Column(
+                                    children: [
+                                      Text(
+                                        _formatDuration(remaining),
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 62,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.getTextPrimary(
+                                            context,
+                                          ),
+                                          letterSpacing: -3,
+                                          shadows: [
+                                            Shadow(
+                                              color: AppColors.teal.withValues(
+                                                alpha: 0.15,
+                                              ),
+                                              blurRadius: 20,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.teal.withValues(
+                                            alpha: 0.08,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(
+                                              Icons.people_alt_rounded,
+                                              size: 14,
+                                              color: AppColors.teal,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              "${session.participants.length} / $_totalGroupMembers Members Joined",
+                                              style: GoogleFonts.inter(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.teal,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        if (session.calculationMode == 'Fixed')
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: AppColors.getSurfaceElevated(context),
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: AppColors.teal.withValues(alpha: 0.3),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.getShadow(
+                                    context,
+                                  ).withValues(alpha: 0.03),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.teal.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.location_on_rounded,
+                                    color: AppColors.teal,
+                                    size: 24,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "TARGET DESTINATION",
+                                        style: GoogleFonts.inter(
+                                          fontSize: 10,
+                                          color: AppColors.getTextMuted(
+                                            context,
+                                          ),
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        session.winner?['name'] ??
+                                            "Selected Venue",
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.getTextPrimary(
+                                            context,
+                                          ),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        else
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _buildActionTile(
+                                context,
+                                "Outing Mode",
+                                session.calculationMode,
+                                Icons.timer_outlined,
+                                ['Time', 'KM'],
+                                AppColors.teal,
+                                (val) => _outingService.updateSessionDetails(
+                                  groupId: widget.groupId,
+                                  sessionId: widget.sessionId,
+                                  calculationMode: val,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              _buildActionTile(
+                                context,
+                                "Discovering",
+                                session.category,
+                                Icons.explore_outlined,
+                                [
+                                  'Restaurant',
+                                  'Cafe',
+                                  'Park',
+                                  'Mall',
+                                  'Sporty',
+                                  'Cinema',
+                                ],
+                                Colors.orangeAccent,
+                                (val) => _outingService.updateSessionDetails(
+                                  groupId: widget.groupId,
+                                  sessionId: widget.sessionId,
+                                  category: val,
                                 ),
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
 
-                  const SizedBox(height: 24),
+                        const SizedBox(height: 24),
 
-                  // Timer Visualization (Glassmorphic)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 32,
-                      horizontal: 24,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(36),
-                      border: Border.all(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        width: 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 30,
-                          offset: const Offset(0, 15),
-                        ),
-                        BoxShadow(
-                          color: AppColors.teal.withValues(alpha: 0.03),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            // Subtle pulse ring
-                            Container(
-                              width: 160,
-                              height: 160,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: AppColors.teal.withValues(alpha: 0.02),
-                              ),
-                            )
-                                .animate(onPlay: (c) => c.repeat())
-                                .scale(
-                                  duration: 2.seconds,
-                                  begin: const Offset(0.8, 0.8),
-                                  end: const Offset(1.2, 1.2),
-                                )
-                                .fadeOut(),
-                            Column(
-                              children: [
-                                Text(
-                                  _formatDuration(remaining),
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 62,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.darkSlate,
-                                    letterSpacing: -3,
-                                    shadows: [
-                                      Shadow(
-                                        color: AppColors.teal.withValues(
-                                          alpha: 0.15,
-                                        ),
-                                        blurRadius: 20,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 14,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.teal.withValues(alpha: 0.08),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(
-                                        Icons.people_alt_rounded,
-                                        size: 14,
-                                        color: AppColors.teal,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        "${session.participants.length} / $_totalGroupMembers Members Joined",
-                                        style: GoogleFonts.inter(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.teal,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  if (session.calculationMode == 'Fixed')
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: AppColors.teal.withValues(alpha: 0.3),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.03),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppColors.teal.withValues(alpha: 0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.location_on_rounded,
-                              color: AppColors.teal,
-                              size: 24,
+                        // Participants List Header
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            "PARTICIPANTS",
+                            style: GoogleFonts.outfit(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.getTextMuted(context),
+                              letterSpacing: 1.5,
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "TARGET DESTINATION",
-                                  style: GoogleFonts.inter(
-                                    fontSize: 10,
-                                    color: Colors.grey.shade400,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  session.winner?['name'] ?? "Selected Venue",
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.darkSlate,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  else
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildActionTile(
-                          context,
-                          "Outing Mode",
-                          session.calculationMode,
-                          Icons.timer_outlined,
-                          ['Time', 'KM'],
-                          AppColors.teal,
-                          (val) => _outingService.updateSessionDetails(
-                            groupId: widget.groupId,
-                            sessionId: widget.sessionId,
-                            calculationMode: val,
-                          ),
                         ),
-                        const SizedBox(width: 16),
-                        _buildActionTile(
-                          context,
-                          "Discovering",
-                          session.category,
-                          Icons.explore_outlined,
-                          [
-                            'Restaurant',
-                            'Cafe',
-                            'Park',
-                            'Mall',
-                            'Sporty',
-                            'Cinema',
-                          ],
-                          Colors.orangeAccent,
-                          (val) => _outingService.updateSessionDetails(
-                            groupId: widget.groupId,
-                            sessionId: widget.sessionId,
-                            category: val,
-                          ),
-                        ),
-                      ],
-                    ),
+                        const SizedBox(height: 16),
 
-                  const SizedBox(height: 24),
+                        // Participant Grid/Row
+                        SizedBox(
+                          height: 100,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: session.participants.length,
+                            itemBuilder: (context, index) {
+                              final p = session.participants[index];
+                              final isMe = p.uid == currentUser?.uid;
+                              final isHost = p.uid == session.creatorId;
+                              final userColor = AppColors.getUserColor(p.uid);
 
-                  // Participants List Header
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "PARTICIPANTS",
-                      style: GoogleFonts.outfit(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade400,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Participant Grid/Row
-                  SizedBox(
-                    height: 100,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: session.participants.length,
-                      itemBuilder: (context, index) {
-                        final p = session.participants[index];
-                        final isMe = p.uid == currentUser?.uid;
-                        final isHost = p.uid == session.creatorId;
-                        final userColor = AppColors.getUserColor(p.uid);
-                        
-                        return Padding(
-                              padding: const EdgeInsets.only(right: 24),
-                              child: Column(
-                                children: [
-                                  Stack(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(3),
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: userColor,
-                                            width: 2.5,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: userColor.withValues(alpha: 0.15),
-                                              blurRadius: 12,
-                                              spreadRadius: 2,
+                              return Padding(
+                                    padding: const EdgeInsets.only(right: 24),
+                                    child: Column(
+                                      children: [
+                                        Stack(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(3),
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                border: Border.all(
+                                                  color: userColor,
+                                                  width: 2.5,
+                                                ),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: userColor.withValues(
+                                                      alpha: 0.15,
+                                                    ),
+                                                    blurRadius: 12,
+                                                    spreadRadius: 2,
+                                                  ),
+                                                ],
+                                              ),
+                                              child: CircleAvatar(
+                                                radius: 28,
+                                                backgroundColor: userColor
+                                                    .withValues(alpha: 0.12),
+                                                backgroundImage:
+                                                    p.photoUrl != null &&
+                                                        p.photoUrl!.isNotEmpty
+                                                    ? NetworkImage(p.photoUrl!)
+                                                    : null,
+                                                child:
+                                                    p.photoUrl == null ||
+                                                        p.photoUrl!.isEmpty
+                                                    ? Text(
+                                                        p.name.isNotEmpty
+                                                            ? p.name[0]
+                                                                  .toUpperCase()
+                                                            : '?',
+                                                        style: TextStyle(
+                                                          fontSize: 20,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: userColor,
+                                                        ),
+                                                      )
+                                                    : null,
+                                              ),
                                             ),
+                                            if (isMe)
+                                              Positioned(
+                                                right: -2,
+                                                bottom: 2,
+                                                child: _buildBadge(
+                                                  Icons.person,
+                                                  AppColors.teal,
+                                                ),
+                                              ),
+                                            if (isHost)
+                                              Positioned(
+                                                left: -2,
+                                                top: -2,
+                                                child: _buildBadge(
+                                                  Icons
+                                                      .workspace_premium_rounded,
+                                                  Colors.orangeAccent,
+                                                ),
+                                              ),
                                           ],
                                         ),
-                                        child: CircleAvatar(
-                                          radius: 28,
-                                          backgroundColor:
-                                              userColor.withValues(alpha: 0.12),
-                                          backgroundImage: p.photoUrl != null &&
-                                                  p.photoUrl!.isNotEmpty
-                                              ? NetworkImage(p.photoUrl!)
-                                              : null,
-                                          child: p.photoUrl == null ||
-                                                  p.photoUrl!.isEmpty
-                                              ? Text(
-                                                  p.name.isNotEmpty
-                                                      ? p.name[0].toUpperCase()
-                                                      : '?',
-                                                  style: TextStyle(
-                                                    fontSize: 20,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: userColor,
-                                                  ),
-                                                )
-                                              : null,
-                                        ),
-                                      ),
-                                      if (isMe)
-                                        Positioned(
-                                          right: -2,
-                                          bottom: 2,
-                                          child: _buildBadge(
-                                            Icons.person,
-                                            AppColors.teal,
+                                        const SizedBox(height: 10),
+                                        Text(
+                                          isMe
+                                              ? "You"
+                                              : (p.name.isNotEmpty
+                                                    ? p.name.split(' ')[0]
+                                                    : 'User'),
+                                          style: GoogleFonts.inter(
+                                            fontSize: 12,
+                                            fontWeight: isMe
+                                                ? FontWeight.bold
+                                                : FontWeight.w600,
+                                            color: AppColors.getTextPrimary(
+                                              context,
+                                            ),
                                           ),
                                         ),
-                                      if (isHost)
-                                        Positioned(
-                                          left: -2,
-                                          top: -2,
-                                          child: _buildBadge(
-                                            Icons.workspace_premium_rounded,
-                                            Colors.orangeAccent,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    isMe
-                                        ? "You"
-                                        : (p.name.isNotEmpty
-                                            ? p.name.split(' ')[0]
-                                            : 'User'),
-                                    style: GoogleFonts.inter(
-                                      fontSize: 12,
-                                      fontWeight: isMe
-                                          ? FontWeight.bold
-                                          : FontWeight.w600,
-                                      color: AppColors.darkSlate,
+                                      ],
                                     ),
-                                  ),
-                                ],
-                              ),
-                            )
-                            .animate()
-                            .fadeIn(delay: (index * 150).ms)
-                            .scale(begin: const Offset(0.8, 0.8));
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 32),
-
-          // BOTTOM ALERT (Local)
-          if (_errorMessage != null)
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.only(bottom: 24),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 16,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.redAccent,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.redAccent.withValues(alpha: 0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.error_outline_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              _errorMessage!,
-                              style: GoogleFonts.inter(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () => setState(() => _errorMessage = null),
-                            child: const Icon(
-                              Icons.close_rounded,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                        .animate()
-                        .slideY(begin: 0.2, end: 0, curve: Curves.easeOutBack)
-                        .fadeIn()
-                        .shimmer(delay: 400.ms, duration: 1.seconds),
-
-                  // Action Buttons Row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextButton(
-                          onPressed: () => _outingService.leaveSession(
-                            widget.groupId,
-                            widget.sessionId,
-                            currentUser!.uid,
-                          ),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            foregroundColor: Colors.redAccent,
-                          ),
-                          child: Text(
-                            "Leave Session",
-                            style: GoogleFonts.outfit(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (isCreator) ...[
-                        const SizedBox(width: 16),
-                        Expanded(
-                          flex: 2,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: AppColors.tealGradient,
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.teal.withValues(alpha: 0.3),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            child: ElevatedButton(
-                              onPressed: () {
-                                if (session.participants.length < 2) {
-                                  _showError("You need at least 2 people to start an outing!");
-                                  return;
-                                }
-                                _outingService.updateStatus(
-                                  widget.groupId,
-                                  widget.sessionId,
-                                  OutingStatus.thinking,
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                shadowColor: Colors.transparent,
-                                padding: const EdgeInsets.symmetric(vertical: 20),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    "Start Journey Now",
-                                    style: GoogleFonts.outfit(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                      color: Colors.white,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  const Icon(
-                                    Icons.arrow_forward_rounded,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ],
-                              ),
-                            ),
+                                  )
+                                  .animate()
+                                  .fadeIn(delay: (index * 150).ms)
+                                  .scale(begin: const Offset(0.8, 0.8));
+                            },
                           ),
                         ),
                       ],
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                ],
-              );
-            },
-          ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // BOTTOM ALERT (Local)
+                if (_errorMessage != null)
+                  Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 24),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.redAccent.withValues(alpha: 0.3),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.error_outline_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                _errorMessage!,
+                                style: GoogleFonts.inter(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => setState(() => _errorMessage = null),
+                              child: const Icon(
+                                Icons.close_rounded,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                      .animate()
+                      .slideY(begin: 0.2, end: 0, curve: Curves.easeOutBack)
+                      .fadeIn()
+                      .shimmer(delay: 400.ms, duration: 1.seconds),
+
+                // Action Buttons Row
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => _outingService.leaveSession(
+                          widget.groupId,
+                          widget.sessionId,
+                          currentUser!.uid,
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          foregroundColor: Colors.redAccent,
+                        ),
+                        child: Text(
+                          "Leave Session",
+                          style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (isCreator) ...[
+                      const SizedBox(width: 16),
+                      Expanded(
+                        flex: 2,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: AppColors.tealGradient,
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.teal.withValues(alpha: 0.3),
+                                blurRadius: 15,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              if (session.participants.length < 2) {
+                                _showError(
+                                  "You need at least 2 people to start an outing!",
+                                );
+                                return;
+                              }
+                              _outingService.updateStatus(
+                                widget.groupId,
+                                widget.sessionId,
+                                OutingStatus.thinking,
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(vertical: 20),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "Start Journey Now",
+                                  style: GoogleFonts.outfit(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                    color: Colors.white,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                const Icon(
+                                  Icons.arrow_forward_rounded,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 12),
+              ],
+            );
+          },
         ),
-      );
+      ),
+    );
   }
 
   Widget _buildBadge(IconData icon, Color color) {
@@ -765,27 +804,20 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
         color: color,
         shape: BoxShape.circle,
         border: Border.all(
-          color: Colors.white,
+          color: AppColors.getSurfaceElevated(context),
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: AppColors.getShadow(context),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Icon(
-        icon,
-        color: Colors.white,
-        size: 10,
-      ),
+      child: Icon(icon, color: AppColors.getSurfaceElevated(context), size: 10),
     );
   }
-
-  
-
 
   Widget _buildActionTile(
     BuildContext context,
@@ -806,9 +838,14 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
             builder: (context) => BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 40,
+                  horizontal: 24,
+                ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.9),
+                  color: AppColors.getSurfaceElevated(
+                    context,
+                  ).withValues(alpha: 0.9),
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(40),
                   ),
@@ -820,7 +857,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                       width: 45,
                       height: 5,
                       decoration: BoxDecoration(
-                        color: Colors.grey.withValues(alpha: 0.2),
+                        color: AppColors.getDivider(context),
                         borderRadius: BorderRadius.circular(3),
                       ),
                     ),
@@ -830,12 +867,13 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                       style: GoogleFonts.outfit(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.darkSlate,
+                        color: AppColors.getTextPrimary(context),
                       ),
                     ),
                     const SizedBox(height: 32),
                     ...options.map((opt) {
-                      final isSelected = value.toLowerCase() == opt.toLowerCase();
+                      final isSelected =
+                          value.toLowerCase() == opt.toLowerCase();
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: GestureDetector(
@@ -847,10 +885,14 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(vertical: 20),
                             decoration: BoxDecoration(
-                              color: isSelected ? accentColor : Colors.grey.shade50,
+                              color: isSelected
+                                  ? accentColor
+                                  : AppColors.getInputBackground(context),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: isSelected ? Colors.transparent : Colors.grey.shade200,
+                                color: isSelected
+                                    ? Colors.transparent
+                                    : AppColors.getBorder(context),
                               ),
                             ),
                             child: Center(
@@ -859,7 +901,9 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                                 style: GoogleFonts.outfit(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: isSelected ? Colors.white : AppColors.darkSlate,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : AppColors.getTextPrimary(context),
                                 ),
                               ),
                             ),
@@ -876,12 +920,14 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.getSurfaceElevated(context),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+            border: Border.all(
+              color: AppColors.getBorder(context).withValues(alpha: 0.5),
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
+                color: AppColors.getShadow(context).withValues(alpha: 0.03),
                 blurRadius: 15,
                 offset: const Offset(0, 8),
               ),
@@ -903,7 +949,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                 label,
                 style: GoogleFonts.inter(
                   fontSize: 10,
-                  color: Colors.grey.shade400,
+                  color: AppColors.getTextMuted(context),
                   fontWeight: FontWeight.bold,
                   letterSpacing: 0.5,
                 ),
@@ -914,7 +960,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                 style: GoogleFonts.outfit(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.darkSlate,
+                  color: AppColors.getTextPrimary(context),
                 ),
               ),
             ],

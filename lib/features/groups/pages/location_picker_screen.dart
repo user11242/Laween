@@ -127,9 +127,11 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading || _currentCenter == null) {
-      return const Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(child: CircularProgressIndicator(color: AppColors.teal)),
+      return Scaffold(
+        backgroundColor: AppColors.getBackground(context),
+        body: const Center(
+          child: CircularProgressIndicator(color: AppColors.teal),
+        ),
       );
     }
 
@@ -144,12 +146,14 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
             icon: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.darkSlate.withValues(alpha: 0.7),
+                color: AppColors.getSurfaceElevated(
+                  context,
+                ).withValues(alpha: 0.8),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_back_ios_new_rounded,
-                color: Colors.white,
+                color: AppColors.getTextPrimary(context),
                 size: 18,
               ),
             ),
@@ -198,13 +202,13 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.getSurfaceElevated(context),
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: const [
+                    boxShadow: [
                       BoxShadow(
-                        color: Colors.black12,
+                        color: AppColors.getShadow(context),
                         blurRadius: 10,
-                        offset: Offset(0, 5),
+                        offset: const Offset(0, 5),
                       ),
                     ],
                   ),
@@ -220,7 +224,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                     decoration: InputDecoration(
                       hintText: "Search for a neighborhood or place...",
                       hintStyle: GoogleFonts.inter(
-                        color: Colors.grey.shade400,
+                        color: AppColors.getTextSecondary(context),
                         fontSize: 14,
                       ),
                       prefixIcon: const Icon(
@@ -229,9 +233,9 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                       ),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.clear,
-                                color: Colors.grey,
+                                color: AppColors.getTextSecondary(context),
                                 size: 20,
                               ),
                               onPressed: () {
@@ -253,13 +257,13 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                     margin: const EdgeInsets.only(top: 8),
                     constraints: const BoxConstraints(maxHeight: 300),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.getSurfaceElevated(context),
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [
+                      boxShadow: [
                         BoxShadow(
-                          color: Colors.black12,
+                          color: AppColors.getShadow(context),
                           blurRadius: 10,
-                          offset: Offset(0, 5),
+                          offset: const Offset(0, 5),
                         ),
                       ],
                     ),
@@ -267,8 +271,10 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                       shrinkWrap: true,
                       padding: EdgeInsets.zero,
                       itemCount: _searchResults.length,
-                      separatorBuilder: (_, __) =>
-                          Divider(height: 1, color: Colors.grey.shade100),
+                      separatorBuilder: (_, __) => Divider(
+                        height: 1,
+                        color: AppColors.getDivider(context),
+                      ),
                       itemBuilder: (context, index) {
                         final place = _searchResults[index];
                         final name =
@@ -284,11 +290,15 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                             style: GoogleFonts.inter(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
+                              color: AppColors.getTextPrimary(context),
                             ),
                           ),
                           subtitle: Text(
                             address,
-                            style: GoogleFonts.inter(fontSize: 12),
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: AppColors.getTextSecondary(context),
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -327,7 +337,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 FloatingActionButton(
-                  backgroundColor: AppColors.darkSlate,
+                  backgroundColor: AppColors.getSurfaceElevated(context),
                   onPressed: _onMyLocationPressed,
                   child: const Icon(
                     Icons.my_location_rounded,

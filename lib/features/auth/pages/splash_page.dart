@@ -35,12 +35,13 @@ class _SplashPageState extends State<SplashPage> {
     Widget nextScreen = const OnboardingPage(); // Default
 
     final user = FirebaseAuth.instance.currentUser;
-    
+
     if (user != null) {
       // User is logged in, check app lock
-      final isLocked = await BiometricService()
-          .isAppLocked()
-          .timeout(const Duration(seconds: 2), onTimeout: () => false);
+      final isLocked = await BiometricService().isAppLocked().timeout(
+        const Duration(seconds: 2),
+        onTimeout: () => false,
+      );
 
       if (!isLocked) {
         // Not locked, check profile
@@ -77,201 +78,201 @@ class _SplashPageState extends State<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Set system status bar color for the splash screen
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: AppColors.teal,
+        systemNavigationBarIconBrightness: Brightness.light,
       ),
-    );
-
-    return Scaffold(
-      body: Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: AppColors.tealGradient,
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
+      child: Scaffold(
+        body: Container(
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: AppColors.tealGradient,
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+            ),
           ),
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            // --- Cinematic Background Orbs ---
-            Positioned(
-              top: -100,
-              left: -50,
-              child:
-                  Container(
-                        width: 300,
-                        height: 300,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.lightGold.withValues(alpha: 0.15),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.lightGold.withValues(
-                                alpha: 0.15,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // --- Cinematic Background Orbs ---
+              Positioned(
+                top: -100,
+                left: -50,
+                child:
+                    Container(
+                          width: 300,
+                          height: 300,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.lightGold.withValues(alpha: 0.15),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.lightGold.withValues(
+                                  alpha: 0.15,
+                                ),
+                                blurRadius: 40,
+                                spreadRadius: 10,
                               ),
-                              blurRadius: 40,
-                              spreadRadius: 10,
-                            ),
-                          ],
+                            ],
+                          ),
+                        )
+                        .animate(
+                          onPlay: (controller) =>
+                              controller.repeat(reverse: true),
+                        )
+                        .move(
+                          begin: const Offset(0, 0),
+                          end: const Offset(50, 50),
+                          duration: 4.seconds,
+                          curve: Curves.easeInOutSine,
                         ),
+              ),
+
+              Positioned(
+                bottom: -50,
+                right: -100,
+                child:
+                    Container(
+                          width: 400,
+                          height: 400,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.1),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.white.withValues(alpha: 0.1),
+                                blurRadius: 50,
+                                spreadRadius: 10,
+                              ),
+                            ],
+                          ),
+                        )
+                        .animate(
+                          onPlay: (controller) =>
+                              controller.repeat(reverse: true),
+                        )
+                        .move(
+                          begin: const Offset(0, 0),
+                          end: const Offset(-80, -40),
+                          duration: 5.seconds,
+                          curve: Curves.easeInOut,
+                        ),
+              ),
+
+              // --- Foreground Main Sequence ---
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // 1. The 3D Spin-in & Shimmer Logo
+                  Image.asset(
+                        'assets/logo/Laween_transparent_iphone.png',
+                        width: 140,
+                        height: 140,
+                        fit: BoxFit.contain,
                       )
-                      .animate(
-                        onPlay: (controller) =>
-                            controller.repeat(reverse: true),
-                      )
-                      .move(
+                      .animate()
+                      // Scale from zero with an elastic bounce
+                      .scale(
                         begin: const Offset(0, 0),
-                        end: const Offset(50, 50),
-                        duration: 4.seconds,
+                        end: const Offset(1.0, 1.0),
+                        duration: 1200.ms,
+                        curve: Curves.elasticOut,
+                      )
+                      // Spin in as it scales
+                      .rotate(
+                        begin: 0.5,
+                        end: 0,
+                        duration: 1000.ms,
+                        curve: Curves.easeOutBack,
+                      )
+                      // After it lands, sweep a beautiful shimmer across it
+                      .then(delay: 200.ms)
+                      .shimmer(
+                        duration: 1500.ms,
+                        color: Colors.white.withValues(alpha: 0.8),
+                        angle: 0.5,
+                      )
+                      // And add a very slow, continuous floating effect
+                      .then()
+                      .slideY(
+                        begin: 0,
+                        end: -0.03,
+                        duration: 2.seconds,
+                        curve: Curves.easeInOutSine,
+                      )
+                      .then()
+                      .slideY(
+                        begin: -0.03,
+                        end: 0,
+                        duration: 2.seconds,
                         curve: Curves.easeInOutSine,
                       ),
-            ),
 
-            Positioned(
-              bottom: -50,
-              right: -100,
-              child:
-                  Container(
-                        width: 400,
-                        height: 400,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.1),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.white.withValues(alpha: 0.1),
-                              blurRadius: 50,
-                              spreadRadius: 10,
-                            ),
-                          ],
+                  const SizedBox(height: 32),
+
+                  // 2. The Clean Text Reveal
+                  Text(
+                        "Laween",
+                        style: GoogleFonts.outfit(
+                          fontSize: 48,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: 3.0,
+                          height: 1.0,
                         ),
                       )
-                      .animate(
-                        onPlay: (controller) =>
-                            controller.repeat(reverse: true),
+                      .animate()
+                      // Start hidden
+                      .fadeIn(delay: 800.ms, duration: 800.ms)
+                      // Slight slide up
+                      .slideY(
+                        begin: 0.2,
+                        end: 0,
+                        delay: 800.ms,
+                        duration: 800.ms,
+                        curve: Curves.easeOutQuart,
                       )
-                      .move(
-                        begin: const Offset(0, 0),
-                        end: const Offset(-80, -40),
-                        duration: 5.seconds,
-                        curve: Curves.easeInOut,
+                      // Shimmer sweeps right after the logo shimmer
+                      .then(delay: 100.ms)
+                      .shimmer(
+                        duration: 1200.ms,
+                        color: AppColors.lightGold,
+                        angle: 1.0,
                       ),
-            ),
 
-            // --- Foreground Main Sequence ---
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // 1. The 3D Spin-in & Shimmer Logo
-                Image.asset(
-                      'assets/logo/Laween_transparent_iphone.png',
-                      width: 140,
-                      height: 140,
-                      fit: BoxFit.contain,
-                    )
-                    .animate()
-                    // Scale from zero with an elastic bounce
-                    .scale(
-                      begin: const Offset(0, 0),
-                      end: const Offset(1.0, 1.0),
-                      duration: 1200.ms,
-                      curve: Curves.elasticOut,
-                    )
-                    // Spin in as it scales
-                    .rotate(
-                      begin: 0.5,
-                      end: 0,
-                      duration: 1000.ms,
-                      curve: Curves.easeOutBack,
-                    )
-                    // After it lands, sweep a beautiful shimmer across it
-                    .then(delay: 200.ms)
-                    .shimmer(
-                      duration: 1500.ms,
-                      color: Colors.white.withValues(alpha: 0.8),
-                      angle: 0.5,
-                    )
-                    // And add a very slow, continuous floating effect
-                    .then()
-                    .slideY(
-                      begin: 0,
-                      end: -0.03,
-                      duration: 2.seconds,
-                      curve: Curves.easeInOutSine,
-                    )
-                    .then()
-                    .slideY(
-                      begin: -0.03,
-                      end: 0,
-                      duration: 2.seconds,
-                      curve: Curves.easeInOutSine,
-                    ),
+                  const SizedBox(height: 8),
 
-                const SizedBox(height: 32),
-
-                // 2. The Clean Text Reveal
-                Text(
-                      "Laween",
-                      style: GoogleFonts.outfit(
-                        fontSize: 48,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: 3.0,
-                        height: 1.0,
-                      ),
-                    )
-                    .animate()
-                    // Start hidden
-                    .fadeIn(delay: 800.ms, duration: 800.ms)
-                    // Slight slide up
-                    .slideY(
-                      begin: 0.2,
-                      end: 0,
-                      delay: 800.ms,
-                      duration: 800.ms,
-                      curve: Curves.easeOutQuart,
-                    )
-                    // Shimmer sweeps right after the logo shimmer
-                    .then(delay: 100.ms)
-                    .shimmer(
-                      duration: 1200.ms,
-                      color: AppColors.lightGold,
-                      angle: 1.0,
-                    ),
-
-                const SizedBox(height: 8),
-
-                // 3. The Cinematic Blur-in Subtitle
-                Directionality(
-                      textDirection: TextDirection.ltr,
-                      child: Text(
-                        "Where do we go next?",
-                        style: GoogleFonts.inter(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w300,
-                          color: Colors.white.withValues(alpha: 0.9),
-                          letterSpacing: 1.0,
+                  // 3. The Cinematic Blur-in Subtitle
+                  Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Text(
+                          "Where do we go next?",
+                          style: GoogleFonts.inter(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w300,
+                            color: Colors.white.withValues(alpha: 0.9),
+                            letterSpacing: 1.0,
+                          ),
                         ),
+                      )
+                      .animate()
+                      // Cinematic Blur-in reveal
+                      .fadeIn(delay: 1600.ms, duration: 1000.ms)
+                      .blur(
+                        begin: const Offset(10, 0),
+                        end: Offset.zero,
+                        delay: 1600.ms,
+                        duration: 1000.ms,
+                        curve: Curves.easeOut,
                       ),
-                    )
-                    .animate()
-                    // Cinematic Blur-in reveal
-                    .fadeIn(delay: 1600.ms, duration: 1000.ms)
-                    .blur(
-                      begin: const Offset(10, 0),
-                      end: Offset.zero,
-                      delay: 1600.ms,
-                      duration: 1000.ms,
-                      curve: Curves.easeOut,
-                    ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

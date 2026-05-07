@@ -238,7 +238,7 @@ class UniversalOtpStepState extends State<UniversalOtpStep> {
           l10n.enterCodeSentTo(NumericUtils.normalize(widget.destination)),
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: widget.isLight ? Colors.black87 : Colors.white70,
+            color: AppColors.getTextSecondary(context),
             fontSize: 16,
             height: 1.4,
           ),
@@ -254,29 +254,23 @@ class UniversalOtpStepState extends State<UniversalOtpStep> {
               shape: MaterialPinShape.outlined,
               borderRadius: BorderRadius.circular(10),
               cellSize: const Size(40, 50),
-              borderColor: widget.isLight
-                  ? Colors.black.withValues(alpha: 0.15)
-                  : Colors.white.withValues(alpha: 0.3),
+              borderColor: AppColors.getBorder(context),
               focusedBorderColor: AppColors.teal,
               filledBorderColor: AppColors.teal,
-              fillColor: widget.isLight
-                  ? Colors.grey.withValues(alpha: 0.05)
-                  : Colors.white.withValues(alpha: 0.05),
+              fillColor: AppColors.getSurface(context),
               focusedFillColor: AppColors.teal.withValues(alpha: 0.1),
               filledFillColor: AppColors.teal.withValues(alpha: 0.05),
               textStyle: TextStyle(
-                color: widget.isLight ? Colors.black : Colors.white,
+                color: AppColors.getTextPrimary(context),
                 fontWeight: FontWeight.bold,
               ),
-              boxShadows: widget.isLight
-                  ? [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ]
-                  : [],
+              boxShadows: [
+                BoxShadow(
+                  color: AppColors.getShadow(context).withValues(alpha: 0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             inputFormatters: [NumericUtils.digitFormatter],
             onChanged: (v) {
@@ -292,7 +286,7 @@ class UniversalOtpStepState extends State<UniversalOtpStep> {
                 : l10n.resendCode,
             style: TextStyle(
               color: _resendCooldown > 0
-                  ? (widget.isLight ? Colors.grey.shade600 : Colors.grey)
+                  ? AppColors.getTextMuted(context)
                   : AppColors.teal,
             ),
           ),

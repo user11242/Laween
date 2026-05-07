@@ -17,18 +17,18 @@ class GroupLocationsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: AppColors.getBackground(context),
       appBar: AppBar(
         title: Text(
           l10n?.sharedLocationsTitle ?? 'Shared Locations',
           style: GoogleFonts.outfit(
             fontWeight: FontWeight.bold,
-            color: AppColors.darkSlate,
+            color: AppColors.getTextPrimary(context),
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.getSurface(context),
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.darkSlate),
+        iconTheme: IconThemeData(color: AppColors.getTextPrimary(context)),
       ),
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: _groupService.getGroupLocations(groupId),
@@ -46,12 +46,15 @@ class GroupLocationsPage extends StatelessWidget {
                   Icon(
                     Icons.location_off_outlined,
                     size: 64,
-                    color: Colors.grey.shade300,
+                    color: AppColors.getDivider(context),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     l10n?.noLocationsYet ?? 'No locations shared yet',
-                    style: GoogleFonts.inter(color: Colors.grey, fontSize: 16),
+                    style: GoogleFonts.inter(
+                      color: AppColors.getTextSecondary(context),
+                      fontSize: 16,
+                    ),
                   ),
                 ],
               ),
@@ -76,11 +79,11 @@ class GroupLocationsPage extends StatelessWidget {
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.getSurfaceElevated(context),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
+                      color: AppColors.getShadow(context).withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -105,12 +108,12 @@ class GroupLocationsPage extends StatelessWidget {
                         : 'Shared by ${msg['senderName'] ?? 'Unknown'}',
                     style: GoogleFonts.inter(
                       fontWeight: FontWeight.bold,
-                      color: AppColors.darkSlate,
+                      color: AppColors.getTextPrimary(context),
                     ),
                   ),
                   subtitle: Text(
                     DateFormat('MMM dd, hh:mm a', l10n?.isAr == true ? 'ar' : 'en').format(date),
-                    style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
+                    style: GoogleFonts.inter(fontSize: 12, color: AppColors.getTextMuted(context)),
                   ),
                   trailing: IconButton(
                     icon: const Icon(Icons.map_rounded, color: AppColors.teal),

@@ -219,9 +219,36 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble>
 
   Widget _buildWaveformSeeder() {
     final List<double> barHeights = [
-      0.3, 0.5, 0.7, 0.4, 0.6, 0.8, 0.5, 0.3, 0.6, 0.8,
-      0.4, 0.7, 0.9, 0.6, 0.4, 0.7, 0.5, 0.8, 0.6, 0.4,
-      0.6, 0.8, 0.5, 0.3, 0.7, 0.5, 0.8, 0.6, 0.4, 0.3
+      0.3,
+      0.5,
+      0.7,
+      0.4,
+      0.6,
+      0.8,
+      0.5,
+      0.3,
+      0.6,
+      0.8,
+      0.4,
+      0.7,
+      0.9,
+      0.6,
+      0.4,
+      0.7,
+      0.5,
+      0.8,
+      0.6,
+      0.4,
+      0.6,
+      0.8,
+      0.5,
+      0.3,
+      0.7,
+      0.5,
+      0.8,
+      0.6,
+      0.4,
+      0.3,
     ];
 
     return GestureDetector(
@@ -266,8 +293,8 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble>
                   color: hasPlayed
                       ? (widget.isMe ? Colors.white : AppColors.teal)
                       : (widget.isMe
-                          ? Colors.white.withValues(alpha: 0.35)
-                          : Colors.grey.shade300),
+                            ? Colors.white.withValues(alpha: 0.35)
+                            : AppColors.getBorder(context)),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -331,7 +358,7 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble>
                           fontSize: 10,
                           color: widget.isMe
                               ? Colors.white70
-                              : Colors.grey.shade500,
+                              : AppColors.getTextSecondary(context),
                         ),
                       ),
                       Text(
@@ -340,7 +367,7 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble>
                           fontSize: 10,
                           color: widget.isMe
                               ? Colors.white70
-                              : Colors.grey.shade500,
+                              : AppColors.getTextSecondary(context),
                         ),
                       ),
                     ],

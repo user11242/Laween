@@ -45,7 +45,6 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
   Set<Polyline> _polylines = {};
   final Map<String, List<LatLng>> _cachedRoutes = {};
 
-
   LatLng _getInitialTarget() {
     final session = widget.initialSession;
     if (session != null) {
@@ -81,7 +80,11 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
     super.dispose();
   }
 
-  Future<BitmapDescriptor> _getAvatarIcon(String name, String? photoUrl, Color color) async {
+  Future<BitmapDescriptor> _getAvatarIcon(
+    String name,
+    String? photoUrl,
+    Color color,
+  ) async {
     final cacheKey = "avatar_${photoUrl ?? name}_${color.toARGB32()}";
     if (_customMarkers.containsKey(cacheKey)) return _customMarkers[cacheKey]!;
 
@@ -112,27 +115,49 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
     if (photoUrl != null && photoUrl.isNotEmpty) {
       try {
         final Completer<ui.Image> completer = Completer();
-        final imageStream = NetworkImage(photoUrl).resolve(ImageConfiguration.empty);
-        imageStream.addListener(ImageStreamListener((info, _) {
-          if (!completer.isCompleted) completer.complete(info.image);
-        }, onError: (exception, stackTrace) {
-           if (!completer.isCompleted) completer.completeError(exception);
-        }));
-        
-        final ui.Image image = await completer.future.timeout(const Duration(seconds: 4));
-        
+        final imageStream = NetworkImage(
+          photoUrl,
+        ).resolve(ImageConfiguration.empty);
+        imageStream.addListener(
+          ImageStreamListener(
+            (info, _) {
+              if (!completer.isCompleted) completer.complete(info.image);
+            },
+            onError: (exception, stackTrace) {
+              if (!completer.isCompleted) completer.completeError(exception);
+            },
+          ),
+        );
+
+        final ui.Image image = await completer.future.timeout(
+          const Duration(seconds: 4),
+        );
+
         canvas.save();
-        Path path = Path()..addOval(Rect.fromCircle(center: Offset(radius, radius), radius: radius - 16));
+        Path path = Path()
+          ..addOval(
+            Rect.fromCircle(
+              center: Offset(radius, radius),
+              radius: radius - 16,
+            ),
+          );
         canvas.clipPath(path);
-        
+
         paintImage(
           canvas: canvas,
-          rect: Rect.fromCircle(center: Offset(radius, radius), radius: radius - 16),
+          rect: Rect.fromCircle(
+            center: Offset(radius, radius),
+            radius: radius - 16,
+          ),
           image: image,
           fit: BoxFit.cover,
         );
         canvas.restore();
-        canvas.drawCircle(const Offset(radius, radius), radius - 16, borderPaint);
+        canvas.drawCircle(
+          const Offset(radius, radius),
+          radius - 16,
+          borderPaint,
+        );
       } catch (e) {
         _drawInitialMarker(canvas, radius, color, name, borderPaint);
       }
@@ -149,7 +174,13 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
     return descriptor;
   }
 
-  void _drawInitialMarker(Canvas canvas, double radius, Color color, String name, Paint borderPaint) {
+  void _drawInitialMarker(
+    Canvas canvas,
+    double radius,
+    Color color,
+    String name,
+    Paint borderPaint,
+  ) {
     final paint = Paint()..color = color;
     canvas.drawCircle(Offset(radius, radius), radius - 16, paint);
     canvas.drawCircle(Offset(radius, radius), radius - 16, borderPaint);
@@ -196,7 +227,11 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
     return mins.toInt().toString();
   }
 
-  Future<void> _fitRouteBounds(double pLat, double pLng, dynamic winnerLoc) async {
+  Future<void> _fitRouteBounds(
+    double pLat,
+    double pLng,
+    dynamic winnerLoc,
+  ) async {
     if (!_controller.isCompleted) return;
     final controller = await _controller.future;
     final vLat = (winnerLoc['latitude'] as num).toDouble();
@@ -265,8 +300,13 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
               });
               _updateMarkers(session); // Re-trigger to update polylines
               if (_selectedParticipantUid != null && winnerLoc != null) {
-                _shouldFollow = false; // Stop auto-following when they inspect a route
-                _fitRouteBounds(p.location!.latitude, p.location!.longitude, winnerLoc);
+                _shouldFollow =
+                    false; // Stop auto-following when they inspect a route
+                _fitRouteBounds(
+                  p.location!.latitude,
+                  p.location!.longitude,
+                  winnerLoc,
+                );
               }
             },
           );
@@ -281,7 +321,9 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
 
     // 3. Handle Selected Polyline
     if (_selectedParticipantUid != null && winnerLoc != null) {
-      final selectedP = session.participants.firstWhere((p) => p.uid == _selectedParticipantUid);
+      final selectedP = session.participants.firstWhere(
+        (p) => p.uid == _selectedParticipantUid,
+      );
       if (selectedP.location != null) {
         List<LatLng>? route = _cachedRoutes[_selectedParticipantUid!];
         if (route == null) {
@@ -314,14 +356,16 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
     }
 
     if (_isDisposed || !mounted) return;
-    
+
     // Guard against infinite rebuild loops
     bool markersChanged = false;
     if (newMarkers.length != _markers.length) {
       markersChanged = true;
     } else {
       for (var newM in newMarkers) {
-        final oldM = _markers.where((m) => m.markerId == newM.markerId).firstOrNull;
+        final oldM = _markers
+            .where((m) => m.markerId == newM.markerId)
+            .firstOrNull;
         if (oldM == null || oldM.position != newM.position) {
           markersChanged = true;
           break;
@@ -380,7 +424,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
   Future<void> _animateToUser(String uid) async {
     if (!_controller.isCompleted) return;
     final controller = await _controller.future;
-    
+
     // Find the participant's location
     final snapshot = await FirebaseFirestore.instance
         .collection('groups')
@@ -388,15 +432,22 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
         .collection('outings')
         .doc(widget.sessionId)
         .get();
-        
+
     if (snapshot.exists) {
       final session = OutingSessionModel.fromFirestore(snapshot);
-      final participant = session.participants.where((p) => p.uid == uid).firstOrNull;
+      final participant = session.participants
+          .where((p) => p.uid == uid)
+          .firstOrNull;
       if (participant != null && participant.location != null) {
-        controller.animateCamera(CameraUpdate.newLatLngZoom(
-          LatLng(participant.location!.latitude, participant.location!.longitude),
-          16.0,
-        ));
+        controller.animateCamera(
+          CameraUpdate.newLatLngZoom(
+            LatLng(
+              participant.location!.latitude,
+              participant.location!.longitude,
+            ),
+            16.0,
+          ),
+        );
       }
     }
   }
@@ -427,7 +478,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.getBackground(context),
       body: StreamBuilder<OutingSessionModel?>(
         stream: _outingService.streamSession(widget.groupId, widget.sessionId),
         initialData: widget.initialSession,
@@ -474,8 +525,6 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                   }
                 },
               ),
-              
-
 
               // --- 2. PREMIUM GLASS HEADER ---
               Positioned(
@@ -487,7 +536,10 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                   child: BackdropFilter(
                     filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.darkSlate.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(24),
@@ -523,15 +575,25 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                                 Row(
                                   children: [
                                     Container(
-                                      width: 6,
-                                      height: 6,
-                                      decoration: const BoxDecoration(
-                                        color: AppColors.teal,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ).animate(onPlay: (c) => c.repeat())
-                                     .scale(duration: 1000.ms, begin: const Offset(0.8, 0.8), end: const Offset(1.2, 1.2))
-                                     .then().scale(duration: 1000.ms, begin: const Offset(1.2, 1.2), end: const Offset(0.8, 0.8)),
+                                          width: 6,
+                                          height: 6,
+                                          decoration: const BoxDecoration(
+                                            color: AppColors.teal,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        )
+                                        .animate(onPlay: (c) => c.repeat())
+                                        .scale(
+                                          duration: 1000.ms,
+                                          begin: const Offset(0.8, 0.8),
+                                          end: const Offset(1.2, 1.2),
+                                        )
+                                        .then()
+                                        .scale(
+                                          duration: 1000.ms,
+                                          begin: const Offset(1.2, 1.2),
+                                          end: const Offset(0.8, 0.8),
+                                        ),
                                     const SizedBox(width: 6),
                                     Text(
                                       "LIVE TRACKING",
@@ -559,12 +621,17 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                           ),
                           if (_shouldFollow)
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
                               margin: const EdgeInsets.only(right: 8),
                               decoration: BoxDecoration(
                                 color: AppColors.teal.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: AppColors.teal.withValues(alpha: 0.3)),
+                                border: Border.all(
+                                  color: AppColors.teal.withValues(alpha: 0.3),
+                                ),
                               ),
                               child: Text(
                                 "FOLLOWING",
@@ -581,33 +648,33 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                   ),
                 ),
               ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.2),
- 
-               // --- MAP CONTROLS ---
-               Positioned(
-                 bottom: 350, // Above ETA sheet
-                 right: 20,
-                 child: Column(
-                   children: [
-                     _buildMapControl(
-                       icon: _shouldFollow
-                           ? Icons.gps_fixed_rounded
-                           : Icons.gps_not_fixed_rounded,
-                       active: _shouldFollow,
-                       onTap: () {
-                         setState(() => _shouldFollow = !_shouldFollow);
-                         if (_shouldFollow) _fitBounds();
-                       },
-                     ),
-                     const SizedBox(height: 12),
-                     _buildMapControl(
-                       icon: Icons.layers_rounded,
-                       onTap: () {
-                         _fitBounds();
-                       },
-                     ),
-                   ],
-                 ),
-               ),
+
+              // --- MAP CONTROLS ---
+              Positioned(
+                bottom: 350, // Above ETA sheet
+                right: 20,
+                child: Column(
+                  children: [
+                    _buildMapControl(
+                      icon: _shouldFollow
+                          ? Icons.gps_fixed_rounded
+                          : Icons.gps_not_fixed_rounded,
+                      active: _shouldFollow,
+                      onTap: () {
+                        setState(() => _shouldFollow = !_shouldFollow);
+                        if (_shouldFollow) _fitBounds();
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    _buildMapControl(
+                      icon: Icons.layers_rounded,
+                      onTap: () {
+                        _fitBounds();
+                      },
+                    ),
+                  ],
+                ),
+              ),
 
               // --- 3. DYNAMIC ETA BOARD ---
               _buildETASheet(session, winner),
@@ -667,13 +734,13 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
               bottom: 40,
             ),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.getSurfaceElevated(context),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(32),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
+                  color: AppColors.getShadow(context),
                   blurRadius: 30,
                   offset: const Offset(0, -10),
                 ),
@@ -688,7 +755,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                     width: 40,
                     height: 5,
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
+                      color: AppColors.getDivider(context),
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
@@ -696,9 +763,9 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                 const SizedBox(height: 20),
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.people_alt_rounded,
-                      color: AppColors.darkSlate,
+                      color: AppColors.getTextPrimary(context),
                       size: 20,
                     ),
                     const SizedBox(width: 8),
@@ -707,7 +774,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.darkSlate,
+                        color: AppColors.getTextPrimary(context),
                       ),
                     ),
                   ],
@@ -719,34 +786,41 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: sortedP.length,
                   separatorBuilder: (_, __) =>
-                      Divider(height: 1, color: Colors.grey.shade100),
+                      Divider(height: 1, color: AppColors.getDivider(context)),
                   itemBuilder: (context, i) {
                     final p = sortedP[i];
                     if (p.location == null) return const SizedBox.shrink();
-                    final isMe = p.uid == FirebaseAuth.instance.currentUser?.uid;
+                    final isMe =
+                        p.uid == FirebaseAuth.instance.currentUser?.uid;
 
                     // Use real Google values from Firestore if available
-                    final dist = p.distanceKm ?? double.parse(
-                      _calculateDistance(
-                        p.location!.latitude,
-                        p.location!.longitude,
-                        vLat,
-                        vLng,
-                      ),
-                    );
-                    final timeMins = p.etaMinutes ?? int.tryParse(_estimateTime(dist)) ?? 0;
+                    final dist =
+                        p.distanceKm ??
+                        double.parse(
+                          _calculateDistance(
+                            p.location!.latitude,
+                            p.location!.longitude,
+                            vLat,
+                            vLng,
+                          ),
+                        );
+                    final timeMins =
+                        p.etaMinutes ?? int.tryParse(_estimateTime(dist)) ?? 0;
                     final bool isArrived = dist <= 0.1;
 
                     return _buildParticipantTile(
-                      p: p,
-                      index: i,
-                      isMe: isMe,
-                      dist: dist,
-                      timeMins: timeMins,
-                      isArrived: isArrived,
-                      vLat: vLat,
-                      vLng: vLng,
-                    ).animate(delay: (i * 100).ms).fadeIn(duration: 400.ms).slideX(begin: 0.1);
+                          p: p,
+                          index: i,
+                          isMe: isMe,
+                          dist: dist,
+                          timeMins: timeMins,
+                          isArrived: isArrived,
+                          vLat: vLat,
+                          vLng: vLng,
+                        )
+                        .animate(delay: (i * 100).ms)
+                        .fadeIn(duration: 400.ms)
+                        .slideX(begin: 0.1);
                   },
                 ),
               ],
@@ -772,12 +846,16 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
     // Calculate Journey Progress
     double progress = 0.0;
     if (p.startLocation != null) {
-      final totalDist = double.tryParse(_calculateDistance(
-        p.startLocation!.latitude,
-        p.startLocation!.longitude,
-        vLat,
-        vLng,
-      )) ?? 0.0;
+      final totalDist =
+          double.tryParse(
+            _calculateDistance(
+              p.startLocation!.latitude,
+              p.startLocation!.longitude,
+              vLat,
+              vLng,
+            ),
+          ) ??
+          0.0;
       if (totalDist > 0.05) {
         progress = (1.0 - (dist / totalDist)).clamp(0.0, 1.0);
       } else {
@@ -792,9 +870,14 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
-      padding: EdgeInsets.symmetric(vertical: 16, horizontal: isSelected ? 12 : 0),
+      padding: EdgeInsets.symmetric(
+        vertical: 16,
+        horizontal: isSelected ? 12 : 0,
+      ),
       decoration: BoxDecoration(
-        color: isSelected ? AppColors.getUserColor(p.uid).withValues(alpha: 0.1) : Colors.transparent,
+        color: isSelected
+            ? AppColors.getUserColor(p.uid).withValues(alpha: 0.1)
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -822,7 +905,8 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                             child: Text(
                               p.name.isNotEmpty ? p.name[0].toUpperCase() : "?",
                               style: GoogleFonts.outfit(
-                                color: Colors.white,
+                                color:
+                                    Colors.white, // Keep white on Teal button
                                 fontWeight: FontWeight.bold,
                                 fontSize: 20,
                               ),
@@ -838,7 +922,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(2),
                     decoration: const BoxDecoration(
-                      color: Colors.white,
+                      color: Colors.white, // Keep white on Teal button
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -870,9 +954,14 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                     if (isMe) ...[
                       const SizedBox(width: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
-                          color: AppColors.getUserColor(p.uid).withValues(alpha: 0.1),
+                          color: AppColors.getUserColor(
+                            p.uid,
+                          ).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -896,17 +985,23 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                       width: 120,
                       child: LinearProgressIndicator(
                         value: progress,
-                        backgroundColor: AppColors.getUserColor(p.uid).withValues(alpha: 0.1),
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.getUserColor(p.uid)),
+                        backgroundColor: AppColors.getUserColor(
+                          p.uid,
+                        ).withValues(alpha: 0.1),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.getUserColor(p.uid),
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 4),
                 ],
                 Text(
-                  isArrived ? "Joined the masterpiece" : "${dist.toStringAsFixed(1)} km left",
+                  isArrived
+                      ? "Joined the masterpiece"
+                      : "${dist.toStringAsFixed(1)} km left",
                   style: GoogleFonts.inter(
-                    color: Colors.grey.shade500,
+                    color: AppColors.getTextSecondary(context),
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -938,10 +1033,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [
-                    Colors.amber.shade400,
-                    Colors.amber.shade600,
-                  ],
+                  colors: [Colors.amber.shade400, Colors.amber.shade600],
                 ),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
@@ -960,7 +1052,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                     style: GoogleFonts.outfit(
                       fontWeight: FontWeight.w900,
                       fontSize: 18,
-                      color: Colors.white,
+                      color: Colors.white, // Keep white on Teal button
                     ),
                   ),
                   const SizedBox(width: 4),
@@ -969,7 +1061,9 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: Colors.white.withValues(
+                        alpha: 0.9,
+                      ), // Keep white on Teal button
                     ),
                   ),
                 ],
@@ -1054,30 +1148,45 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
 
   Widget _buildSkeletonLoader() {
     return Container(
-      color: AppColors.darkSlate,
+      color: AppColors.getBackground(context),
       child: Stack(
         children: [
           // Shimmery Map Placeholder
           Opacity(
-            opacity: 0.1,
-            child: Container(color: Colors.white),
-          ).animate(onPlay: (controller) => controller.repeat())
-            .shimmer(duration: 1500.ms, color: Colors.white24),
-          
+                opacity: 0.1,
+                child: Container(color: AppColors.getSurface(context)),
+              )
+              .animate(onPlay: (controller) => controller.repeat())
+              .shimmer(
+                duration: 1500.ms,
+                color: AppColors.getSurfaceElevated(
+                  context,
+                ).withValues(alpha: 0.1),
+              ),
+
           // Header Skeleton
           Positioned(
-            top: 55, left: 20, right: 20,
+            top: 55,
+            left: 20,
+            right: 20,
             child: Row(
               children: [
                 Container(
-                  width: 40, height: 40,
-                  decoration: const BoxDecoration(color: Colors.white10, shape: BoxShape.circle),
+                  width: 40,
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    color: Colors.white10,
+                    shape: BoxShape.circle,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Container(
                     height: 50,
-                    decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(20)),
+                    decoration: BoxDecoration(
+                      color: Colors.white10,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                   ),
                 ),
               ],
@@ -1090,31 +1199,62 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
             child: Container(
               height: 380,
               padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
-                color: Colors.white,
+              decoration: BoxDecoration(
+                color: AppColors.getSurfaceElevated(context),
                 borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
               ),
               child: Column(
-                children: List.generate(3, (i) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Row(
-                    children: [
-                      Container(width: 36, height: 36, decoration: BoxDecoration(color: Colors.grey.shade100, shape: BoxShape.circle)),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(width: 120, height: 16, decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(4))),
-                            const SizedBox(height: 6),
-                            Container(width: 60, height: 12, decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(4))),
-                          ],
+                children: List.generate(
+                  3,
+                  (i) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: AppColors.getSurfaceElevated(context),
+                            shape: BoxShape.circle,
+                          ),
                         ),
-                      ),
-                      Container(width: 60, height: 30, decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(12))),
-                    ],
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 120,
+                                height: 16,
+                                decoration: BoxDecoration(
+                                  color: AppColors.getSurfaceElevated(context),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Container(
+                                width: 60,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: AppColors.getSurfaceElevated(context),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          width: 60,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            color: AppColors.getSurfaceElevated(context),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                )),
+                ),
               ),
             ),
           ).animate().slideY(begin: 1, duration: 400.ms, curve: Curves.easeOut),
@@ -1136,44 +1276,48 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
     required VoidCallback onTap,
   }) {
     return GestureDetector(
-      onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(25),
-        child: BackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: active
-                  ? AppColors.teal.withValues(alpha: 0.8)
-                  : AppColors.darkSlate.withValues(alpha: 0.6),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: active
-                    ? Colors.white.withValues(alpha: 0.5)
-                    : Colors.white.withValues(alpha: 0.1),
-                width: 1,
-              ),
-              boxShadow: [
-                if (active)
-                  BoxShadow(
-                    color: AppColors.teal.withValues(alpha: 0.3),
-                    blurRadius: 15,
-                    spreadRadius: 2,
+          onTap: onTap,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(25),
+            child: BackdropFilter(
+              filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: active
+                      ? AppColors.teal.withValues(alpha: 0.8)
+                      : AppColors.darkSlate.withValues(alpha: 0.6),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: active
+                        ? Colors.white.withValues(alpha: 0.5)
+                        : Colors.white.withValues(alpha: 0.1),
+                    width: 1,
                   ),
-              ],
-            ),
-            child: Icon(
-              icon,
-              color: Colors.white,
-              size: 22,
+                  boxShadow: [
+                    if (active)
+                      BoxShadow(
+                        color: AppColors.teal.withValues(alpha: 0.3),
+                        blurRadius: 15,
+                        spreadRadius: 2,
+                      ),
+                  ],
+                ),
+                child: Icon(
+                  icon,
+                  color: Colors.white, // Keep white on Teal button
+                  size: 22,
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-    ).animate(target: active ? 1 : 0)
-     .scale(begin: const Offset(1, 1), end: const Offset(1.05, 1.05), duration: 200.ms);
+        )
+        .animate(target: active ? 1 : 0)
+        .scale(
+          begin: const Offset(1, 1),
+          end: const Offset(1.05, 1.05),
+          duration: 200.ms,
+        );
   }
 }
-

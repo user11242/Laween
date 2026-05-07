@@ -64,7 +64,7 @@ class _GroupsPageState extends State<GroupsPage>
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: AppColors.getBackground(context),
       body: Stack(
         children: [
           StreamBuilder<QuerySnapshot>(
@@ -110,8 +110,10 @@ class _GroupsPageState extends State<GroupsPage>
                   : allGroups.where((g) {
                       final query = _searchQuery.toLowerCase();
                       return g.name.toLowerCase().contains(query) ||
-                          (g.lastMessage?.toLowerCase().contains(query) ?? false) ||
-                          (g.lastMessageSender?.toLowerCase().contains(query) ?? false);
+                          (g.lastMessage?.toLowerCase().contains(query) ??
+                              false) ||
+                          (g.lastMessageSender?.toLowerCase().contains(query) ??
+                              false);
                     }).toList();
 
               // Sync FCM topic subscriptions for all groups
@@ -181,11 +183,13 @@ class _GroupsPageState extends State<GroupsPage>
                       padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.getSurfaceElevated(context),
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
+                              color: AppColors.getShadow(
+                                context,
+                              ).withValues(alpha: 0.05),
                               blurRadius: 15,
                               offset: const Offset(0, 5),
                             ),
@@ -198,7 +202,7 @@ class _GroupsPageState extends State<GroupsPage>
                           decoration: InputDecoration(
                             hintText: l10n.search,
                             hintStyle: GoogleFonts.inter(
-                              color: Colors.grey.shade400,
+                              color: AppColors.getTextMuted(context),
                               fontSize: 14,
                             ),
                             prefixIcon: const Icon(
@@ -208,7 +212,11 @@ class _GroupsPageState extends State<GroupsPage>
                             ),
                             suffixIcon: _searchQuery.isNotEmpty
                                 ? IconButton(
-                                    icon: const Icon(Icons.close, size: 18, color: AppColors.slate),
+                                    icon: const Icon(
+                                      Icons.close,
+                                      size: 18,
+                                      color: AppColors.slate,
+                                    ),
                                     onPressed: () {
                                       setState(() => _searchQuery = '');
                                       FocusScope.of(context).unfocus();
@@ -254,7 +262,7 @@ class _GroupsPageState extends State<GroupsPage>
                               ),
                               child: Divider(
                                 height: 1,
-                                color: Colors.grey.shade100,
+                                color: AppColors.getDivider(context),
                               ),
                             );
                           }
@@ -372,7 +380,10 @@ class _GroupsPageState extends State<GroupsPage>
                 ? "ابدأ بإنشاء مجموعة جديدة أو انضم إلى المجموعات المتاحة"
                 : "Start by creating a new group or join existing ones",
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(fontSize: 14, color: Colors.grey.shade500),
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: AppColors.getTextSecondary(context),
+            ),
           ),
         ),
       ],
@@ -410,19 +421,27 @@ class _GroupCard extends StatelessWidget {
       // Fast check for unpaired surrogates
       for (int i = 0; i < input.length; i++) {
         int code = input.codeUnitAt(i);
-        if (code >= 0xD800 && code <= 0xDBFF) { // High surrogate
+        if (code >= 0xD800 && code <= 0xDBFF) {
+          // High surrogate
           if (i + 1 == input.length) {
-            debugPrint("🚨 BAD STRING DETECTED in $source: Dangling high surrogate! String: $input");
+            debugPrint(
+              "🚨 BAD STRING DETECTED in $source: Dangling high surrogate! String: $input",
+            );
             return "CORRUPTED TEXT";
           }
           int next = input.codeUnitAt(i + 1);
           if (next < 0xDC00 || next > 0xDFFF) {
-            debugPrint("🚨 BAD STRING DETECTED in $source: Unpaired high surrogate! String: $input");
+            debugPrint(
+              "🚨 BAD STRING DETECTED in $source: Unpaired high surrogate! String: $input",
+            );
             return "CORRUPTED TEXT";
           }
           i++;
-        } else if (code >= 0xDC00 && code <= 0xDFFF) { // Low surrogate
-          debugPrint("🚨 BAD STRING DETECTED in $source: Dangling low surrogate! String: $input");
+        } else if (code >= 0xDC00 && code <= 0xDFFF) {
+          // Low surrogate
+          debugPrint(
+            "🚨 BAD STRING DETECTED in $source: Dangling low surrogate! String: $input",
+          );
           return "CORRUPTED TEXT";
         }
       }
@@ -441,7 +460,7 @@ class _GroupCard extends StatelessWidget {
     final unreadCount = group.unreadCounts[currentUser?.uid] ?? 0;
 
     return Material(
-      color: Colors.white,
+      color: AppColors.getSurface(context),
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -468,7 +487,7 @@ class _GroupCard extends StatelessWidget {
                           imageUrl: group.photoUrl!,
                           fit: BoxFit.cover,
                           placeholder: (context, url) => Container(
-                            color: Colors.grey.shade100,
+                            color: AppColors.getSurface(context),
                             child: const Center(
                               child: SizedBox(
                                 width: 20,
@@ -522,7 +541,7 @@ class _GroupCard extends StatelessWidget {
                               fontSize: 11,
                               color: unreadCount > 0
                                   ? AppColors.teal
-                                  : Colors.grey.shade500,
+                                  : AppColors.getTextSecondary(context),
                               fontWeight: unreadCount > 0
                                   ? FontWeight.bold
                                   : FontWeight.normal,
@@ -621,7 +640,7 @@ class _GroupCard extends StatelessWidget {
                                 text: TextSpan(
                                   style: GoogleFonts.inter(
                                     fontSize: 13,
-                                    color: Colors.grey.shade600,
+                                    color: AppColors.getTextSecondary(context),
                                   ),
                                   children: [
                                     if (group.lastMessageSender != null)

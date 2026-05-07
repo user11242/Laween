@@ -21,7 +21,6 @@ import '../data/services/outing_service.dart';
 import '../data/services/chat_service.dart';
 import '../../../core/services/location_service.dart';
 import '../../../core/services/google_maps_service.dart';
-import '../widgets/sos_alarm_overlay.dart';
 import 'ar_friend_compass_page.dart';
 import 'receipt_splitter_screen.dart';
 
@@ -58,7 +57,6 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
   final TextEditingController _chatController = TextEditingController();
   final ScrollController _chatScrollController = ScrollController();
   final ChatService _chatService = ChatService();
-
 
   // Premium Map Style (Electric Midnight / High Contrast)
   static const String _mapStyle = '''
@@ -169,8 +167,14 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     }
   }
 
-  Future<BitmapDescriptor> _getAvatarIcon(String name, String? photoUrl, Color color, {bool isSelected = false}) async {
-    final cacheKey = "avatar_${photoUrl ?? name}_${color.toARGB32()}_$isSelected";
+  Future<BitmapDescriptor> _getAvatarIcon(
+    String name,
+    String? photoUrl,
+    Color color, {
+    bool isSelected = false,
+  }) async {
+    final cacheKey =
+        "avatar_${photoUrl ?? name}_${color.toARGB32()}_$isSelected";
     if (_customMarkers.containsKey(cacheKey)) return _customMarkers[cacheKey]!;
 
     final recorder = ui.PictureRecorder();
@@ -209,27 +213,49 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     if (photoUrl != null && photoUrl.isNotEmpty) {
       try {
         final Completer<ui.Image> completer = Completer();
-        final imageStream = NetworkImage(photoUrl).resolve(ImageConfiguration.empty);
-        imageStream.addListener(ImageStreamListener((info, _) {
-          if (!completer.isCompleted) completer.complete(info.image);
-        }, onError: (exception, stackTrace) {
-           if (!completer.isCompleted) completer.completeError(exception);
-        }));
-        
-        final ui.Image image = await completer.future.timeout(const Duration(seconds: 4));
-        
+        final imageStream = NetworkImage(
+          photoUrl,
+        ).resolve(ImageConfiguration.empty);
+        imageStream.addListener(
+          ImageStreamListener(
+            (info, _) {
+              if (!completer.isCompleted) completer.complete(info.image);
+            },
+            onError: (exception, stackTrace) {
+              if (!completer.isCompleted) completer.completeError(exception);
+            },
+          ),
+        );
+
+        final ui.Image image = await completer.future.timeout(
+          const Duration(seconds: 4),
+        );
+
         canvas.save();
-        Path path = Path()..addOval(Rect.fromCircle(center: Offset(radius, radius), radius: radius - 14));
+        Path path = Path()
+          ..addOval(
+            Rect.fromCircle(
+              center: Offset(radius, radius),
+              radius: radius - 14,
+            ),
+          );
         canvas.clipPath(path);
-        
+
         paintImage(
           canvas: canvas,
-          rect: Rect.fromCircle(center: Offset(radius, radius), radius: radius - 14),
+          rect: Rect.fromCircle(
+            center: Offset(radius, radius),
+            radius: radius - 14,
+          ),
           image: image,
           fit: BoxFit.cover,
         );
         canvas.restore();
-        canvas.drawCircle(const Offset(radius, radius), radius - 14, borderPaint);
+        canvas.drawCircle(
+          const Offset(radius, radius),
+          radius - 14,
+          borderPaint,
+        );
       } catch (e) {
         _drawInitialMarker(canvas, radius, color, name, borderPaint);
       }
@@ -246,7 +272,13 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     return descriptor;
   }
 
-  void _drawInitialMarker(Canvas canvas, double radius, Color color, String name, Paint borderPaint) {
+  void _drawInitialMarker(
+    Canvas canvas,
+    double radius,
+    Color color,
+    String name,
+    Paint borderPaint,
+  ) {
     final paint = Paint()..color = color;
     canvas.drawCircle(Offset(radius, radius), radius - 15, paint);
     canvas.drawCircle(Offset(radius, radius), radius - 15, borderPaint);
@@ -269,7 +301,12 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     );
   }
 
-  Future<BitmapDescriptor> _getVenueMarker(String venueId, String? photoUrl, bool isSelected, int? index) async {
+  Future<BitmapDescriptor> _getVenueMarker(
+    String venueId,
+    String? photoUrl,
+    bool isSelected,
+    int? index,
+  ) async {
     final cacheKey = "venue_${venueId}_$isSelected";
     if (_customMarkers.containsKey(cacheKey)) return _customMarkers[cacheKey]!;
 
@@ -280,10 +317,11 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
 
     // Rank index (1-based)
 
-
     // Outer glow (More subtle)
     final glowPaint = Paint()
-      ..color = (isSelected ? AppColors.teal : Colors.pinkAccent).withValues(alpha: 0.3)
+      ..color = (isSelected ? AppColors.teal : Colors.pinkAccent).withValues(
+        alpha: 0.3,
+      )
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
     canvas.drawCircle(Offset(radius, radius), radius - 8, glowPaint);
 
@@ -296,22 +334,40 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     if (photoUrl != null && photoUrl.isNotEmpty) {
       try {
         final Completer<ui.Image> completer = Completer();
-        final imageStream = NetworkImage(photoUrl).resolve(ImageConfiguration.empty);
-        imageStream.addListener(ImageStreamListener((info, _) {
-          if (!completer.isCompleted) completer.complete(info.image);
-        }, onError: (exception, stackTrace) {
-           if (!completer.isCompleted) completer.completeError(exception);
-        }));
-        
-        final ui.Image image = await completer.future.timeout(const Duration(seconds: 4));
-        
+        final imageStream = NetworkImage(
+          photoUrl,
+        ).resolve(ImageConfiguration.empty);
+        imageStream.addListener(
+          ImageStreamListener(
+            (info, _) {
+              if (!completer.isCompleted) completer.complete(info.image);
+            },
+            onError: (exception, stackTrace) {
+              if (!completer.isCompleted) completer.completeError(exception);
+            },
+          ),
+        );
+
+        final ui.Image image = await completer.future.timeout(
+          const Duration(seconds: 4),
+        );
+
         canvas.save();
-        Path path = Path()..addOval(Rect.fromCircle(center: Offset(radius, radius), radius: radius - 12));
+        Path path = Path()
+          ..addOval(
+            Rect.fromCircle(
+              center: Offset(radius, radius),
+              radius: radius - 12,
+            ),
+          );
         canvas.clipPath(path);
-        
+
         paintImage(
           canvas: canvas,
-          rect: Rect.fromCircle(center: Offset(radius, radius), radius: radius - 12),
+          rect: Rect.fromCircle(
+            center: Offset(radius, radius),
+            radius: radius - 12,
+          ),
           image: image,
           fit: BoxFit.cover,
         );
@@ -325,19 +381,33 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     }
 
     // Rank Badge
-    final rankPaint = Paint()..color = isSelected ? AppColors.teal : AppColors.darkSlate;
+    final rankPaint = Paint()
+      ..color = isSelected ? AppColors.teal : AppColors.darkSlate;
     const rankSize = 24.0;
-    canvas.drawCircle(Offset(size - rankSize / 2, rankSize / 2), rankSize / 2, rankPaint);
-    
+    canvas.drawCircle(
+      Offset(size - rankSize / 2, rankSize / 2),
+      rankSize / 2,
+      rankPaint,
+    );
+
     final textPainter = TextPainter(
       text: TextSpan(
         text: index != null ? "${index + 1}" : '?',
-        style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+        style: GoogleFonts.outfit(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    textPainter.paint(canvas, Offset(size - rankSize / 2 - textPainter.width / 2, rankSize / 2 - textPainter.height / 2));
-
+    textPainter.paint(
+      canvas,
+      Offset(
+        size - rankSize / 2 - textPainter.width / 2,
+        rankSize / 2 - textPainter.height / 2,
+      ),
+    );
 
     final picture = recorder.endRecording();
     final img = await picture.toImage(size.toInt(), size.toInt());
@@ -348,11 +418,17 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     return descriptor;
   }
 
-  void _drawVenuePlaceholder(Canvas canvas, double radius, bool isSelected, Paint borderPaint) {
-    final paint = Paint()..color = isSelected ? AppColors.teal : Colors.pinkAccent;
+  void _drawVenuePlaceholder(
+    Canvas canvas,
+    double radius,
+    bool isSelected,
+    Paint borderPaint,
+  ) {
+    final paint = Paint()
+      ..color = isSelected ? AppColors.teal : Colors.pinkAccent;
     canvas.drawCircle(Offset(radius, radius), radius - 12, paint);
     canvas.drawCircle(Offset(radius, radius), radius - 12, borderPaint);
-    
+
     // Draw an icon placeholder
     final textPainter = TextPainter(
       text: TextSpan(
@@ -379,11 +455,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
 
     await controller.animateCamera(
       CameraUpdate.newCameraPosition(
-        CameraPosition(
-          target: LatLng(lat, lng),
-          zoom: 16.0,
-          tilt: 45,
-        ),
+        CameraPosition(target: LatLng(lat, lng), zoom: 16.0, tilt: 45),
       ),
     );
   }
@@ -398,14 +470,17 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     return r"$$";
   }
 
-  Widget _buildMapControl({required IconData icon, required VoidCallback onTap}) {
+  Widget _buildMapControl({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
+        color: AppColors.getSurfaceElevated(context).withValues(alpha: 0.9),
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: AppColors.getShadow(context),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -418,7 +493,11 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
           customBorder: const CircleBorder(),
           child: Padding(
             padding: const EdgeInsets.all(12),
-            child: Icon(icon, color: AppColors.darkSlate, size: 24),
+            child: Icon(
+              icon,
+              color: AppColors.getTextPrimary(context),
+              size: 24,
+            ),
           ),
         ),
       ),
@@ -431,8 +510,8 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     // Default selected member to current user on first load
     if (!_selectedParticipantInitialized && session.participants.isNotEmpty) {
       final myUid = FirebaseAuth.instance.currentUser?.uid;
-      final defaultUid = myUid != null &&
-              session.participants.any((p) => p.uid == myUid)
+      final defaultUid =
+          myUid != null && session.participants.any((p) => p.uid == myUid)
           ? myUid
           : session.participants.first.uid;
       if (mounted) {
@@ -451,8 +530,12 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
       if (p.location != null) {
         final userColor = AppColors.getUserColor(p.uid);
         final isThisMemberSelected = _selectedParticipantUid == p.uid;
-        final icon = await _getAvatarIcon(p.name, p.photoUrl, userColor,
-            isSelected: isThisMemberSelected);
+        final icon = await _getAvatarIcon(
+          p.name,
+          p.photoUrl,
+          userColor,
+          isSelected: isThisMemberSelected,
+        );
         newMarkers.add(
           Marker(
             markerId: MarkerId('p_${p.uid}'),
@@ -461,7 +544,9 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
             icon: icon,
             // Always keep someone selected — tapping a member sets them as
             // the metric source for all venue cards.
-            zIndexInt: isThisMemberSelected ? 210 : 200, // members always above venues
+            zIndexInt: isThisMemberSelected
+                ? 210
+                : 200, // members always above venues
             onTap: () {
               setState(() => _selectedParticipantUid = p.uid);
               _updateMarkers(session);
@@ -482,14 +567,21 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
         if (photoRef != null) {
           if (photoRef.startsWith('places/')) {
             // New Places API (V1) Photo URL
-            photoUrl = "https://places.googleapis.com/v1/$photoRef/media?key=${dotenv.env['GOOGLE_MAPS_API_KEY']}&maxHeightPx=800&maxWidthPx=800";
+            photoUrl =
+                "https://places.googleapis.com/v1/$photoRef/media?key=${dotenv.env['GOOGLE_MAPS_API_KEY']}&maxHeightPx=800&maxWidthPx=800";
           } else {
             // Legacy Places API Photo URL
-            photoUrl = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=$photoRef&key=${dotenv.env['GOOGLE_MAPS_API_KEY']}";
+            photoUrl =
+                "https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=$photoRef&key=${dotenv.env['GOOGLE_MAPS_API_KEY']}";
           }
         }
-            
-        final icon = await _getVenueMarker(v['id'], photoUrl, i == _currentVenueIndex, i);
+
+        final icon = await _getVenueMarker(
+          v['id'],
+          photoUrl,
+          i == _currentVenueIndex,
+          i,
+        );
 
         newMarkers.add(
           Marker(
@@ -511,10 +603,14 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     // 3. Participant Routes (if selected)
     final Set<Polyline> newPolylines = {};
     if (_selectedParticipantUid != null) {
-      final p = session.participants.firstWhere((p) => p.uid == _selectedParticipantUid);
-      final dest = session.winner != null ? session.winner! : (session.finalLocation != null ? session.finalLocation : null);
+      final p = session.participants.firstWhere(
+        (p) => p.uid == _selectedParticipantUid,
+      );
+      final dest = session.winner != null
+          ? session.winner!
+          : (session.finalLocation != null ? session.finalLocation : null);
       final destLoc = dest?['location'];
-      
+
       if (p.location != null && destLoc != null) {
         final route = await GoogleMapsService().getRoutePolyline(
           originLat: p.location!.latitude,
@@ -541,11 +637,14 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     }
 
     if (_isDisposed || !mounted) return;
-    
+
     // Guard against infinite rebuild loops: Only update if markers or polylines actually changed
-    bool markersChanged = _markers.length != newMarkers.length || !_markers.containsAll(newMarkers);
-    bool polylinesChanged = _polylines.length != newPolylines.length; // Simplified for performance
-    
+    bool markersChanged =
+        _markers.length != newMarkers.length ||
+        !_markers.containsAll(newMarkers);
+    bool polylinesChanged =
+        _polylines.length != newPolylines.length; // Simplified for performance
+
     if (markersChanged || polylinesChanged) {
       if (mounted) {
         setState(() {
@@ -590,7 +689,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
       builder: (context, snapshot) {
         if (!snapshot.hasData || snapshot.data == null) {
           return Scaffold(
-            backgroundColor: AppColors.darkSlate,
+            backgroundColor: AppColors.getBackground(context),
             body: const Center(
               child: CircularProgressIndicator(color: AppColors.teal),
             ),
@@ -604,10 +703,11 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
 
         // Initialize the selected member synchronously on first data arrival
         // so venue cards always have a valid UID to look up — never null.
-        if (!_selectedParticipantInitialized && session.participants.isNotEmpty) {
+        if (!_selectedParticipantInitialized &&
+            session.participants.isNotEmpty) {
           final myUid = FirebaseAuth.instance.currentUser?.uid;
-          _selectedParticipantUid = myUid != null &&
-                  session.participants.any((p) => p.uid == myUid)
+          _selectedParticipantUid =
+              myUid != null && session.participants.any((p) => p.uid == myUid)
               ? myUid
               : session.participants.first.uid;
           _selectedParticipantInitialized = true;
@@ -620,7 +720,8 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
             backgroundColor: AppColors.darkSlate,
             body: Builder(
               builder: (context) {
-                final List venuesRaw = session.finalLocation?['topVenues'] ?? [];
+                final List venuesRaw =
+                    session.finalLocation?['topVenues'] ?? [];
                 final venues = List<Map<String, dynamic>>.from(venuesRaw);
                 venues.sort((a, b) {
                   final rA = (a['rating'] ?? 0.0) as num;
@@ -638,16 +739,21 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                   if (mounted && !_isDisposed) _updateMarkers(session);
                 });
 
-
                 return Column(
                   children: [
                     // TOP 50%: MAP (Only during voting)
-                    if (session.status != OutingStatus.completed && session.status != OutingStatus.archived)
+                    if (session.status != OutingStatus.completed &&
+                        session.status != OutingStatus.archived)
                       Expanded(
                         flex: 1,
                         child: Container(
                           decoration: BoxDecoration(
-                            border: Border(bottom: BorderSide(color: Colors.grey.shade300, width: 1)),
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Colors.grey.shade300,
+                                width: 1,
+                              ),
+                            ),
                           ),
                           child: Stack(
                             children: [
@@ -663,7 +769,10 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                 onMapCreated: (controller) {
                                   if (!_controller.isCompleted) {
                                     _controller.complete(controller);
-                                    Future.delayed(const Duration(milliseconds: 500), () => _fitBounds());
+                                    Future.delayed(
+                                      const Duration(milliseconds: 500),
+                                      () => _fitBounds(),
+                                    );
                                   }
                                 },
                                 zoomControlsEnabled: false,
@@ -675,13 +784,13 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                 compassEnabled: false,
                                 mapToolbarEnabled: false,
                               ),
-                              
+
                               // 🔭 CUSTOM PREMIUM ZOOM CONTROLS
                               Positioned(
-                top: 50,
-                left: 20,
-                child: _buildBackButton(context),
-              ),
+                                top: 50,
+                                left: 20,
+                                child: _buildBackButton(context),
+                              ),
                               Positioned(
                                 right: 20,
                                 bottom: 20,
@@ -689,41 +798,49 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     _buildMapControl(
-                                    icon: Icons.my_location_rounded,
-                                    onTap: () => _fitBounds(),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  _buildMapControl(
-                                    icon: Icons.add_rounded,
-                                    onTap: () async {
-                                      final controller = await _controller.future;
-                                      controller.animateCamera(CameraUpdate.zoomIn());
-                                    },
-                                  ),
-                                  const SizedBox(height: 12),
-                                  _buildMapControl(
-                                    icon: Icons.remove_rounded,
-                                    onTap: () async {
-                                      final controller = await _controller.future;
-                                      controller.animateCamera(CameraUpdate.zoomOut());
-                                    },
-                                  ),
-                                ],
+                                      icon: Icons.my_location_rounded,
+                                      onTap: () => _fitBounds(),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _buildMapControl(
+                                      icon: Icons.add_rounded,
+                                      onTap: () async {
+                                        final controller =
+                                            await _controller.future;
+                                        controller.animateCamera(
+                                          CameraUpdate.zoomIn(),
+                                        );
+                                      },
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _buildMapControl(
+                                      icon: Icons.remove_rounded,
+                                      onTap: () async {
+                                        final controller =
+                                            await _controller.future;
+                                        controller.animateCamera(
+                                          CameraUpdate.zoomOut(),
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
 
                     // BOTTOM CONTENT: VENUE LIST or WINNER PANEL
-                    if (session.status == OutingStatus.voting && venues.isNotEmpty)
+                    if (session.status == OutingStatus.voting &&
+                        venues.isNotEmpty)
                       Expanded(
                         flex: 1,
                         child: _buildVenueListPanel(venues, session),
                       ),
-                    
-                    if (session.status == OutingStatus.completed && session.winner != null)
+
+                    if (session.status == OutingStatus.completed &&
+                        session.winner != null)
                       Expanded(
                         flex: 1, // Will occupy full screen if map is hidden
                         child: _buildWinnerPanel(session),
@@ -741,11 +858,11 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
   Widget _buildVenueListPanel(List venues, OutingSessionModel session) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.getSurfaceElevated(context),
         borderRadius: BorderRadius.zero,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: AppColors.getShadow(context),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -759,7 +876,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
             child: Container(
               height: 42,
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
+                color: AppColors.getInputBackground(context),
                 borderRadius: BorderRadius.circular(22),
               ),
               child: Row(
@@ -794,7 +911,11 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                       itemBuilder: (context, index) {
                         final venue = venues[index];
                         return _buildVenueListItem(
-                            venue, session, index == _currentVenueIndex, index);
+                          venue,
+                          session,
+                          index == _currentVenueIndex,
+                          index,
+                        );
                       },
                     ),
             ),
@@ -824,7 +945,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                       color: AppColors.teal.withValues(alpha: 0.25),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
-                    )
+                    ),
                   ]
                 : [],
           ),
@@ -834,7 +955,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
             style: GoogleFonts.outfit(
               fontSize: 13,
               fontWeight: FontWeight.bold,
-              color: selected ? Colors.white : Colors.grey.shade500,
+              color: selected ? Colors.white : AppColors.getTextMuted(context),
             ),
           ),
         ),
@@ -861,8 +982,10 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                 );
               }
               final messages = snapshot.data!
-                  .where((m) =>
-                      (m.type == 'text' || m.type == 'voice') && !m.isDeleted)
+                  .where(
+                    (m) =>
+                        (m.type == 'text' || m.type == 'voice') && !m.isDeleted,
+                  )
                   .toList()
                   .reversed
                   .toList();
@@ -873,7 +996,9 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                     'No messages yet.\nBe the first to say hi! 👋',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
-                        fontSize: 13, color: Colors.grey.shade400),
+                      fontSize: 13,
+                      color: AppColors.getTextMuted(context),
+                    ),
                   ),
                 );
               }
@@ -881,14 +1006,17 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (_chatScrollController.hasClients) {
                   _chatScrollController.jumpTo(
-                      _chatScrollController.position.maxScrollExtent);
+                    _chatScrollController.position.maxScrollExtent,
+                  );
                 }
               });
 
               return ListView.builder(
                 controller: _chatScrollController,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 itemCount: messages.length,
                 itemBuilder: (context, i) {
                   final msg = messages[i];
@@ -906,20 +1034,23 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                           CircleAvatar(
                             radius: 12,
                             backgroundColor: userColor.withValues(alpha: 0.15),
-                            backgroundImage: msg.senderPhotoUrl != null &&
+                            backgroundImage:
+                                msg.senderPhotoUrl != null &&
                                     msg.senderPhotoUrl!.isNotEmpty
                                 ? NetworkImage(msg.senderPhotoUrl!)
                                 : null,
-                            child: (msg.senderPhotoUrl == null ||
+                            child:
+                                (msg.senderPhotoUrl == null ||
                                     msg.senderPhotoUrl!.isEmpty)
                                 ? Text(
                                     msg.senderName.isNotEmpty
                                         ? msg.senderName[0].toUpperCase()
                                         : '?',
                                     style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                        color: userColor),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: userColor,
+                                    ),
                                   )
                                 : null,
                           ),
@@ -928,11 +1059,13 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                         Flexible(
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
                               color: isMe
                                   ? AppColors.teal
-                                  : Colors.grey.shade100,
+                                  : AppColors.getSurface(context),
                               borderRadius: BorderRadius.only(
                                 topLeft: const Radius.circular(16),
                                 topRight: const Radius.circular(16),
@@ -942,7 +1075,8 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                               border: !isMe
                                   ? Border.all(
                                       color: userColor.withValues(alpha: 0.3),
-                                      width: 1.5)
+                                      width: 1.5,
+                                    )
                                   : null,
                             ),
                             child: Column(
@@ -965,7 +1099,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                     fontSize: 13,
                                     color: isMe
                                         ? Colors.white
-                                        : AppColors.darkSlate,
+                                        : AppColors.getTextPrimary(context),
                                   ),
                                 ),
                               ],
@@ -985,9 +1119,9 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
         Container(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.getSurfaceElevated(context),
             border: Border(
-              top: BorderSide(color: Colors.grey.shade100, width: 1),
+              top: BorderSide(color: AppColors.getDivider(context), width: 1),
             ),
           ),
           child: Row(
@@ -1001,11 +1135,15 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                   decoration: InputDecoration(
                     hintText: 'Say something...',
                     hintStyle: GoogleFonts.inter(
-                        fontSize: 13, color: Colors.grey.shade400),
+                      fontSize: 13,
+                      color: AppColors.getTextMuted(context),
+                    ),
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 10),
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                     filled: true,
-                    fillColor: Colors.grey.shade50,
+                    fillColor: AppColors.getInputBackground(context),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(24),
                       borderSide: BorderSide.none,
@@ -1023,8 +1161,11 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                     color: AppColors.teal,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.send_rounded,
-                      color: Colors.white, size: 18),
+                  child: const Icon(
+                    Icons.send_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                 ),
               ),
             ],
@@ -1048,18 +1189,23 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     _chatController.clear();
   }
 
-
-
-  Widget _buildVenueListItem(Map<String, dynamic> venue, OutingSessionModel session, bool isSelected, int index) {
+  Widget _buildVenueListItem(
+    Map<String, dynamic> venue,
+    OutingSessionModel session,
+    bool isSelected,
+    int index,
+  ) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     final loc = venue['location'];
     final photoRef = venue['photoReference'];
     String? photoUrl;
     if (photoRef != null) {
       if (photoRef.startsWith('places/')) {
-        photoUrl = "https://places.googleapis.com/v1/$photoRef/media?key=${dotenv.env['GOOGLE_MAPS_API_KEY']}&maxHeightPx=800&maxWidthPx=800";
+        photoUrl =
+            "https://places.googleapis.com/v1/$photoRef/media?key=${dotenv.env['GOOGLE_MAPS_API_KEY']}&maxHeightPx=800&maxWidthPx=800";
       } else {
-        photoUrl = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=$photoRef&key=${dotenv.env['GOOGLE_MAPS_API_KEY']}";
+        photoUrl =
+            "https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=$photoRef&key=${dotenv.env['GOOGLE_MAPS_API_KEY']}";
       }
     }
 
@@ -1068,7 +1214,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     final votesCount = (venue['votes'] as List?)?.length ?? 0;
 
     final isOpen = _openSwipeIndex == index;
-    
+
     // Calculate dynamic height to prevent overflow
     final memberRoutes = venue['memberRoutes'] as Map<String, dynamic>?;
     int itemsCount = 1;
@@ -1077,8 +1223,10 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
         itemsCount = session.participants.length;
       } else {
         int count = 0;
-        if (uid != null && session.participants.any((p) => p.uid == uid)) count++;
-        if (_selectedParticipantUid != null && _selectedParticipantUid != uid) count++;
+        if (uid != null && session.participants.any((p) => p.uid == uid))
+          count++;
+        if (_selectedParticipantUid != null && _selectedParticipantUid != uid)
+          count++;
         itemsCount = count > 0 ? count : 1;
       }
     }
@@ -1094,7 +1242,9 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
-                color: hasVotedForThis ? Colors.redAccent.shade400 : AppColors.teal,
+                color: hasVotedForThis
+                    ? Colors.redAccent.shade400
+                    : AppColors.teal,
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Row(
@@ -1111,10 +1261,14 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                             venueId: venue['id'],
                             uid: uid,
                           );
-                          setState(() => _openSwipeIndex = null); // Close after vote
+                          setState(
+                            () => _openSwipeIndex = null,
+                          ); // Close after vote
                         }
                       },
-                      borderRadius: const BorderRadius.horizontal(right: Radius.circular(24)),
+                      borderRadius: const BorderRadius.horizontal(
+                        right: Radius.circular(24),
+                      ),
                       child: Container(
                         width: 100,
                         alignment: Alignment.center,
@@ -1122,7 +1276,9 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              hasVotedForThis ? Icons.heart_broken_rounded : Icons.thumb_up_rounded,
+                              hasVotedForThis
+                                  ? Icons.heart_broken_rounded
+                                  : Icons.thumb_up_rounded,
                               color: Colors.white,
                               size: 28,
                             ),
@@ -1144,7 +1300,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
               ),
             ),
           ),
-          
+
           // Foreground Card with Horizontal Drag
           AnimatedPositioned(
             duration: const Duration(milliseconds: 250),
@@ -1172,15 +1328,19 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.getSurfaceElevated(context),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: isSelected ? AppColors.teal.withValues(alpha: 0.3) : Colors.grey.shade100,
+                    color: isSelected
+                        ? AppColors.teal.withValues(alpha: 0.3)
+                        : AppColors.getBorder(context),
                     width: 1.5,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
+                      color: AppColors.getShadow(
+                        context,
+                      ).withValues(alpha: 0.03),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -1189,7 +1349,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                         color: AppColors.teal.withValues(alpha: 0.1),
                         blurRadius: 15,
                         offset: const Offset(0, 8),
-                      )
+                      ),
                   ],
                 ),
                 child: Row(
@@ -1199,10 +1359,13 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                       child: Container(
                         width: 90,
                         height: 90,
-                        color: Colors.grey.shade100,
-                        child: photoUrl != null 
-                          ? CachedNetworkImage(imageUrl: photoUrl, fit: BoxFit.cover)
-                          : const Icon(Icons.restaurant_rounded),
+                        color: AppColors.getSurface(context),
+                        child: photoUrl != null
+                            ? CachedNetworkImage(
+                                imageUrl: photoUrl,
+                                fit: BoxFit.cover,
+                              )
+                            : const Icon(Icons.restaurant_rounded),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -1213,9 +1376,14 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                           Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: isSelected ? AppColors.teal.withValues(alpha: 0.1) : AppColors.darkSlate.withValues(alpha: 0.05),
+                                  color: isSelected
+                                      ? AppColors.teal.withValues(alpha: 0.1)
+                                      : AppColors.getSurface(context),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
@@ -1223,7 +1391,9 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                   style: GoogleFonts.outfit(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w900,
-                                    color: isSelected ? AppColors.teal : AppColors.darkSlate,
+                                    color: isSelected
+                                        ? AppColors.teal
+                                        : AppColors.getTextPrimary(context),
                                   ),
                                 ),
                               ),
@@ -1237,14 +1407,18 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                 ),
                               ),
                               const Spacer(),
-                              const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
+                              const Icon(
+                                Icons.star_rounded,
+                                color: Colors.amber,
+                                size: 16,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 "${venue['rating'] ?? '?.?'}",
                                 style: GoogleFonts.inter(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.darkSlate,
+                                  color: AppColors.getTextPrimary(context),
                                 ),
                               ),
                             ],
@@ -1257,167 +1431,236 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                             style: GoogleFonts.outfit(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.darkSlate,
+                              color: AppColors.getTextPrimary(context),
                             ),
                           ),
                           const SizedBox(height: 6),
                           // ── SELECTED MEMBER ROUTE METRIC ─────────────────
-                          Builder(builder: (context) {
-                            final memberRoutes = venue['memberRoutes'] as Map<String, dynamic>?;
-                            final fallbackEta = venue['averageEtaMinutes'] as int?;
-                            final fallbackDistMeters = venue['averageRouteDistanceMeters'] as int?;
+                          Builder(
+                            builder: (context) {
+                              final memberRoutes =
+                                  venue['memberRoutes']
+                                      as Map<String, dynamic>?;
+                              final fallbackEta =
+                                  venue['averageEtaMinutes'] as int?;
+                              final fallbackDistMeters =
+                                  venue['averageRouteDistanceMeters'] as int?;
 
-                            if (memberRoutes != null) {
-                              final myUid = FirebaseAuth.instance.currentUser?.uid;
-                              
-                              // Build list of UIDs to show route metrics for
-                              List<String> uidsToShow = [];
-                              
-                              if (session.participants.length <= 3) {
-                                // Add current user first if present
-                                if (myUid != null && session.participants.any((p) => p.uid == myUid)) {
-                                  uidsToShow.add(myUid);
-                                }
-                                // Add the rest
-                                for (var p in session.participants) {
-                                  if (!uidsToShow.contains(p.uid)) {
-                                    uidsToShow.add(p.uid);
+                              if (memberRoutes != null) {
+                                final myUid =
+                                    FirebaseAuth.instance.currentUser?.uid;
+
+                                // Build list of UIDs to show route metrics for
+                                List<String> uidsToShow = [];
+
+                                if (session.participants.length <= 3) {
+                                  // Add current user first if present
+                                  if (myUid != null &&
+                                      session.participants.any(
+                                        (p) => p.uid == myUid,
+                                      )) {
+                                    uidsToShow.add(myUid);
                                   }
-                                }
-                              } else {
-                                // > 3 members: show current user + selected member
-                                if (myUid != null && session.participants.any((p) => p.uid == myUid)) {
-                                  uidsToShow.add(myUid);
-                                }
-                                if (_selectedParticipantUid != null && !uidsToShow.contains(_selectedParticipantUid)) {
-                                  uidsToShow.add(_selectedParticipantUid!);
-                                }
-                              }
-
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: uidsToShow.map((pUid) {
-                                  final p = session.participants.firstWhere(
-                                    (p) => p.uid == pUid,
-                                    orElse: () => session.participants.first,
-                                  );
-                                  final route = memberRoutes[pUid] as Map<String, dynamic>?;
-                                  final routeOk = route?['routeAvailable'] == true;
-                                  final etaMin = route?['etaMinutes'] as int?;
-                                  final distKm = (route?['distanceKm'] as num?)?.toDouble();
-
-                                  String metricLabel;
-                                  if (routeOk && etaMin != null && distKm != null) {
-                                    if (session.calculationMode == 'Time') {
-                                      metricLabel = '$etaMin min  •  ${distKm.toStringAsFixed(1)} km';
-                                    } else {
-                                      metricLabel = '${distKm.toStringAsFixed(1)} km  •  $etaMin min';
+                                  // Add the rest
+                                  for (var p in session.participants) {
+                                    if (!uidsToShow.contains(p.uid)) {
+                                      uidsToShow.add(p.uid);
                                     }
-                                  } else {
-                                    metricLabel = 'Route unavailable';
                                   }
-
-                                  final userColor = AppColors.getUserColor(pUid);
-                                  final isMe = pUid == myUid;
-
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 4.0),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 9,
-                                          backgroundColor: userColor.withValues(alpha: 0.15),
-                                          backgroundImage: p.photoUrl != null && p.photoUrl!.isNotEmpty
-                                              ? NetworkImage(p.photoUrl!)
-                                              : null,
-                                          child: (p.photoUrl == null || p.photoUrl!.isEmpty)
-                                              ? Text(
-                                                  p.name.isNotEmpty ? p.name[0].toUpperCase() : '?',
-                                                  style: GoogleFonts.outfit(
-                                                    fontSize: 9,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: userColor,
-                                                  ),
-                                                )
-                                              : null,
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          metricLabel,
-                                          style: GoogleFonts.inter(
-                                            fontSize: 11,
-                                            fontWeight: isMe ? FontWeight.w700 : FontWeight.w600,
-                                            color: routeOk ? AppColors.darkSlate : Colors.grey.shade400,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }).toList(),
-                              );
-                            } else {
-                              // Fallback logic for legacy sessions without memberRoutes
-                              final fallbackDistKm = fallbackDistMeters != null ? fallbackDistMeters / 1000.0 : null;
-                              String metricLabel;
-                              bool isUnavailable = false;
-
-                              if (fallbackEta != null && fallbackEta > 0) {
-                                if (session.calculationMode == 'Time') {
-                                  metricLabel = fallbackDistKm != null
-                                      ? '~$fallbackEta min avg  •  ${fallbackDistKm.toStringAsFixed(1)} km'
-                                      : '~$fallbackEta min avg';
                                 } else {
-                                  metricLabel = fallbackDistKm != null
-                                      ? '~${fallbackDistKm.toStringAsFixed(1)} km avg  •  $fallbackEta min'
-                                      : '~$fallbackEta min avg';
+                                  // > 3 members: show current user + selected member
+                                  if (myUid != null &&
+                                      session.participants.any(
+                                        (p) => p.uid == myUid,
+                                      )) {
+                                    uidsToShow.add(myUid);
+                                  }
+                                  if (_selectedParticipantUid != null &&
+                                      !uidsToShow.contains(
+                                        _selectedParticipantUid,
+                                      )) {
+                                    uidsToShow.add(_selectedParticipantUid!);
+                                  }
                                 }
-                              } else {
-                                metricLabel = 'Route unavailable';
-                                isUnavailable = true;
-                              }
 
-                              return Row(
-                                children: [
-                                  Icon(
-                                    isUnavailable ? Icons.warning_amber_rounded : Icons.near_me_rounded,
-                                    size: 14,
-                                    color: isUnavailable ? Colors.grey.shade400 : Colors.orange.shade400,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    metricLabel,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: isUnavailable ? Colors.grey.shade400 : Colors.orange.shade700,
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: uidsToShow.map((pUid) {
+                                    final p = session.participants.firstWhere(
+                                      (p) => p.uid == pUid,
+                                      orElse: () => session.participants.first,
+                                    );
+                                    final route =
+                                        memberRoutes[pUid]
+                                            as Map<String, dynamic>?;
+                                    final routeOk =
+                                        route?['routeAvailable'] == true;
+                                    final etaMin = route?['etaMinutes'] as int?;
+                                    final distKm =
+                                        (route?['distanceKm'] as num?)
+                                            ?.toDouble();
+
+                                    String metricLabel;
+                                    if (routeOk &&
+                                        etaMin != null &&
+                                        distKm != null) {
+                                      if (session.calculationMode == 'Time') {
+                                        metricLabel =
+                                            '$etaMin min  •  ${distKm.toStringAsFixed(1)} km';
+                                      } else {
+                                        metricLabel =
+                                            '${distKm.toStringAsFixed(1)} km  •  $etaMin min';
+                                      }
+                                    } else {
+                                      metricLabel = 'Route unavailable';
+                                    }
+
+                                    final userColor = AppColors.getUserColor(
+                                      pUid,
+                                    );
+                                    final isMe = pUid == myUid;
+
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 4.0,
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 9,
+                                            backgroundColor: userColor
+                                                .withValues(alpha: 0.15),
+                                            backgroundImage:
+                                                p.photoUrl != null &&
+                                                    p.photoUrl!.isNotEmpty
+                                                ? NetworkImage(p.photoUrl!)
+                                                : null,
+                                            child:
+                                                (p.photoUrl == null ||
+                                                    p.photoUrl!.isEmpty)
+                                                ? Text(
+                                                    p.name.isNotEmpty
+                                                        ? p.name[0]
+                                                              .toUpperCase()
+                                                        : '?',
+                                                    style: GoogleFonts.outfit(
+                                                      fontSize: 9,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: userColor,
+                                                    ),
+                                                  )
+                                                : null,
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            metricLabel,
+                                            style: GoogleFonts.inter(
+                                              fontSize: 11,
+                                              fontWeight: isMe
+                                                  ? FontWeight.w700
+                                                  : FontWeight.w600,
+                                              color: routeOk
+                                                  ? AppColors.getTextPrimary(
+                                                      context,
+                                                    )
+                                                  : AppColors.getTextMuted(
+                                                      context,
+                                                    ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+                                );
+                              } else {
+                                // Fallback logic for legacy sessions without memberRoutes
+                                final fallbackDistKm =
+                                    fallbackDistMeters != null
+                                    ? fallbackDistMeters / 1000.0
+                                    : null;
+                                String metricLabel;
+                                bool isUnavailable = false;
+
+                                if (fallbackEta != null && fallbackEta > 0) {
+                                  if (session.calculationMode == 'Time') {
+                                    metricLabel = fallbackDistKm != null
+                                        ? '~$fallbackEta min avg  •  ${fallbackDistKm.toStringAsFixed(1)} km'
+                                        : '~$fallbackEta min avg';
+                                  } else {
+                                    metricLabel = fallbackDistKm != null
+                                        ? '~${fallbackDistKm.toStringAsFixed(1)} km avg  •  $fallbackEta min'
+                                        : '~$fallbackEta min avg';
+                                  }
+                                } else {
+                                  metricLabel = 'Route unavailable';
+                                  isUnavailable = true;
+                                }
+
+                                return Row(
+                                  children: [
+                                    Icon(
+                                      isUnavailable
+                                          ? Icons.warning_amber_rounded
+                                          : Icons.near_me_rounded,
+                                      size: 14,
+                                      color: isUnavailable
+                                          ? AppColors.getTextMuted(context)
+                                          : Colors.orange.shade400,
                                     ),
-                                  ),
-                                ],
-                              );
-                            }
-                          }),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      metricLabel,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: isUnavailable
+                                            ? AppColors.getTextMuted(context)
+                                            : Colors.orange.shade700,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }
+                            },
+                          ),
                           const SizedBox(height: 6),
                           // ── VOTES + SWIPE HINT ────────────────────────────
                           Row(
                             children: [
                               if (isTrending)
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
                                   margin: const EdgeInsets.only(right: 8),
                                   decoration: BoxDecoration(
                                     color: Colors.orange.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
-                                  child: const Icon(Icons.bolt_rounded, color: Colors.orange, size: 14),
+                                  child: const Icon(
+                                    Icons.bolt_rounded,
+                                    color: Colors.orange,
+                                    size: 14,
+                                  ),
                                 ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: hasVotedForThis ? AppColors.teal : Colors.grey.shade100,
+                                  color: hasVotedForThis
+                                      ? AppColors.teal
+                                      : AppColors.getDivider(context),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
-                                    color: hasVotedForThis ? AppColors.teal : Colors.transparent,
+                                    color: hasVotedForThis
+                                        ? AppColors.teal
+                                        : Colors.transparent,
                                     width: 1,
                                   ),
                                 ),
@@ -1426,7 +1669,9 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                   style: GoogleFonts.inter(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
-                                    color: hasVotedForThis ? Colors.white : Colors.grey.shade600,
+                                    color: hasVotedForThis
+                                        ? Colors.white
+                                        : AppColors.getTextSecondary(context),
                                   ),
                                 ),
                               ),
@@ -1438,7 +1683,11 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                     ),
                     // Hint Icon (Fades out when open)
                     if (!isOpen)
-                      const Icon(Icons.swipe_left_alt_rounded, size: 16, color: Colors.grey),
+                      Icon(
+                        Icons.swipe_left_alt_rounded,
+                        size: 16,
+                        color: AppColors.getTextMuted(context),
+                      ),
                   ],
                 ),
               ),
@@ -1458,9 +1707,11 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     String? photoUrl;
     if (photoRef != null) {
       if (photoRef.startsWith('places/')) {
-        photoUrl = "https://places.googleapis.com/v1/$photoRef/media?key=${dotenv.env['GOOGLE_MAPS_API_KEY']}&maxHeightPx=800&maxWidthPx=800";
+        photoUrl =
+            "https://places.googleapis.com/v1/$photoRef/media?key=${dotenv.env['GOOGLE_MAPS_API_KEY']}&maxHeightPx=800&maxWidthPx=800";
       } else {
-        photoUrl = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=$photoRef&key=${dotenv.env['GOOGLE_MAPS_API_KEY']}";
+        photoUrl =
+            "https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=$photoRef&key=${dotenv.env['GOOGLE_MAPS_API_KEY']}";
       }
     }
 
@@ -1475,8 +1726,22 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
         if (a.location == null && b.location != null) return 1;
         if (a.location != null && b.location == null) return -1;
         if (a.location == null && b.location == null) return 0;
-        final distA = double.parse(_calculateDistance(a.location!.latitude, a.location!.longitude, vLat, vLng));
-        final distB = double.parse(_calculateDistance(b.location!.latitude, b.location!.longitude, vLat, vLng));
+        final distA = double.parse(
+          _calculateDistance(
+            a.location!.latitude,
+            a.location!.longitude,
+            vLat,
+            vLng,
+          ),
+        );
+        final distB = double.parse(
+          _calculateDistance(
+            b.location!.latitude,
+            b.location!.longitude,
+            vLat,
+            vLng,
+          ),
+        );
         return distA.compareTo(distB);
       });
     }
@@ -1485,638 +1750,962 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     final isHost = session.creatorId == myUid;
 
     return Container(
-      color: Colors.white,
+      color: AppColors.getBackground(context),
       child: SafeArea(
         child: Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-          ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 10, 24, 40),
-          child: Column(
-            children: [
-              // Back Button & Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: Container(
-                      padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(color: AppColors.getSurface(context)),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 10, 24, 40),
+            child: Column(
+              children: [
+                // Back Button & Header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.getSurfaceElevated(context),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: AppColors.getTextPrimary(context),
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                    // Confetti header
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
-                        color: AppColors.darkSlate.withValues(alpha: 0.05),
-                        shape: BoxShape.circle,
+                        color: Colors.amber.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.amber.withValues(alpha: 0.3),
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        color: AppColors.darkSlate,
-                        size: 18,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.celebration_rounded,
+                            color: Colors.amber,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            "WINNER DECIDED",
+                            style: GoogleFonts.outfit(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.amber.shade700,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                  // Confetti header
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.celebration_rounded, color: Colors.amber, size: 16),
-                        const SizedBox(width: 8),
-                        Text(
-                          "WINNER DECIDED",
-                          style: GoogleFonts.outfit(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.amber.shade700,
-                            letterSpacing: 1.5,
+                    const SizedBox(
+                      width: 48,
+                    ), // Spacer to balance the back button
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // Venue photo
+                if (photoUrl != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: SizedBox(
+                      height: 140,
+                      width: double.infinity,
+                      child: CachedNetworkImage(
+                        imageUrl: photoUrl,
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) => Container(
+                          color: AppColors.getSurfaceElevated(context),
+                        ),
+                        errorWidget: (_, __, ___) => Container(
+                          color: AppColors.getSurfaceElevated(context),
+                          child: Icon(
+                            Icons.restaurant_rounded,
+                            size: 40,
+                            color: AppColors.getTextMuted(context),
                           ),
                         ),
-                      ],
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 48), // Spacer to balance the back button
-                ],
-              ),
-              const SizedBox(height: 20),
+                if (photoUrl != null) const SizedBox(height: 16),
 
-            // Venue photo
-            if (photoUrl != null)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: SizedBox(
-                  height: 140,
-                  width: double.infinity,
-                  child: CachedNetworkImage(
-                    imageUrl: photoUrl,
-                    fit: BoxFit.cover,
-                    placeholder: (_, __) => Container(color: Colors.grey.shade100),
-                    errorWidget: (_, __, ___) => Container(
-                      color: Colors.grey.shade100,
-                      child: const Icon(Icons.restaurant_rounded, size: 40),
-                    ),
+                // Venue Name
+                Text(
+                  name,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.getTextPrimary(context),
                   ),
                 ),
-              ),
-            if (photoUrl != null) const SizedBox(height: 16),
+                const SizedBox(height: 8),
 
-            // Venue Name
-            Text(
-              name,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppColors.darkSlate,
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Rating + Address
-            if (rating != null)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.star_rounded, color: Colors.amber, size: 18),
-                  const SizedBox(width: 4),
-                  Text(
-                    '$rating',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.darkSlate,
-                    ),
-                  ),
-                ],
-              ),
-            if (address.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(
-                address,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: Colors.grey.shade500,
-                ),
-              ),
-            ],
-            const SizedBox(height: 24),
-            
-            // --- FRIENDS ETA SECTION ---
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.darkSlate.withValues(alpha: 0.03),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.grey.shade100),
-              ),
-              child: Column(
-                children: [
+                // Rating + Address
+                if (rating != null)
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.people_alt_rounded, color: AppColors.darkSlate, size: 18),
-                      const SizedBox(width: 10),
+                      const Icon(
+                        Icons.star_rounded,
+                        color: Colors.amber,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 4),
                       Text(
-                        "Friends on the way",
-                        style: GoogleFonts.outfit(
-                          fontSize: 16,
+                        '$rating',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.darkSlate,
+                          color: AppColors.getTextPrimary(context),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: EdgeInsets.zero,
-                    itemCount: sortedP.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, i) {
-                      final p = sortedP[i];
-                      final userColor = AppColors.getUserColor(p.uid);
-                      
-                      String statusText = "Calculating...";
-                      bool isArrived = false;
+                if (address.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    address,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppColors.getTextMuted(context),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 24),
 
-                      if (p.location != null && vLat != null && vLng != null) {
-                        // Use real Google values from Firestore if available
-                        final dist = p.distanceKm ?? double.parse(_calculateDistance(p.location!.latitude, p.location!.longitude, vLat, vLng));
-                        
-                        if (dist < 0.1) {
-                          isArrived = true;
-                          statusText = "Arrived";
-                        } else {
-                          // Display Google ETA if fresh, otherwise fallback
-                          if (p.etaMinutes != null) {
-                            statusText = "${p.etaMinutes} min (${dist.toStringAsFixed(1)} km)";
-                          } else {
-                            statusText = "${_estimateTime(dist)} min (${dist.toStringAsFixed(1)} km)";
-                          }
-                        }
-                      }
-
-                      return Row(
+                // --- FRIENDS ETA SECTION ---
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: AppColors.getSurfaceElevated(context),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: AppColors.getBorder(context)),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
                         children: [
-                          Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: userColor, width: 2),
-                              image: p.photoUrl != null 
-                                ? DecorationImage(image: CachedNetworkImageProvider(p.photoUrl!), fit: BoxFit.cover)
-                                : null,
-                            ),
-                            child: p.photoUrl == null
-                              ? Center(child: Text(p.name[0], style: GoogleFonts.outfit(color: userColor, fontWeight: FontWeight.bold)))
-                              : null,
+                          Icon(
+                            Icons.people_alt_rounded,
+                            color: AppColors.getTextPrimary(context),
+                            size: 18,
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              p.name + (p.uid == myUid ? " (You)" : ""),
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.darkSlate,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: isArrived ? AppColors.teal.withValues(alpha: 0.1) : Colors.amber.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              statusText,
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: isArrived ? AppColors.teal : Colors.amber.shade800,
-                              ),
+                          const SizedBox(width: 10),
+                          Text(
+                            "Friends on the way",
+                            style: GoogleFonts.outfit(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.getTextPrimary(context),
                             ),
                           ),
                         ],
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Navigation Button
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: AppColors.tealGradient),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(color: AppColors.teal.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8)),
-                ],
-              ),
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  final loc = winner['location'];
-                  if (loc != null) _glideToVenue(loc['latitude'], loc['longitude']);
-                },
-                icon: const Icon(Icons.navigation_rounded),
-                label: Text("Navigate to Venue", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  foregroundColor: Colors.white,
-                  shadowColor: Colors.transparent,
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Live Track Button
-            SizedBox(
-              width: double.infinity,
-              child: TextButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => OutingTrackingScreen(
-                        groupId: session.groupId,
-                        sessionId: session.id,
-                        initialSession: session,
                       ),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.people_alt_rounded, color: AppColors.teal),
-                label: Text("Live Track Group", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.darkSlate)),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(color: AppColors.teal.withValues(alpha: 0.3)),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
+                      const SizedBox(height: 16),
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        padding: EdgeInsets.zero,
+                        itemCount: sortedP.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, i) {
+                          final p = sortedP[i];
+                          final userColor = AppColors.getUserColor(p.uid);
 
-            // ➕ OUTING TOOLS & SAFETY MENU (PLUS BUTTON)
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  showModalBottomSheet(
-                    context: context,
-                    backgroundColor: Colors.white,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                    ),
-                    builder: (context) {
-                      return StreamBuilder<DocumentSnapshot>(
-                        stream: FirebaseFirestore.instance
-                            .collection('groups')
-                            .doc(widget.groupId)
-                            .collection('outings')
-                            .doc(widget.sessionId)
-                            .snapshots(),
-                        builder: (context, snapshot) {
-                          bool mySosActive = false;
-                          if (snapshot.hasData && snapshot.data!.exists) {
-                            final data = snapshot.data!.data() as Map<String, dynamic>;
-                            final participants = data['participants'] as List? ?? [];
-                            final me = participants.where((p) => p['uid'] == myUid).firstOrNull;
-                            mySosActive = me?['isSosActive'] ?? false;
+                          String statusText = "Calculating...";
+                          bool isArrived = false;
+
+                          if (p.location != null &&
+                              vLat != null &&
+                              vLng != null) {
+                            // Use real Google values from Firestore if available
+                            final dist =
+                                p.distanceKm ??
+                                double.parse(
+                                  _calculateDistance(
+                                    p.location!.latitude,
+                                    p.location!.longitude,
+                                    vLat,
+                                    vLng,
+                                  ),
+                                );
+
+                            if (dist < 0.1) {
+                              isArrived = true;
+                              statusText = "Arrived";
+                            } else {
+                              // Display Google ETA if fresh, otherwise fallback
+                              if (p.etaMinutes != null) {
+                                statusText =
+                                    "${p.etaMinutes} min (${dist.toStringAsFixed(1)} km)";
+                              } else {
+                                statusText =
+                                    "${_estimateTime(dist)} min (${dist.toStringAsFixed(1)} km)";
+                              }
+                            }
                           }
 
-                          return Padding(
-                            padding: const EdgeInsets.all(24.0),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Outing Tools & Safety",
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.darkSlate,
+                          return Row(
+                            children: [
+                              Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: userColor,
+                                    width: 2,
+                                  ),
+                                  image: p.photoUrl != null
+                                      ? DecorationImage(
+                                          image: CachedNetworkImageProvider(
+                                            p.photoUrl!,
+                                          ),
+                                          fit: BoxFit.cover,
+                                        )
+                                      : null,
+                                ),
+                                child: p.photoUrl == null
+                                    ? Center(
+                                        child: Text(
+                                          p.name[0],
+                                          style: GoogleFonts.outfit(
+                                            color: userColor,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  p.name + (p.uid == myUid ? " (You)" : ""),
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.getTextPrimary(context),
                                   ),
                                 ),
-                                const SizedBox(height: 16),
-                                
-                                // 🚨 SOS Emergency
-                                ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundColor: mySosActive ? Colors.green : Colors.red,
-                                    child: Icon(
-                                      mySosActive ? Icons.check_circle_outline : Icons.emergency_rounded,
-                                      color: Colors.white,
-                                    ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isArrived
+                                      ? AppColors.teal.withValues(alpha: 0.1)
+                                      : Colors.amber.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  statusText,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: isArrived
+                                        ? AppColors.teal
+                                        : Colors.amber.shade800,
                                   ),
-                                  title: Text(
-                                    mySosActive ? "Cancel SOS Emergency" : "SOS Emergency",
-                                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: mySosActive ? Colors.green.shade700 : Colors.red.shade700),
-                                  ),
-                                  subtitle: Text(
-                                    mySosActive ? "Click to clear your SOS alert" : "Alert everyone in case of emergency",
-                                    style: GoogleFonts.outfit(fontSize: 13),
-                                  ),
-                                  onTap: () async {
-                                    Navigator.pop(context);
-                                    if (mySosActive) {
-                                      await OutingService().clearSOS(
-                                        session: session,
-                                        userUid: FirebaseAuth.instance.currentUser?.uid ?? '',
-                                      );
-                                      if (mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text("SOS Cleared")),
-                                        );
-                                      }
-                                    } else {
-                                      final confirm = await showDialog<bool>(
-                                        context: context,
-                                        builder: (context) => AlertDialog(
-                                          title: Text("🚨 Trigger SOS?", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.red)),
-                                          content: const Text("This will alert everyone in the session and send your location to the group chat. Continue?"),
-                                          actions: [
-                                            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancel")),
-                                            TextButton(
-                                              onPressed: () => Navigator.pop(context, true),
-                                              style: TextButton.styleFrom(foregroundColor: Colors.red),
-                                              child: const Text("YES, SOS", style: TextStyle(fontWeight: FontWeight.bold)),
-                                            ),
-                                          ],
-                                        ),
-                                      );
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
 
-                                      if (confirm == true) {
-                                        try {
-                                          final pos = await Geolocator.getCurrentPosition();
-                                          final user = FirebaseAuth.instance.currentUser;
-                                          await OutingService().triggerSOS(
+                // Navigation Button
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: AppColors.tealGradient,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.teal.withValues(alpha: 0.3),
+                        blurRadius: 15,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      final loc = winner['location'];
+                      if (loc != null)
+                        _glideToVenue(loc['latitude'], loc['longitude']);
+                    },
+                    icon: const Icon(Icons.navigation_rounded),
+                    label: Text(
+                      "Navigate to Venue",
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      shadowColor: Colors.transparent,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Live Track Button
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => OutingTrackingScreen(
+                            groupId: session.groupId,
+                            sessionId: session.id,
+                            initialSession: session,
+                          ),
+                        ),
+                      );
+                    },
+                    icon: Icon(Icons.people_alt_rounded, color: AppColors.teal),
+                    label: Text(
+                      "Live Track Group",
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: AppColors.getTextPrimary(context),
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(
+                          color: AppColors.teal.withValues(alpha: 0.3),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // ➕ OUTING TOOLS & SAFETY MENU (PLUS BUTTON)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        backgroundColor: AppColors.getBackground(context),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(24),
+                          ),
+                        ),
+                        builder: (context) {
+                          return StreamBuilder<DocumentSnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection('groups')
+                                .doc(widget.groupId)
+                                .collection('outings')
+                                .doc(widget.sessionId)
+                                .snapshots(),
+                            builder: (context, snapshot) {
+                              bool mySosActive = false;
+                              if (snapshot.hasData && snapshot.data!.exists) {
+                                final data =
+                                    snapshot.data!.data()
+                                        as Map<String, dynamic>;
+                                final participants =
+                                    data['participants'] as List? ?? [];
+                                final me = participants
+                                    .where((p) => p['uid'] == myUid)
+                                    .firstOrNull;
+                                mySosActive = me?['isSosActive'] ?? false;
+                              }
+
+                              return Padding(
+                                padding: const EdgeInsets.all(24.0),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Outing Tools & Safety",
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.getTextPrimary(
+                                          context,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+
+                                    // 🚨 SOS Emergency
+                                    ListTile(
+                                      leading: CircleAvatar(
+                                        backgroundColor: mySosActive
+                                            ? Colors.green
+                                            : Colors.red,
+                                        child: Icon(
+                                          mySosActive
+                                              ? Icons.check_circle_outline
+                                              : Icons.emergency_rounded,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      title: Text(
+                                        mySosActive
+                                            ? "Cancel SOS Emergency"
+                                            : "SOS Emergency",
+                                        style: GoogleFonts.outfit(
+                                          fontWeight: FontWeight.bold,
+                                          color: mySosActive
+                                              ? Colors.green.shade700
+                                              : Colors.red.shade700,
+                                        ),
+                                      ),
+                                      subtitle: Text(
+                                        mySosActive
+                                            ? "Click to clear your SOS alert"
+                                            : "Alert everyone in case of emergency",
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 13,
+                                          color: AppColors.getTextSecondary(
+                                            context,
+                                          ),
+                                        ),
+                                      ),
+                                      onTap: () async {
+                                        Navigator.pop(context);
+                                        if (mySosActive) {
+                                          await OutingService().clearSOS(
                                             session: session,
-                                            userUid: user?.uid ?? '',
-                                            userName: user?.displayName ?? 'A Friend',
-                                            lat: pos.latitude,
-                                            lng: pos.longitude,
+                                            userUid:
+                                                FirebaseAuth
+                                                    .instance
+                                                    .currentUser
+                                                    ?.uid ??
+                                                '',
                                           );
                                           if (mounted) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
                                               const SnackBar(
-                                                content: Text("🚨 SOS ACTIVATED. Stay where you are!"),
-                                                backgroundColor: Colors.red,
+                                                content: Text("SOS Cleared"),
                                               ),
                                             );
                                           }
-                                        } catch (e) {
-                                          if (mounted) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text("Error triggering SOS: $e")),
-                                            );
+                                        } else {
+                                          final confirm = await showDialog<bool>(
+                                            context: context,
+                                            builder: (context) => AlertDialog(
+                                              title: Text(
+                                                "🚨 Trigger SOS?",
+                                                style: GoogleFonts.outfit(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.red,
+                                                ),
+                                              ),
+                                              content: const Text(
+                                                "This will alert everyone in the session and send your location to the group chat. Continue?",
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(
+                                                        context,
+                                                        false,
+                                                      ),
+                                                  child: const Text("Cancel"),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(
+                                                        context,
+                                                        true,
+                                                      ),
+                                                  style: TextButton.styleFrom(
+                                                    foregroundColor: Colors.red,
+                                                  ),
+                                                  child: const Text(
+                                                    "YES, SOS",
+                                                    style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+
+                                          if (confirm == true) {
+                                            try {
+                                              final pos =
+                                                  await Geolocator.getCurrentPosition();
+                                              final user = FirebaseAuth
+                                                  .instance
+                                                  .currentUser;
+                                              await OutingService().triggerSOS(
+                                                session: session,
+                                                userUid: user?.uid ?? '',
+                                                userName:
+                                                    user?.displayName ??
+                                                    'A Friend',
+                                                lat: pos.latitude,
+                                                lng: pos.longitude,
+                                              );
+                                              if (mounted) {
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text(
+                                                      "🚨 SOS ACTIVATED. Stay where you are!",
+                                                    ),
+                                                    backgroundColor: Colors.red,
+                                                  ),
+                                                );
+                                              }
+                                            } catch (e) {
+                                              if (mounted) {
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                      "Error triggering SOS: $e",
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+                                            }
                                           }
                                         }
-                                      }
-                                    }
-                                  },
-                                ),
+                                      },
+                                    ),
 
-                                // 🧭 AR Compass
-                                ListTile(
-                                  leading: const CircleAvatar(
-                                    backgroundColor: AppColors.teal,
-                                    child: Icon(Icons.explore_rounded, color: Colors.white),
-                                  ),
-                                  title: Text("AR Friend Compass", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-                                  subtitle: const Text("Visual 3D pointer to find friends"),
-                                  onTap: () {
-                                    Navigator.pop(context);
-                                    final others = session.participants.where((p) => p.uid != myUid).toList();
-                                    if (others.isEmpty) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text("No other participants in this outing")),
-                                      );
-                                      return;
-                                    }
-                                    showModalBottomSheet(
-                                      context: context,
-                                      backgroundColor: Colors.white,
-                                      shape: const RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                                    // 🧭 AR Compass
+                                    ListTile(
+                                      leading: const CircleAvatar(
+                                        backgroundColor: AppColors.teal,
+                                        child: Icon(
+                                          Icons.explore_rounded,
+                                          color: Colors.white,
+                                        ),
                                       ),
-                                      builder: (context) {
-                                        return Padding(
-                                          padding: const EdgeInsets.all(24.0),
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                "🧭 AR Friend Compass",
-                                                style: GoogleFonts.outfit(
-                                                  fontSize: 20,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: AppColors.darkSlate,
-                                                ),
+                                      title: Text(
+                                        "AR Friend Compass",
+                                        style: GoogleFonts.outfit(
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.getTextPrimary(
+                                            context,
+                                          ),
+                                        ),
+                                      ),
+                                      subtitle: Text(
+                                        "Visual 3D pointer to find friends",
+                                        style: TextStyle(
+                                          color: AppColors.getTextSecondary(
+                                            context,
+                                          ),
+                                        ),
+                                      ),
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                        final others = session.participants
+                                            .where((p) => p.uid != myUid)
+                                            .toList();
+                                        if (others.isEmpty) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                "No other participants in this outing",
                                               ),
-                                              const SizedBox(height: 6),
-                                              Text(
-                                                "Select a participant to find with the visual AR pointer",
-                                                style: GoogleFonts.outfit(
-                                                  fontSize: 14,
-                                                  color: Colors.grey.shade600,
-                                                ),
+                                            ),
+                                          );
+                                          return;
+                                        }
+                                        showModalBottomSheet(
+                                          context: context,
+                                          backgroundColor:
+                                              AppColors.getBackground(context),
+                                          shape: const RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.vertical(
+                                              top: Radius.circular(24),
+                                            ),
+                                          ),
+                                          builder: (context) {
+                                            return Padding(
+                                              padding: const EdgeInsets.all(
+                                                24.0,
                                               ),
-                                              const SizedBox(height: 16),
-                                              Flexible(
-                                                child: ListView.separated(
-                                                  shrinkWrap: true,
-                                                  itemCount: others.length,
-                                                  separatorBuilder: (context, i) => const SizedBox(height: 12),
-                                                  itemBuilder: (context, index) {
-                                                    final p = others[index];
-                                                    return InkWell(
-                                                      onTap: () {
-                                                        Navigator.pop(context);
-                                                        if (p.location != null) {
-                                                          Navigator.push(
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    "🧭 AR Friend Compass",
+                                                    style: GoogleFonts.outfit(
+                                                      fontSize: 20,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color:
+                                                          AppColors.getTextPrimary(
                                                             context,
-                                                            MaterialPageRoute(
-                                                              builder: (context) => ArFriendCompassPage(
-                                                                friendLat: p.location!.latitude,
-                                                                friendLng: p.location!.longitude,
-                                                                friendName: p.name,
-                                                                friendImageUrl: p.photoUrl,
-                                                                friendAccuracy: p.locationAccuracy,
-                                                                friendLastUpdate: p.lastLocationUpdate,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 6),
+                                                  Text(
+                                                    "Select a participant to find with the visual AR pointer",
+                                                    style: GoogleFonts.outfit(
+                                                      fontSize: 14,
+                                                      color:
+                                                          AppColors.getTextSecondary(
+                                                            context,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 16),
+                                                  Flexible(
+                                                    child: ListView.separated(
+                                                      shrinkWrap: true,
+                                                      itemCount: others.length,
+                                                      separatorBuilder:
+                                                          (context, i) =>
+                                                              const SizedBox(
+                                                                height: 12,
                                                               ),
-                                                            ),
-                                                          );
-                                                        } else {
-                                                          ScaffoldMessenger.of(context).showSnackBar(
-                                                            const SnackBar(content: Text("No location available for this friend")),
-                                                          );
-                                                        }
-                                                      },
-                                                      borderRadius: BorderRadius.circular(16),
-                                                      child: Container(
-                                                        padding: const EdgeInsets.all(12),
-                                                        decoration: BoxDecoration(
-                                                          border: Border.all(color: Colors.grey.shade200),
-                                                          borderRadius: BorderRadius.circular(16),
-                                                        ),
-                                                        child: Row(
-                                                          children: [
-                                                            ClipOval(
-                                                              child: p.photoUrl != null && p.photoUrl!.isNotEmpty
-                                                                  ? CachedNetworkImage(
-                                                                      imageUrl: p.photoUrl!,
-                                                                      width: 44,
-                                                                      height: 44,
-                                                                      fit: BoxFit.cover,
-                                                                    )
-                                                                  : Container(
-                                                                      width: 44,
-                                                                      height: 44,
-                                                                      color: Colors.grey.shade200,
-                                                                      child: const Icon(Icons.person, color: Colors.grey),
-                                                                    ),
-                                                            ),
-                                                            const SizedBox(width: 16),
-                                                            Expanded(
-                                                              child: Text(
-                                                                p.name,
-                                                                style: GoogleFonts.outfit(
-                                                                  fontSize: 16,
-                                                                  fontWeight: FontWeight.bold,
-                                                                  color: AppColors.darkSlate,
+                                                      itemBuilder: (context, index) {
+                                                        final p = others[index];
+                                                        return InkWell(
+                                                          onTap: () {
+                                                            Navigator.pop(
+                                                              context,
+                                                            );
+                                                            if (p.location !=
+                                                                null) {
+                                                              Navigator.push(
+                                                                context,
+                                                                MaterialPageRoute(
+                                                                  builder: (context) => ArFriendCompassPage(
+                                                                    friendLat: p
+                                                                        .location!
+                                                                        .latitude,
+                                                                    friendLng: p
+                                                                        .location!
+                                                                        .longitude,
+                                                                    friendName:
+                                                                        p.name,
+                                                                    friendImageUrl:
+                                                                        p.photoUrl,
+                                                                    friendAccuracy:
+                                                                        p.locationAccuracy,
+                                                                    friendLastUpdate:
+                                                                        p.lastLocationUpdate,
+                                                                  ),
                                                                 ),
+                                                              );
+                                                            } else {
+                                                              ScaffoldMessenger.of(
+                                                                context,
+                                                              ).showSnackBar(
+                                                                const SnackBar(
+                                                                  content: Text(
+                                                                    "No location available for this friend",
+                                                                  ),
+                                                                ),
+                                                              );
+                                                            }
+                                                          },
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                16,
                                                               ),
+                                                          child: Container(
+                                                            padding:
+                                                                const EdgeInsets.all(
+                                                                  12,
+                                                                ),
+                                                            decoration: BoxDecoration(
+                                                              border: Border.all(
+                                                                color:
+                                                                    AppColors.getBorder(
+                                                                      context,
+                                                                    ),
+                                                              ),
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    16,
+                                                                  ),
                                                             ),
-                                                            const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.grey),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    );
-                                                  },
-                                                ),
+                                                            child: Row(
+                                                              children: [
+                                                                ClipOval(
+                                                                  child:
+                                                                      p.photoUrl !=
+                                                                              null &&
+                                                                          p.photoUrl!.isNotEmpty
+                                                                      ? CachedNetworkImage(
+                                                                          imageUrl:
+                                                                              p.photoUrl!,
+                                                                          width:
+                                                                              44,
+                                                                          height:
+                                                                              44,
+                                                                          fit: BoxFit
+                                                                              .cover,
+                                                                        )
+                                                                      : Container(
+                                                                          width:
+                                                                              44,
+                                                                          height:
+                                                                              44,
+                                                                          color: AppColors.getSurfaceElevated(
+                                                                            context,
+                                                                          ),
+                                                                          child: Icon(
+                                                                            Icons.person,
+                                                                            color: AppColors.getTextMuted(
+                                                                              context,
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                ),
+                                                                const SizedBox(
+                                                                  width: 16,
+                                                                ),
+                                                                Expanded(
+                                                                  child: Text(
+                                                                    p.name,
+                                                                    style: GoogleFonts.outfit(
+                                                                      fontSize:
+                                                                          16,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold,
+                                                                      color: AppColors.getTextPrimary(
+                                                                        context,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                Icon(
+                                                                  Icons
+                                                                      .arrow_forward_ios_rounded,
+                                                                  size: 16,
+                                                                  color:
+                                                                      AppColors.getTextMuted(
+                                                                        context,
+                                                                      ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        );
+                                                      },
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
-                                            ],
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
+
+                                    // 🧾 Split Bill
+                                    ListTile(
+                                      leading: const CircleAvatar(
+                                        backgroundColor: AppColors.teal,
+                                        child: Icon(
+                                          Icons.receipt_long_rounded,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      title: Text(
+                                        "Split Bill (AI)",
+                                        style: GoogleFonts.outfit(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      subtitle: const Text(
+                                        "Auto extract items and parse prices",
+                                      ),
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                ReceiptSplitterScreen(
+                                                  participants:
+                                                      session.participants,
+                                                ),
                                           ),
                                         );
                                       },
-                                    );
-                                  },
+                                    ),
+                                  ],
                                 ),
-
-                                // 🧾 Split Bill
-                                ListTile(
-                                  leading: const CircleAvatar(
-                                    backgroundColor: AppColors.teal,
-                                    child: Icon(Icons.receipt_long_rounded, color: Colors.white),
-                                  ),
-                                  title: Text("Split Bill (AI)", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-                                  subtitle: const Text("Auto extract items and parse prices"),
-                                  onTap: () {
-                                    Navigator.pop(context);
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ReceiptSplitterScreen(
-                                          participants: session.participants,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
+                              );
+                            },
                           );
                         },
                       );
                     },
-                  );
-                },
-                icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white),
-                label: Text("OUTING TOOLS & SAFETY", style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.white)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.teal,
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  elevation: 0,
-                ),
-              ),
-            ),
-            // Finish session button (Host only)
-            if (isHost) ...[
-              const SizedBox(height: 24),
-              const Divider(height: 1),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () async {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: Text("Finish Outing?", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-                        content: const Text("This will close the session for everyone. Are you sure you're done?"),
-                        actions: [
-                          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Not yet")),
-                          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("Yes, finish!", style: TextStyle(color: Colors.red))),
-                        ],
+                    icon: const Icon(
+                      Icons.add_circle_outline_rounded,
+                      color: Colors.white,
+                    ),
+                    label: Text(
+                      "OUTING TOOLS & SAFETY",
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 16,
+                        color: Colors.white,
                       ),
-                    );
-                    if (confirm == true) {
-                      if (mounted) {
-                        try {
-                          await OutingService().markAsFinished(session);
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => OutingMemoryUploadScreen(
-                                session: session,
-                              ),
-                            ),
-                          );
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Error finishing outing: $e")),
-                          );
-                        }
-                      }
-                    }
-                  },
-                  icon: const Icon(Icons.check_circle_outline_rounded, size: 20),
-                  label: Text("Finish Outing", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.redAccent,
-                    side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.2)),
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    backgroundColor: Colors.redAccent.withValues(alpha: 0.03),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.teal,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      elevation: 0,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ],
+                // Finish session button (Host only)
+                if (isHost) ...[
+                  const SizedBox(height: 24),
+                  const Divider(height: 1),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text(
+                              "Finish Outing?",
+                              style: GoogleFonts.outfit(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            content: const Text(
+                              "This will close the session for everyone. Are you sure you're done?",
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text("Not yet"),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text(
+                                  "Yes, finish!",
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirm == true) {
+                          if (mounted) {
+                            try {
+                              await OutingService().markAsFinished(session);
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      OutingMemoryUploadScreen(
+                                        session: session,
+                                      ),
+                                ),
+                              );
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text("Error finishing outing: $e"),
+                                ),
+                              );
+                            }
+                          }
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.check_circle_outline_rounded,
+                        size: 20,
+                      ),
+                      label: Text(
+                        "Finish Outing",
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.redAccent,
+                        side: BorderSide(
+                          color: Colors.redAccent.withValues(alpha: 0.2),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        backgroundColor: Colors.redAccent.withValues(
+                          alpha: 0.03,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
-    ),
-  ),
-).animate().fadeIn(duration: 400.ms).slideY(begin: 0.2);
-}
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.2);
+  }
 
   Widget _buildBackButton(BuildContext context) {
     return GestureDetector(
@@ -2124,22 +2713,29 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.getSurfaceElevated(context),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: AppColors.getShadow(context),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.darkSlate, size: 20),
+        child: Icon(
+          Icons.arrow_back_ios_new_rounded,
+          color: AppColors.getTextPrimary(context),
+          size: 20,
+        ),
       ),
     );
   }
 
-  bool _isVenueTrending(Map<String, dynamic> venue, OutingSessionModel session) {
+  bool _isVenueTrending(
+    Map<String, dynamic> venue,
+    OutingSessionModel session,
+  ) {
     final venues = session.finalLocation?['topVenues'] ?? [];
     if (venues.isEmpty) return false;
     int maxVotes = 0;
@@ -2152,9 +2748,15 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     return currentVotes == maxVotes;
   }
 
-  String _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+  String _calculateDistance(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
     const p = 0.017453292519943295;
-    final a = 0.5 -
+    final a =
+        0.5 -
         math.cos((lat2 - lat1) * p) / 2 +
         math.cos(lat1 * p) *
             math.cos(lat2 * p) *
@@ -2170,4 +2772,3 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     return mins.toInt().toString();
   }
 }
-

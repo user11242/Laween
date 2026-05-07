@@ -76,7 +76,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
       if (_imageFile != null) {
         photoUrl = await _storageService.uploadFile(
           file: _imageFile!,
-          path: 'profile_pics/${user?.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg',
+          path:
+              'profile_pics/${user?.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg',
         );
       }
 
@@ -98,18 +99,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
           .update(updates);
 
       if (mounted) {
-        AppMessenger.showSuccess(
-          context,
-          message: l10n.successUpdate,
-        );
+        AppMessenger.showSuccess(context, message: l10n.successUpdate);
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        AppMessenger.showError(
-          context,
-          message: e.toString(),
-        );
+        AppMessenger.showError(context, message: e.toString());
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -121,19 +116,23 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: AppColors.getBackground(context),
       appBar: AppBar(
-        backgroundColor: Colors.grey.shade50,
+        backgroundColor: AppColors.getSurface(context),
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
+          icon: Icon(
+            Icons.arrow_back_ios,
+            color: AppColors.getTextPrimary(context),
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           l10n.editProfile,
           style: GoogleFonts.inter(
-            color: Colors.black,
+            color: AppColors.getTextPrimary(context),
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
@@ -174,13 +173,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                 return Container(
                                   padding: const EdgeInsets.all(4),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: AppColors.getSurfaceElevated(
+                                      context,
+                                    ),
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.08,
-                                        ),
+                                        color: AppColors.getShadow(
+                                          context,
+                                        ).withValues(alpha: 0.08),
                                         blurRadius: 15,
                                         spreadRadius: 2,
                                         offset: const Offset(0, 8),
@@ -226,7 +227,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                   color: AppColors.primary,
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: Colors.white,
+                                    color: AppColors.getSurfaceElevated(context),
                                     width: 3,
                                   ),
                                 ),
@@ -345,18 +346,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
+              color: AppColors.getTextSecondary(context),
             ),
           ),
         ),
         Container(
           decoration: BoxDecoration(
-            color: enabled ? Colors.white : Colors.grey.shade100,
+            color: enabled
+                ? AppColors.getInputBackground(context)
+                : AppColors.getDivider(context),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               if (enabled)
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
+                  color: AppColors.getShadow(context).withValues(alpha: 0.03),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -370,7 +373,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
             enabled: enabled,
             style: GoogleFonts.inter(
               fontSize: 16,
-              color: enabled ? Colors.black : Colors.grey.shade600,
+              color: enabled
+                  ? AppColors.getTextPrimary(context)
+                  : AppColors.getTextSecondary(context),
               fontWeight: FontWeight.w500,
             ),
             decoration: InputDecoration(

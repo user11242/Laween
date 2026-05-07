@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -131,18 +130,18 @@ class ChatWallpaperPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.getBackground(context),
       appBar: AppBar(
         title: Text(
           l10n?.customWallpaper ?? "Custom Wallpaper",
           style: GoogleFonts.outfit(
-            color: AppColors.darkSlate,
+            color: AppColors.getTextPrimary(context),
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.getBackground(context),
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.darkSlate),
+        iconTheme: IconThemeData(color: AppColors.getTextPrimary(context)),
       ),
       body: CustomScrollView(
         slivers: [
@@ -157,22 +156,27 @@ class ChatWallpaperPage extends StatelessWidget {
                     style: GoogleFonts.outfit(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.darkSlate,
+                      color: AppColors.getTextPrimary(context),
                     ),
                   ),
-                  const SizedBox(height: 12),
                   _buildOptionCard(
+                    context: context,
                     icon: Icons.photo_library_rounded,
                     title: l10n?.pickFromGallery ?? "Pick from Gallery",
-                    subtitle: l10n?.frostedGlassBlurDesc ?? "Will apply a stunning frosted-glass blur",
+                    subtitle:
+                        l10n?.frostedGlassBlurDesc ??
+                        "Will apply a stunning frosted-glass blur",
                     color: AppColors.teal,
                     onTap: () => _pickImage(context),
                   ),
                   const SizedBox(height: 12),
                   _buildOptionCard(
+                    context: context,
                     icon: Icons.layers_clear_rounded,
                     title: l10n?.removeWallpaper ?? "Remove Wallpaper",
-                    subtitle: l10n?.restoreDefaultWallpaperDesc ?? "Restore the default light grey background",
+                    subtitle:
+                        l10n?.restoreDefaultWallpaperDesc ??
+                        "Restore the default light grey background",
                     color: Colors.red.shade400,
                     onTap: () => _resetWallpaper(context),
                   ),
@@ -182,7 +186,7 @@ class ChatWallpaperPage extends StatelessWidget {
                     style: GoogleFonts.outfit(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.darkSlate,
+                      color: AppColors.getTextPrimary(context),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -223,8 +227,10 @@ class ChatWallpaperPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: isActive
-                            ? AppColors.darkSlate
-                            : Colors.black.withValues(alpha: 0.05),
+                            ? AppColors.teal
+                            : AppColors.getShadow(
+                                context,
+                              ).withValues(alpha: 0.1),
                         width: isActive ? 3 : 1,
                       ),
                       boxShadow: [
@@ -262,7 +268,7 @@ class ChatWallpaperPage extends StatelessWidget {
                 style: GoogleFonts.outfit(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.darkSlate,
+                  color: AppColors.getTextPrimary(context),
                 ),
               ),
             ),
@@ -294,8 +300,10 @@ class ChatWallpaperPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: isActive
-                            ? AppColors.darkSlate
-                            : Colors.black.withValues(alpha: 0.1),
+                            ? AppColors.teal
+                            : AppColors.getShadow(
+                                context,
+                              ).withValues(alpha: 0.1),
                         width: isActive ? 3 : 1,
                       ),
                       boxShadow: [
@@ -327,6 +335,7 @@ class ChatWallpaperPage extends StatelessWidget {
   }
 
   Widget _buildOptionCard({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required String subtitle,
@@ -363,14 +372,14 @@ class ChatWallpaperPage extends StatelessWidget {
                     style: GoogleFonts.outfit(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.darkSlate,
+                      color: AppColors.getTextPrimary(context),
                     ),
                   ),
                   Text(
                     subtitle,
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      color: Colors.grey.shade600,
+                      color: AppColors.getTextSecondary(context),
                     ),
                   ),
                 ],

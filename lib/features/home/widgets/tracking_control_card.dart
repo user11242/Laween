@@ -30,15 +30,15 @@ class TrackingControlCard extends StatelessWidget {
         return Container(
           margin: const EdgeInsets.only(bottom: 24),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
+            color: AppColors.getSurfaceElevated(context),
             borderRadius: BorderRadius.circular(28),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.1),
+              color: AppColors.getDivider(context),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
+                color: AppColors.getShadow(context),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -57,7 +57,7 @@ class TrackingControlCard extends StatelessWidget {
                             color:
                                 (isTrackingActive
                                         ? const Color(0xFF10B981)
-                                        : Colors.grey)
+                                        : AppColors.getTextSecondary(context))
                                     .withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
@@ -67,7 +67,7 @@ class TrackingControlCard extends StatelessWidget {
                                 : Icons.radar_outlined,
                             color: isTrackingActive
                                 ? const Color(0xFF10B981)
-                                : Colors.grey,
+                                : AppColors.getTextSecondary(context),
                             size: 20,
                           ),
                         )
@@ -84,7 +84,7 @@ class TrackingControlCard extends StatelessWidget {
                             style: GoogleFonts.inter(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white38,
+                              color: AppColors.getTextSecondary(context),
                               letterSpacing: 1.2,
                             ),
                           ),
@@ -95,13 +95,13 @@ class TrackingControlCard extends StatelessWidget {
                             style: GoogleFonts.outfit(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: AppColors.getTextPrimary(context),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    _buildPrivacyToggle(user.uid, isGhostMode),
+                    _buildPrivacyToggle(context, user.uid, isGhostMode),
                   ],
                 ),
               ),
@@ -122,7 +122,7 @@ class TrackingControlCard extends StatelessWidget {
     );
   }
 
-  Widget _buildPrivacyToggle(String userId, bool isGhostMode) {
+  Widget _buildPrivacyToggle(BuildContext context, String userId, bool isGhostMode) {
     return GestureDetector(
       onTap: () => LocationService().updatePrivacy(userId, !isGhostMode),
       child: AnimatedContainer(
@@ -136,7 +136,7 @@ class TrackingControlCard extends StatelessWidget {
           border: Border.all(
             color: isGhostMode
                 ? const Color(0xFF6366F1).withValues(alpha: 0.3)
-                : Colors.white.withValues(alpha: 0.1),
+                : AppColors.getTextMuted(context).withValues(alpha: 0.1),
           ),
         ),
         child: Row(
@@ -145,7 +145,7 @@ class TrackingControlCard extends StatelessWidget {
             Icon(
               isGhostMode ? Icons.security_rounded : Icons.public_rounded,
               size: 14,
-              color: isGhostMode ? const Color(0xFF818CF8) : Colors.white38,
+              color: isGhostMode ? const Color(0xFF818CF8) : AppColors.getTextSecondary(context),
             ),
             const SizedBox(width: 6),
             Text(
@@ -153,7 +153,7 @@ class TrackingControlCard extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
-                color: isGhostMode ? const Color(0xFF818CF8) : Colors.white38,
+                color: isGhostMode ? const Color(0xFF818CF8) : AppColors.getTextSecondary(context),
               ),
             ),
           ],

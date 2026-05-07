@@ -43,7 +43,11 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(isAr ? 'مغادرة المجموعة' : 'Leave Group'),
-        content: Text(isAr ? 'هل أنت متأكد أنك تريد مغادرة هذه المجموعة؟' : 'Are you sure you want to leave this group?'),
+        content: Text(
+          isAr
+              ? 'هل أنت متأكد أنك تريد مغادرة هذه المجموعة؟'
+              : 'Are you sure you want to leave this group?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -51,7 +55,10 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(isAr ? 'مغادرة' : 'Leave', style: const TextStyle(color: Colors.red)),
+            child: Text(
+              isAr ? 'مغادرة' : 'Leave',
+              style: const TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -96,7 +103,10 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(isAr ? 'حذف' : 'Delete', style: const TextStyle(color: Colors.red)),
+            child: Text(
+              isAr ? 'حذف' : 'Delete',
+              style: const TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -153,8 +163,8 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
               left: 24,
               right: 24,
             ),
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              color: AppColors.getSurfaceElevated(context),
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: Column(
@@ -167,7 +177,7 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                   style: GoogleFonts.outfit(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.darkSlate,
+                    color: AppColors.getTextPrimary(context),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -319,20 +329,20 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: AppColors.getBackground(context),
       appBar: AppBar(
         title: Text(
           AppLocalizations.of(context)?.isAr == true
               ? 'معلومات المجموعة'
               : 'Group Info',
           style: GoogleFonts.outfit(
-            color: AppColors.darkSlate,
+            color: AppColors.getTextPrimary(context),
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.getSurface(context),
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.darkSlate),
+        iconTheme: IconThemeData(color: AppColors.getTextPrimary(context)),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit, color: AppColors.teal),
@@ -360,10 +370,15 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: AppColors.teal.withValues(alpha: 0.1),
-                        border: Border.all(color: Colors.white, width: 4),
+                        border: Border.all(
+                          color: AppColors.getSurfaceElevated(context),
+                          width: 4,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
+                            color: AppColors.getShadow(
+                              context,
+                            ).withValues(alpha: 0.08),
                             blurRadius: 15,
                             offset: const Offset(0, 5),
                           ),
@@ -401,7 +416,7 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                     style: GoogleFonts.outfit(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.darkSlate,
+                      color: AppColors.getTextPrimary(context),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -412,7 +427,7 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
                       fontSize: 14,
-                      color: Colors.grey.shade600,
+                      color: AppColors.getTextSecondary(context),
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -420,11 +435,13 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                   // --- Media & Content Navigation ---
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.getSurfaceElevated(context),
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.02),
+                          color: AppColors.getShadow(
+                            context,
+                          ).withValues(alpha: 0.02),
                           blurRadius: 5,
                           offset: const Offset(0, 2),
                         ),
@@ -486,7 +503,7 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                     style: GoogleFonts.inter(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.darkSlate,
+                      color: AppColors.getTextPrimary(context),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -503,11 +520,13 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                       final members = snapshot.data!;
                       return Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.getSurfaceElevated(context),
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.02),
+                              color: AppColors.getShadow(
+                                context,
+                              ).withValues(alpha: 0.02),
                               blurRadius: 5,
                               offset: const Offset(0, 2),
                             ),
@@ -560,7 +579,7 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                                 name,
                                 style: GoogleFonts.inter(
                                   fontWeight: FontWeight.w500,
-                                  color: AppColors.darkSlate,
+                                  color: AppColors.getTextPrimary(context),
                                 ),
                               ),
                               trailing: null,
@@ -609,20 +628,24 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.grey.shade50,
+          color: AppColors.getSurface(context),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon, color: AppColors.darkSlate, size: 22),
+        child: Icon(icon, color: AppColors.getTextPrimary(context), size: 22),
       ),
       title: Text(
         title,
         style: GoogleFonts.inter(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          color: AppColors.darkSlate,
+          color: AppColors.getTextPrimary(context),
         ),
       ),
-      trailing: const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+      trailing: Icon(
+        Icons.chevron_right,
+        color: AppColors.getTextMuted(context),
+        size: 20,
+      ),
     );
   }
 }

@@ -18,11 +18,11 @@ class CreateJoinDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.getSurfaceElevated(context),
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
+            color: AppColors.getShadow(context).withValues(alpha: 0.15),
             blurRadius: 30,
             offset: const Offset(0, 15),
           ),
@@ -40,7 +40,7 @@ class CreateJoinDialog extends StatelessWidget {
                 style: GoogleFonts.outfit(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.darkSlate,
+                  color: AppColors.getTextPrimary(context),
                 ),
               ),
               GestureDetector(
@@ -48,12 +48,12 @@ class CreateJoinDialog extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.05),
+                    color: AppColors.getSurface(context),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.close,
-                    color: Colors.black54,
+                    color: AppColors.getTextSecondary(context),
                     size: 20,
                   ),
                 ),
@@ -176,7 +176,7 @@ class _AnimatedOptionCardState extends State<_AnimatedOptionCard>
           widget.onTap();
         },
         borderRadius: BorderRadius.circular(20),
-        highlightColor: Colors.grey.withValues(alpha: 0.05),
+        highlightColor: AppColors.getSurface(context),
         splashColor: widget.baseColor.withValues(alpha: 0.1),
         child: AnimatedBuilder(
           animation: _scaleAnimation,
@@ -185,16 +185,19 @@ class _AnimatedOptionCardState extends State<_AnimatedOptionCard>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.getSurface(context),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
+                    color: AppColors.getShadow(context).withValues(alpha: 0.03),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
                 ],
-                border: Border.all(color: Colors.grey.shade100, width: 1),
+                border: Border.all(
+                  color: AppColors.getDivider(context),
+                  width: 1,
+                ),
               ),
               child: Row(
                 children: [
@@ -217,7 +220,7 @@ class _AnimatedOptionCardState extends State<_AnimatedOptionCard>
                           style: GoogleFonts.outfit(
                             fontSize: 17,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.darkSlate,
+                            color: AppColors.getTextPrimary(context),
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -227,7 +230,7 @@ class _AnimatedOptionCardState extends State<_AnimatedOptionCard>
                           maxLines: 1,
                           style: GoogleFonts.inter(
                             fontSize: 13,
-                            color: Colors.grey.shade500,
+                            color: AppColors.getTextSecondary(context),
                           ),
                         ),
                       ],
@@ -235,7 +238,7 @@ class _AnimatedOptionCardState extends State<_AnimatedOptionCard>
                   ),
                   Icon(
                     isAr ? Icons.chevron_left : Icons.chevron_right,
-                    color: Colors.grey.shade300,
+                    color: AppColors.getTextMuted(context),
                     size: 22,
                   ),
                 ],

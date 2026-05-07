@@ -58,15 +58,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         curve: const Interval(0.2, 0.5, curve: Curves.easeOut),
       ),
     );
-    _titleSlide = Tween<Offset>(
-      begin: const Offset(0, 0.5),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _entranceController,
-        curve: const Interval(0.2, 0.5, curve: Curves.easeOutCubic),
-      ),
-    );
+    _titleSlide = Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _entranceController,
+            curve: const Interval(0.2, 0.5, curve: Curves.easeOutCubic),
+          ),
+        );
 
     // Form fades up last
     _formFade = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -75,15 +73,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         curve: const Interval(0.4, 0.8, curve: Curves.easeOut),
       ),
     );
-    _formSlide = Tween<Offset>(
-      begin: const Offset(0, 0.15),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _entranceController,
-        curve: const Interval(0.4, 0.8, curve: Curves.easeOutCubic),
-      ),
-    );
+    _formSlide = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _entranceController,
+            curve: const Interval(0.4, 0.8, curve: Curves.easeOutCubic),
+          ),
+        );
 
     _entranceController.forward();
   }
@@ -101,194 +97,195 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     final screenH = MediaQuery.of(context).size.height;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.dark,
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF8F9FB),
-        body: Stack(
-          children: [
-            // ── 1. Organic gradient blobs ──
-            _AnimatedBlob(
-              controller: _breatheController,
-              top: -screenH * 0.12,
-              right: -80,
-              size: screenH * 0.42,
-              color: AppColors.teal,
-              baseOpacity: 0.08,
-            ),
-            _AnimatedBlob(
-              controller: _breatheController,
-              bottom: screenH * 0.15,
-              left: -100,
-              size: screenH * 0.35,
-              color: AppColors.tealLight,
-              baseOpacity: 0.06,
-              reversed: true,
-            ),
-            _AnimatedBlob(
-              controller: _breatheController,
-              top: screenH * 0.4,
-              right: -60,
-              size: screenH * 0.18,
-              color: const Color(0xFF6C63FF),
-              baseOpacity: 0.04,
-            ),
+    return Scaffold(
+      backgroundColor: AppColors.getBackground(context),
+      extendBodyBehindAppBar: true,
+      body: Stack(
+        children: [
+          // ── 1. Organic gradient blobs ──
+          _AnimatedBlob(
+            controller: _breatheController,
+            top: -screenH * 0.12,
+            right: -80,
+            size: screenH * 0.42,
+            color: AppColors.teal,
+            baseOpacity: 0.08,
+          ),
+          _AnimatedBlob(
+            controller: _breatheController,
+            bottom: screenH * 0.15,
+            left: -100,
+            size: screenH * 0.35,
+            color: AppColors.tealLight,
+            baseOpacity: 0.06,
+            reversed: true,
+          ),
+          _AnimatedBlob(
+            controller: _breatheController,
+            top: screenH * 0.4,
+            right: -60,
+            size: screenH * 0.18,
+            color: const Color(0xFF6C63FF),
+            baseOpacity: 0.04,
+          ),
 
-            // ── 2. Scrollable Content ──
-            SafeArea(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: EdgeInsets.only(bottom: bottomInset + 32),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: screenH -
-                        MediaQuery.of(context).padding.top -
-                        MediaQuery.of(context).padding.bottom,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28),
-                    child: Column(
-                      children: [
-                        SizedBox(height: screenH * 0.08),
+          // ── 2. Scrollable Content ──
+          SafeArea(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.only(bottom: bottomInset + 32),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight:
+                      screenH -
+                      MediaQuery.of(context).padding.top -
+                      MediaQuery.of(context).padding.bottom,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 28),
+                  child: Column(
+                    children: [
+                      SizedBox(height: screenH * 0.08),
 
-                        // ── Logo ──
-                        ScaleTransition(
-                          scale: _logoScale,
-                          child: FadeTransition(
-                            opacity: _logoFade,
-                            child: Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(24),
-                                color: Colors.white,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.teal.withValues(alpha: 0.15),
-                                    blurRadius: 32,
-                                    spreadRadius: 0,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.04),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(24),
-                                child: Image.asset(
-                                  'assets/logo/Laween_transparent_iphone.png',
-                                  fit: BoxFit.cover,
+                      // ── Logo ──
+                      ScaleTransition(
+                        scale: _logoScale,
+                        child: FadeTransition(
+                          opacity: _logoFade,
+                          child: Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(24),
+                              color: AppColors.getSurfaceElevated(context),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.teal.withValues(alpha: 0.15),
+                                  blurRadius: 32,
+                                  spreadRadius: 0,
+                                  offset: const Offset(0, 8),
                                 ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 32),
-
-                        // ── Title & Subtitle ──
-                        SlideTransition(
-                          position: _titleSlide,
-                          child: FadeTransition(
-                            opacity: _titleFade,
-                            child: Column(
-                              children: [
-                                Text(
-                                  loc.loginTitle,
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 34,
-                                    fontWeight: FontWeight.w800,
-                                    color: const Color(0xFF1A1D2E),
-                                    letterSpacing: -1.0,
-                                    height: 1.1,
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  loc.loginSubtitle,
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w400,
-                                    color: const Color(0xFF8E95A9),
-                                    height: 1.5,
-                                  ),
+                                BoxShadow(
+                                  color: AppColors.getShadow(context),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
                             ),
-                          ),
-                        ),
-
-                        SizedBox(height: screenH * 0.04),
-
-                        // ── Auth Form Card ──
-                        SlideTransition(
-                          position: _formSlide,
-                          child: FadeTransition(
-                            opacity: _formFade,
-                            child: Container(
-                              padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(28),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.04),
-                                    blurRadius: 32,
-                                    spreadRadius: 0,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                  BoxShadow(
-                                    color: AppColors.teal.withValues(alpha: 0.03),
-                                    blurRadius: 48,
-                                    spreadRadius: 0,
-                                    offset: const Offset(0, 16),
-                                  ),
-                                ],
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(24),
+                              child: Image.asset(
+                                'assets/logo/Laween_transparent_iphone.png',
+                                fit: BoxFit.cover,
                               ),
-                              child: const LoginForm(),
                             ),
                           ),
                         ),
+                      ),
 
-                        const SizedBox(height: 32),
-                      ],
-                    ),
+                      const SizedBox(height: 32),
+
+                      // ── Title & Subtitle ──
+                      SlideTransition(
+                        position: _titleSlide,
+                        child: FadeTransition(
+                          opacity: _titleFade,
+                          child: Column(
+                            children: [
+                              Text(
+                                loc.loginTitle,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 34,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.getTextPrimary(context),
+                                  letterSpacing: -1.0,
+                                  height: 1.1,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                loc.loginSubtitle,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w400,
+                                  color: AppColors.getTextSecondary(context),
+                                  height: 1.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: screenH * 0.04),
+
+                      // ── Auth Form Card ──
+                      SlideTransition(
+                        position: _formSlide,
+                        child: FadeTransition(
+                          opacity: _formFade,
+                          child: Container(
+                            padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+                            decoration: BoxDecoration(
+                              color: AppColors.getSurface(context),
+                              borderRadius: BorderRadius.circular(28),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.getShadow(context),
+                                  blurRadius: 32,
+                                  spreadRadius: 0,
+                                  offset: const Offset(0, 8),
+                                ),
+                                BoxShadow(
+                                  color: AppColors.teal.withValues(alpha: 0.03),
+                                  blurRadius: 48,
+                                  spreadRadius: 0,
+                                  offset: const Offset(0, 16),
+                                ),
+                              ],
+                            ),
+                            child: const LoginForm(),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 32),
+                    ],
                   ),
                 ),
               ),
             ),
+          ),
 
-            // ── 3. Back Button ──
-            Positioned(
-              top: MediaQuery.of(context).padding.top + 8,
-              left: 12,
-              child: FadeTransition(
-                opacity: _logoFade,
-                child: IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.white.withValues(alpha: 0.8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
+          // ── 3. Back Button ──
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            left: 12,
+            child: FadeTransition(
+              opacity: _logoFade,
+              child: IconButton(
+                onPressed: () => Navigator.pop(context),
+                style: IconButton.styleFrom(
+                  backgroundColor: AppColors.getSurfaceElevated(
+                    context,
+                  ).withValues(alpha: 0.8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  icon: Icon(
-                    loc.isAr
-                        ? Icons.arrow_forward_ios_rounded
-                        : Icons.arrow_back_ios_new_rounded,
-                    color: const Color(0xFF1A1D2E),
-                    size: 18,
-                  ),
+                ),
+                icon: Icon(
+                  loc.isAr
+                      ? Icons.arrow_forward_ios_rounded
+                      : Icons.arrow_back_ios_new_rounded,
+                  color: AppColors.getTextPrimary(context),
+                  size: 18,
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

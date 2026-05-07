@@ -71,7 +71,9 @@ class _BiometricAuthDialogState extends State<BiometricAuthDialog> {
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
       child: Dialog(
-        backgroundColor: Colors.white.withValues(alpha: 0.9),
+        backgroundColor: AppColors.getSurfaceElevated(
+          context,
+        ).withValues(alpha: 0.9),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -96,7 +98,7 @@ class _BiometricAuthDialogState extends State<BiometricAuthDialog> {
                 style: GoogleFonts.inter(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1A202C),
+                  color: AppColors.getTextPrimary(context),
                 ),
               ),
               const SizedBox(height: 12),
@@ -105,7 +107,7 @@ class _BiometricAuthDialogState extends State<BiometricAuthDialog> {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   fontSize: 14,
-                  color: const Color(0xFF4A5568),
+                  color: AppColors.getTextSecondary(context),
                   height: 1.5,
                 ),
               ),
@@ -125,7 +127,7 @@ class _BiometricAuthDialogState extends State<BiometricAuthDialog> {
                       _isPasswordVisible
                           ? Icons.visibility
                           : Icons.visibility_off,
-                      color: Colors.grey,
+                      color: AppColors.getTextSecondary(context),
                       size: 20,
                     ),
                     onPressed: () => setState(
@@ -133,7 +135,7 @@ class _BiometricAuthDialogState extends State<BiometricAuthDialog> {
                     ),
                   ),
                   filled: true,
-                  fillColor: Colors.grey.shade100,
+                  fillColor: AppColors.getSurfaceElevated(context),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
@@ -150,7 +152,7 @@ class _BiometricAuthDialogState extends State<BiometricAuthDialog> {
                       child: Text(
                         l10n.cancel,
                         style: GoogleFonts.inter(
-                          color: Colors.grey.shade600,
+                          color: AppColors.getTextSecondary(context),
                           fontWeight: FontWeight.w600,
                         ),
                       ),

@@ -126,10 +126,10 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
         content: SingleChildScrollView(
           child: Text(
             message,
-            style: const TextStyle(color: Colors.white, fontSize: 12),
+            style: TextStyle(color: AppColors.getTextPrimary(ctx), fontSize: 12),
           ),
         ),
-        backgroundColor: const Color(0xFF1E1E1E),
+        backgroundColor: AppColors.getSurfaceElevated(ctx),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -196,11 +196,13 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
                       MediaQuery.of(context).size.height * 0.85 - bottomInset,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.getSurfaceElevated(context),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
+                      color: AppColors.getShadow(
+                        context,
+                      ).withValues(alpha: 0.1),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -217,9 +219,9 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
                             Align(
                               alignment: AlignmentDirectional.topEnd,
                               child: IconButton(
-                                icon: const Icon(
+                                icon: Icon(
                                   Icons.close,
-                                  color: Colors.black54,
+                                  color: AppColors.getTextMuted(context),
                                 ),
                                 onPressed: _handleCancel,
                               ),
@@ -230,7 +232,7 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
                           Text(
                             l10n.stepOf(currentStepIndex, totalStepsCount),
                             style: TextStyle(
-                              color: Colors.black.withValues(alpha: 0.4),
+                              color: AppColors.getTextMuted(context),
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),

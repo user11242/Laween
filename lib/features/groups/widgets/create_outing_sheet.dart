@@ -309,15 +309,15 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.9),
+          color: AppColors.getSurfaceElevated(context).withValues(alpha: 0.9),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.5),
+            color: AppColors.getBorder(context).withValues(alpha: 0.5),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: AppColors.getShadow(context),
               blurRadius: 30,
               offset: const Offset(0, -10),
             ),
@@ -335,124 +335,124 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            // Handle
-            Center(
-              child: Container(
-                width: 45,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Search Bar (Only shown in Direct Mode)
-            if (_isDirectMode) ...[
-              _buildSearchBar(),
-
-              if (_searchResults.isNotEmpty) _buildSearchResults(),
-
-              const SizedBox(height: 20),
-            ],
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _isDirectMode ? "Direct Outing" : "Create Outing",
-                      style: GoogleFonts.outfit(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.darkSlate,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    Text(
-                      _isDirectMode
-                          ? "Pick a destination and let's go!"
-                          : "Find the perfect mid-point",
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        color: Colors.grey.shade500,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-                Container(
-                  padding: const EdgeInsets.all(10),
+              // Handle
+              Center(
+                child: Container(
+                  width: 45,
+                  height: 5,
                   decoration: BoxDecoration(
-                    color: AppColors.teal.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
+                    color: AppColors.getDivider(context),
+                    borderRadius: BorderRadius.circular(3),
                   ),
-                  child: const Icon(
-                    Icons.flash_on_rounded,
-                    color: AppColors.teal,
-                    size: 22,
-                  ),
-                ).animate().scale(
-                  delay: 200.milliseconds,
-                  duration: 400.milliseconds,
-                  curve: Curves.easeOutBack,
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            // Section 1: Mode (Hidden in Direct Mode as it's not needed for discovery)
-            if (!_isDirectMode) ...[
-              _buildSectionHeader("Calculation Mode"),
-              const SizedBox(height: 12),
-              _buildModeSwitcher(),
-              const SizedBox(height: 24),
-            ],
-
-            // Section 2: Category (Only shown in Discovery Mode)
-            if (!_isDirectMode) ...[
-              _buildSectionHeader("Select Category"),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 104,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  clipBehavior: Clip.none,
-                  itemCount: _categories.length,
-                  itemBuilder: (context, index) =>
-                      _buildCategoryCard(_categories[index]),
                 ),
               ),
+              const SizedBox(height: 16),
+
+              // Search Bar (Only shown in Direct Mode)
+              if (_isDirectMode) ...[
+                _buildSearchBar(),
+
+                if (_searchResults.isNotEmpty) _buildSearchResults(),
+
+                const SizedBox(height: 20),
+              ],
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _isDirectMode ? "Direct Outing" : "Create Outing",
+                        style: GoogleFonts.outfit(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.getTextPrimary(context),
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      Text(
+                        _isDirectMode
+                            ? "Pick a destination and let's go!"
+                            : "Find the perfect mid-point",
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: AppColors.getTextSecondary(context),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.teal.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.flash_on_rounded,
+                      color: AppColors.teal,
+                      size: 22,
+                    ),
+                  ).animate().scale(
+                    delay: 200.milliseconds,
+                    duration: 400.milliseconds,
+                    curve: Curves.easeOutBack,
+                  ),
+                ],
+              ),
+
               const SizedBox(height: 24),
+
+              // Section 1: Mode (Hidden in Direct Mode as it's not needed for discovery)
+              if (!_isDirectMode) ...[
+                _buildSectionHeader("Calculation Mode"),
+                const SizedBox(height: 12),
+                _buildModeSwitcher(),
+                const SizedBox(height: 24),
+              ],
+
+              // Section 2: Category (Only shown in Discovery Mode)
+              if (!_isDirectMode) ...[
+                _buildSectionHeader("Select Category"),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 104,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    clipBehavior: Clip.none,
+                    itemCount: _categories.length,
+                    itemBuilder: (context, index) =>
+                        _buildCategoryCard(_categories[index]),
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
+
+              // Section 3: Time Limit
+              _buildSectionHeader("Join Time Limit"),
+              const SizedBox(height: 12),
+              _buildTimeLimitRow(),
+
+              const SizedBox(height: 24),
+
+              // Section 4: Schedule
+              _buildSectionHeader("Schedule Session"),
+              const SizedBox(height: 12),
+              _buildScheduleSection(),
+
+              const SizedBox(height: 32),
+
+              // Final Action
+              _buildMainButton(),
+              const SizedBox(height: 12),
             ],
-
-            // Section 3: Time Limit
-            _buildSectionHeader("Join Time Limit"),
-            const SizedBox(height: 12),
-            _buildTimeLimitRow(),
-
-            const SizedBox(height: 24),
-
-            // Section 4: Schedule
-            _buildSectionHeader("Schedule Session"),
-            const SizedBox(height: 12),
-            _buildScheduleSection(),
-
-            const SizedBox(height: 32),
-
-            // Final Action
-            _buildMainButton(),
-            const SizedBox(height: 12),
-          ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildSectionHeader(String title) {
     return Text(
@@ -460,7 +460,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
       style: GoogleFonts.outfit(
         fontSize: 12,
         fontWeight: FontWeight.bold,
-        color: AppColors.darkSlate.withValues(alpha: 0.4),
+        color: AppColors.getTextMuted(context),
         letterSpacing: 1.2,
       ),
     );
@@ -471,7 +471,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
       height: 60,
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: AppColors.getInputBackground(context),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -492,12 +492,16 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
+            color: isSelected
+                ? AppColors.getSurface(context)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(15),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
+                      color: AppColors.getShadow(
+                        context,
+                      ).withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -510,7 +514,9 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
               Icon(
                 icon,
                 size: 20,
-                color: isSelected ? AppColors.teal : Colors.grey.shade400,
+                color: isSelected
+                    ? AppColors.teal
+                    : AppColors.getTextMuted(context),
               ),
               const SizedBox(width: 8),
               Text(
@@ -519,8 +525,8 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: isSelected
-                      ? AppColors.darkSlate
-                      : Colors.grey.shade400,
+                      ? AppColors.getTextPrimary(context)
+                      : AppColors.getTextMuted(context),
                 ),
               ),
             ],
@@ -542,8 +548,8 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
         margin: const EdgeInsets.only(right: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? Colors.white
-              : Colors.white.withValues(alpha: 0.5),
+              ? AppColors.getSurfaceElevated(context)
+              : AppColors.getSurface(context).withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? AppColors.teal : Colors.transparent,
@@ -553,7 +559,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
             BoxShadow(
               color: isSelected
                   ? AppColors.teal.withValues(alpha: 0.15)
-                  : Colors.black.withValues(alpha: 0.03),
+                  : AppColors.getShadow(context).withValues(alpha: 0.03),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -576,7 +582,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
               style: GoogleFonts.outfit(
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: AppColors.darkSlate,
+                color: AppColors.getTextPrimary(context),
               ),
             ),
           ],
@@ -597,18 +603,22 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
               margin: EdgeInsets.only(right: t == 10 ? 0 : 12),
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.darkSlate : Colors.white,
+                color: isSelected
+                    ? AppColors.getTextPrimary(context)
+                    : AppColors.getSurface(context),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: isSelected
-                      ? AppColors.darkSlate
-                      : Colors.grey.shade200,
+                      ? AppColors.getTextPrimary(context)
+                      : AppColors.getBorder(context),
                   width: 1.5,
                 ),
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: AppColors.darkSlate.withValues(alpha: 0.2),
+                          color: AppColors.getTextPrimary(
+                            context,
+                          ).withValues(alpha: 0.2),
                           blurRadius: 12,
                           offset: const Offset(0, 6),
                         ),
@@ -621,7 +631,9 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                   style: GoogleFonts.outfit(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: isSelected ? Colors.white : Colors.grey.shade600,
+                    color: isSelected
+                        ? AppColors.getSurface(context)
+                        : AppColors.getTextSecondary(context),
                   ),
                 ),
               ),
@@ -635,11 +647,11 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
   Widget _buildSearchBar() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.getSurfaceElevated(context),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: AppColors.getShadow(context).withValues(alpha: 0.05),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -651,7 +663,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
         decoration: InputDecoration(
           hintText: "Where are we going?",
           hintStyle: GoogleFonts.inter(
-            color: Colors.grey.shade400,
+            color: AppColors.getTextMuted(context),
             fontSize: 15,
           ),
           prefixIcon: const Icon(Icons.search_rounded, color: AppColors.teal),
@@ -698,11 +710,11 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
       margin: const EdgeInsets.only(top: 8),
       constraints: const BoxConstraints(maxHeight: 280),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.getSurfaceElevated(context),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: AppColors.getShadow(context),
             blurRadius: 30,
             offset: const Offset(0, 10),
           ),
@@ -718,7 +730,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
             height: 1,
             indent: 76,
             endIndent: 16,
-            color: Colors.grey.shade50,
+            color: AppColors.getDivider(context),
           ),
           itemBuilder: (context, index) {
             final place = _searchResults[index];
@@ -732,7 +744,8 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
               if (distanceMeters < 1000) {
                 distanceText = "${distanceMeters.toStringAsFixed(0)}m";
               } else {
-                distanceText = "${(distanceMeters / 1000).toStringAsFixed(1)}km";
+                distanceText =
+                    "${(distanceMeters / 1000).toStringAsFixed(1)}km";
               }
             }
 
@@ -756,30 +769,29 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                         borderRadius: BorderRadius.circular(14),
                         child:
                             (place['photos'] != null &&
-                                    place['photos'].isNotEmpty &&
-                                    _apiKey != null)
-                                ? CachedNetworkImage(
-                                  imageUrl:
-                                      'https://places.googleapis.com/v1/${place['photos'][0]['name']}/media?key=$_apiKey&maxWidthPx=100',
-                                  fit: BoxFit.cover,
-                                  placeholder:
-                                      (context, url) => const Icon(
-                                        Icons.location_on_rounded,
-                                        color: AppColors.teal,
-                                        size: 22,
-                                      ),
-                                  errorWidget:
-                                      (context, url, error) => const Icon(
-                                        Icons.location_on_rounded,
-                                        color: AppColors.teal,
-                                        size: 22,
-                                      ),
-                                )
-                                : const Icon(
+                                place['photos'].isNotEmpty &&
+                                _apiKey != null)
+                            ? CachedNetworkImage(
+                                imageUrl:
+                                    'https://places.googleapis.com/v1/${place['photos'][0]['name']}/media?key=$_apiKey&maxWidthPx=100',
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => const Icon(
                                   Icons.location_on_rounded,
                                   color: AppColors.teal,
                                   size: 22,
                                 ),
+                                errorWidget: (context, url, error) =>
+                                    const Icon(
+                                      Icons.location_on_rounded,
+                                      color: AppColors.teal,
+                                      size: 22,
+                                    ),
+                              )
+                            : const Icon(
+                                Icons.location_on_rounded,
+                                color: AppColors.teal,
+                                size: 22,
+                              ),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -795,7 +807,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                                   style: GoogleFonts.outfit(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: AppColors.darkSlate,
+                                    color: AppColors.getTextPrimary(context),
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -829,7 +841,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                             address,
                             style: GoogleFonts.inter(
                               fontSize: 13,
-                              color: Colors.grey.shade500,
+                              color: AppColors.getTextSecondary(context),
                               fontWeight: FontWeight.w400,
                             ),
                             maxLines: 1,
@@ -842,10 +854,9 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                                 ...List.generate(5, (i) {
                                   return Icon(
                                     Icons.star_rounded,
-                                    color:
-                                        i < rating.floor()
-                                            ? Colors.amber
-                                            : Colors.grey.shade200,
+                                    color: i < rating.floor()
+                                        ? Colors.amber
+                                        : AppColors.getBorder(context),
                                     size: 14,
                                   );
                                 }),
@@ -855,7 +866,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                                   style: GoogleFonts.inter(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.grey.shade700,
+                                    color: AppColors.getTextPrimary(context),
                                   ),
                                 ),
                                 const SizedBox(width: 4),
@@ -863,7 +874,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                                   "(${place['userRatingCount'] ?? 0})",
                                   style: GoogleFonts.inter(
                                     fontSize: 11,
-                                    color: Colors.grey.shade400,
+                                    color: AppColors.getTextSecondary(context),
                                   ),
                                 ),
                               ],
@@ -946,15 +957,17 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        color: AppColors.getSurfaceElevated(context),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: _isScheduled ? AppColors.teal.withValues(alpha: 0.4) : Colors.grey.shade200,
+          color: _isScheduled
+              ? AppColors.teal.withValues(alpha: 0.4)
+              : AppColors.getBorder(context),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: AppColors.getShadow(context).withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -970,12 +983,18 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: (_isScheduled ? AppColors.teal : Colors.grey).withValues(alpha: 0.1),
+                      color:
+                          (_isScheduled
+                                  ? AppColors.teal
+                                  : AppColors.getTextMuted(context))
+                              .withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.calendar_month_rounded,
-                      color: _isScheduled ? AppColors.teal : Colors.grey.shade600,
+                      color: _isScheduled
+                          ? AppColors.teal
+                          : AppColors.getTextMuted(context),
                       size: 20,
                     ),
                   ),
@@ -988,7 +1007,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                         style: GoogleFonts.outfit(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.darkSlate,
+                          color: AppColors.getTextPrimary(context),
                         ),
                       ),
                       Text(
@@ -997,7 +1016,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                             : "Off - Start the session now",
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          color: Colors.grey.shade500,
+                          color: AppColors.getTextSecondary(context),
                         ),
                       ),
                     ],
@@ -1011,7 +1030,9 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                   setState(() {
                     _isScheduled = val;
                     if (val && _scheduledDateTime == null) {
-                      _scheduledDateTime = DateTime.now().add(const Duration(hours: 1));
+                      _scheduledDateTime = DateTime.now().add(
+                        const Duration(hours: 1),
+                      );
                     }
                   });
                 },
@@ -1033,10 +1054,10 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                   builder: (context, child) {
                     return Theme(
                       data: Theme.of(context).copyWith(
-                        colorScheme: const ColorScheme.light(
+                        colorScheme: ColorScheme.light(
                           primary: AppColors.teal,
-                          onPrimary: Colors.white,
-                          onSurface: AppColors.darkSlate,
+                          onPrimary: AppColors.getSurface(context),
+                          onSurface: AppColors.getTextPrimary(context),
                         ),
                       ),
                       child: child!,
@@ -1046,14 +1067,16 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                 if (date != null && mounted) {
                   final time = await showTimePicker(
                     context: context,
-                    initialTime: TimeOfDay.fromDateTime(_scheduledDateTime ?? DateTime.now()),
+                    initialTime: TimeOfDay.fromDateTime(
+                      _scheduledDateTime ?? DateTime.now(),
+                    ),
                     builder: (context, child) {
                       return Theme(
                         data: Theme.of(context).copyWith(
-                          colorScheme: const ColorScheme.light(
+                          colorScheme: ColorScheme.light(
                             primary: AppColors.teal,
-                            onPrimary: Colors.white,
-                            onSurface: AppColors.darkSlate,
+                            onPrimary: AppColors.getSurface(context),
+                            onSurface: AppColors.getTextPrimary(context),
                           ),
                         ),
                         child: child!,
@@ -1103,4 +1126,3 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
     );
   }
 }
-

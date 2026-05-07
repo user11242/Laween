@@ -79,7 +79,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.getBackground(context),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -203,7 +203,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     style: GoogleFonts.inter(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: const Color(0xFF2D3748),
+                      color: AppColors.getTextPrimary(context),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -212,7 +212,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
                       fontSize: 14,
-                      color: Colors.grey.shade500,
+                      color: AppColors.getTextSecondary(context),
                       height: 1.5,
                     ),
                   ),
@@ -228,7 +228,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       l10n.phoneNumber,
                       style: GoogleFonts.inter(
                         fontSize: 14,
-                        color: Colors.grey.shade600,
+                        color: AppColors.getTextSecondary(context),
                       ),
                     ),
                   ),
@@ -240,14 +240,20 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         _fullPhoneNumber = phone.completeNumber,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: AppColors.getInputBackground(context),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
+                        borderSide: BorderSide(
+                          color: AppColors.getBorder(context),
+                        ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide(color: Colors.grey.shade200),
+                        borderSide: BorderSide(
+                          color: AppColors.getBorder(
+                            context,
+                          ).withValues(alpha: 0.5),
+                        ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
@@ -298,7 +304,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     child: Text(
                       l10n.backToLogin,
                       style: GoogleFonts.inter(
-                        color: Colors.grey.shade600,
+                        color: AppColors.getTextSecondary(context),
                         fontSize: 14,
                         decoration: TextDecoration.underline,
                       ),

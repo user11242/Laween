@@ -17,18 +17,18 @@ class GroupMediaPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.getBackground(context),
       appBar: AppBar(
         title: Text(
           l10n?.mediaTitle ?? 'Media',
           style: GoogleFonts.outfit(
             fontWeight: FontWeight.bold,
-            color: AppColors.darkSlate,
+            color: AppColors.getTextPrimary(context),
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.getSurface(context),
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.darkSlate),
+        iconTheme: IconThemeData(color: AppColors.getTextPrimary(context)),
       ),
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: _groupService.getGroupMedia(
@@ -48,12 +48,15 @@ class GroupMediaPage extends StatelessWidget {
                   Icon(
                     Icons.photo_library_outlined,
                     size: 64,
-                    color: Colors.grey.shade300,
+                    color: AppColors.getDivider(context),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     l10n?.noMediaYet ?? 'No media shared yet',
-                    style: GoogleFonts.inter(color: Colors.grey, fontSize: 16),
+                    style: GoogleFonts.inter(
+                      color: AppColors.getTextSecondary(context),
+                      fontSize: 16,
+                    ),
                   ),
                 ],
               ),
@@ -106,8 +109,8 @@ class GroupMediaPage extends StatelessWidget {
                   imageUrl: url,
                   fit: BoxFit.cover,
                   placeholder: (context, url) =>
-                      Container(color: Colors.grey.shade100),
-                  errorWidget: (context, url, error) => const Icon(Icons.error),
+                      Container(color: AppColors.getSurface(context)),
+                  errorWidget: (context, url, error) => Icon(Icons.error, color: AppColors.getTextSecondary(context)),
                 ),
               );
             },

@@ -118,15 +118,12 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 24),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.getSurface(context),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: AppColors.slate.withValues(alpha: 0.1),
-            width: 1,
-          ),
+          border: Border.all(color: AppColors.getDivider(context), width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
+              color: AppColors.getShadow(context).withValues(alpha: 0.04),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -168,7 +165,7 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
                         style: GoogleFonts.outfit(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
+                          color: AppColors.getTextPrimary(context),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -203,7 +200,7 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
                   height: 6,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: AppColors.slate.withValues(alpha: 0.2),
+                    color: AppColors.getDivider(context),
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
@@ -235,7 +232,7 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
                   "${session.participants.length} friends moving",
                   style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: AppColors.slate,
+                    color: AppColors.getTextSecondary(context),
                   ),
                 ),
                 Row(

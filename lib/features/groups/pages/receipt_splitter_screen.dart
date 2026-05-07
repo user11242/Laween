@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -48,9 +47,10 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
 
     try {
       // Call Apple Vision OCR via native method channel
-      final List<dynamic> lines = await _ocrChannel.invokeMethod('recognizeText', {
-        'imagePath': pickedFile.path,
-      });
+      final List<dynamic> lines = await _ocrChannel.invokeMethod(
+        'recognizeText',
+        {'imagePath': pickedFile.path},
+      );
 
       final List<ReceiptItem> extracted = [];
       for (var line in lines) {
@@ -63,7 +63,10 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
           final price = double.tryParse(priceStr);
 
           if (price != null && price > 0.0) {
-            var name = text.substring(0, match.start).replaceAll(RegExp(r'[\.\-]+'), '').trim();
+            var name = text
+                .substring(0, match.start)
+                .replaceAll(RegExp(r'[\.\-]+'), '')
+                .trim();
             if (name.isEmpty) name = "Item #${extracted.length + 1}";
             extracted.add(ReceiptItem(name: name, price: price));
           }
@@ -89,8 +92,13 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
         final nameController = TextEditingController();
         final priceController = TextEditingController();
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text("Add Custom Item", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            "Add Custom Item",
+            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: AppColors.getTextPrimary(context)),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -98,16 +106,22 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
                 controller: nameController,
                 decoration: InputDecoration(
                   labelText: "Item Name",
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: priceController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: InputDecoration(
                   labelText: "Price",
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ],
@@ -140,7 +154,7 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
   void _showAssignBottomSheet(ReceiptItem item) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.getSurface(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -158,14 +172,14 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
                     style: GoogleFonts.outfit(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.darkSlate,
+                      color: AppColors.getTextPrimary(context),
                     ),
                   ),
                   Text(
                     "Select who ate or shared this item",
                     style: GoogleFonts.outfit(
                       fontSize: 14,
-                      color: Colors.grey.shade600,
+                      color: AppColors.getTextSecondary(context),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -180,7 +194,9 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
                           value: isSelected,
                           title: Text(
                             p.name,
-                            style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           activeColor: AppColors.teal,
                           onChanged: (val) {
@@ -236,14 +252,14 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
     final totals = _calculateSplits();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: AppColors.getBackground(context),
       appBar: AppBar(
         title: Text(
           "Receipt Splitter",
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 20),
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.darkSlate,
+        backgroundColor: AppColors.getSurface(context),
+        foregroundColor: AppColors.getTextPrimary(context),
         elevation: 0,
       ),
       body: CustomScrollView(
@@ -255,11 +271,11 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.getSurface(context),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
+                      color: AppColors.getShadow(context),
                       blurRadius: 15,
                       offset: const Offset(0, 5),
                     ),
@@ -272,12 +288,17 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
                         Expanded(
                           child: ElevatedButton.icon(
                             onPressed: () => _pickImage(ImageSource.camera),
-                            icon: const Icon(Icons.camera_alt_rounded, color: Colors.white),
+                            icon: const Icon(
+                              Icons.camera_alt_rounded,
+                              color: Colors.white,
+                            ),
                             label: const Text("Scan Receipt"),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.teal,
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
                               elevation: 0,
                             ),
                           ),
@@ -286,13 +307,18 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
                         Expanded(
                           child: OutlinedButton.icon(
                             onPressed: _addNewItem,
-                            icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.teal),
+                            icon: const Icon(
+                              Icons.add_circle_outline_rounded,
+                              color: AppColors.teal,
+                            ),
                             label: const Text("Add Custom"),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.teal,
                               side: const BorderSide(color: AppColors.teal),
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
                             ),
                           ),
                         ),
@@ -302,7 +328,13 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
                       const SizedBox(height: 16),
                       const LinearProgressIndicator(color: AppColors.teal),
                       const SizedBox(height: 8),
-                      Text("Scanning with Apple Vision AI...", style: GoogleFonts.outfit(fontSize: 13, color: Colors.grey)),
+                      Text(
+                        "Scanning with Apple Vision AI...",
+                        style: GoogleFonts.outfit(
+                          fontSize: 13,
+                          color: AppColors.getTextSecondary(context),
+                        ),
+                      ),
                     ],
                   ],
                 ),
@@ -315,56 +347,67 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final item = _items[index];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.grey.shade100),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  item.name,
-                                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final item = _items[index];
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.getSurface(context),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.getDivider(context)),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.name,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.getTextPrimary(context),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  "${item.price.toStringAsFixed(2)} JOD",
-                                  style: GoogleFonts.outfit(color: AppColors.teal, fontWeight: FontWeight.bold, fontSize: 15),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "${item.price.toStringAsFixed(2)} JOD",
+                                style: GoogleFonts.outfit(
+                                  color: AppColors.teal,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
                                 ),
-                              ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => _showAssignBottomSheet(item),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: item.sharedWithUids.isEmpty
+                                ? AppColors.getSurfaceElevated(context)
+                                : AppColors.teal.withValues(alpha: 0.1),
+                            elevation: 0,
+                            foregroundColor: item.sharedWithUids.isEmpty
+                                ? AppColors.getTextSecondary(context)
+                                : AppColors.teal,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          ElevatedButton(
-                            onPressed: () => _showAssignBottomSheet(item),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: item.sharedWithUids.isEmpty ? Colors.grey.shade200 : AppColors.teal.withValues(alpha: 0.1),
-                              elevation: 0,
-                              foregroundColor: item.sharedWithUids.isEmpty ? Colors.grey.shade700 : AppColors.teal,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: Text(
-                              item.sharedWithUids.isEmpty
-                                  ? "Assign"
-                                  : "${item.sharedWithUids.length} Selected",
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
+                          child: Text(
+                            item.sharedWithUids.isEmpty
+                                ? "Assign"
+                                : "${item.sharedWithUids.length} Selected",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
-                        ],
-                      ),
-                    ).animate().fadeIn(duration: 300.ms, delay: (index * 40).ms);
-                  },
-                  childCount: _items.length,
-                ),
+                        ),
+                      ],
+                    ),
+                  ).animate().fadeIn(duration: 300.ms, delay: (index * 40).ms);
+                }, childCount: _items.length),
               ),
             ),
 
@@ -376,7 +419,7 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.getSurface(context),
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: Column(
@@ -384,33 +427,53 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
                     children: [
                       Text(
                         "Extra Adjustments",
-                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: AppColors.getTextPrimary(context),
+                        ),
                       ),
                       const SizedBox(height: 12),
                       Row(
                         children: [
                           Expanded(
                             child: TextField(
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                               decoration: InputDecoration(
                                 labelText: "Tax %",
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                               onChanged: (val) {
-                                setState(() => _taxPercent = double.tryParse(val) ?? 0.0);
+                                setState(
+                                  () =>
+                                      _taxPercent = double.tryParse(val) ?? 0.0,
+                                );
                               },
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: TextField(
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                               decoration: InputDecoration(
                                 labelText: "Tip %",
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                               onChanged: (val) {
-                                setState(() => _tipPercent = double.tryParse(val) ?? 0.0);
+                                setState(
+                                  () =>
+                                      _tipPercent = double.tryParse(val) ?? 0.0,
+                                );
                               },
                             ),
                           ),
@@ -427,45 +490,46 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
               sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final p = widget.participants[index];
-                    final amt = totals[p.uid] ?? 0.0;
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: amt > 0 ? AppColors.teal.withValues(alpha: 0.05) : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: amt > 0 ? AppColors.teal.withValues(alpha: 0.3) : Colors.grey.shade100,
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final p = widget.participants[index];
+                  final amt = totals[p.uid] ?? 0.0;
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: amt > 0
+                          ? AppColors.teal.withValues(alpha: 0.05)
+                          : AppColors.getSurface(context),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: amt > 0
+                            ? AppColors.teal.withValues(alpha: 0.3)
+                            : AppColors.getDivider(context),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          p.name,
+                          style: GoogleFonts.outfit(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.getTextPrimary(context),
+                          ),
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            p.name,
-                            style: GoogleFonts.outfit(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.darkSlate,
-                            ),
+                        const Spacer(),
+                        Text(
+                          "${amt.toStringAsFixed(2)} JOD",
+                          style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: amt > 0 ? AppColors.teal : AppColors.getTextMuted(context),
                           ),
-                          const Spacer(),
-                          Text(
-                            "${amt.toStringAsFixed(2)} JOD",
-                            style: GoogleFonts.outfit(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: amt > 0 ? AppColors.teal : Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                  childCount: widget.participants.length,
-                ),
+                        ),
+                      ],
+                    ),
+                  );
+                }, childCount: widget.participants.length),
               ),
             ),
         ],
