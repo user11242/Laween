@@ -164,7 +164,7 @@ class _GroupsPageState extends State<GroupsPage>
                                 width: 200,
                                 height: 200,
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.1),
+                                  color: Colors.white.withOpacity(0.1),
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -185,7 +185,7 @@ class _GroupsPageState extends State<GroupsPage>
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
+                              color: Colors.black.withOpacity(0.05),
                               blurRadius: 15,
                               offset: const Offset(0, 5),
                             ),
@@ -346,7 +346,7 @@ class _GroupsPageState extends State<GroupsPage>
         Container(
           padding: const EdgeInsets.all(32),
           decoration: BoxDecoration(
-            color: AppColors.teal.withValues(alpha: 0.05),
+            color: AppColors.teal.withOpacity(0.05),
             shape: BoxShape.circle,
           ),
           child: const Icon(
@@ -458,7 +458,7 @@ class _GroupCard extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: AppColors.teal.withValues(alpha: 0.1),
+                  color: AppColors.teal.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: ClipRRect(

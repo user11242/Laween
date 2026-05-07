@@ -30,6 +30,22 @@ class OtpAuthService {
         // 🤖 ANDROID ONLY: Auto-resolves SMS code without typing
         verificationCompleted: (PhoneAuthCredential cred) async {
           debugPrint("✅ Android Auto-Verification completed");
+          // If auto-verification happens, we can immediately verify it.
+          // Note: We don't have the verificationId here, but the credential itself is enough.
+          try {
+             final currentUser = _auth.currentUser;
+             if (currentUser != null) {
+               await currentUser.linkWithCredential(cred);
+             } else {
+               final userCred = await _auth.signInWithCredential(cred);
+               if (userCred.user != null) await _auth.signOut();
+             }
+             // How do we tell the UI to move forward? 
+             // We can use a callback or just let the UI handle the standard codeSent flow.
+             // Usually, for auto-verification, we might want to notify the caller.
+          } catch (e) {
+             debugPrint("❌ Auto-verification error: $e");
+          }
         },
 
         // ❌ FAILED
@@ -75,47 +91,64 @@ class OtpAuthService {
     required String smsCode,
   }) async {
     try {
-      // Create the credential
+      // 1. Create the credential
       final credential = PhoneAuthProvider.credential(
         verificationId: verificationId,
         smsCode: smsCode,
       );
 
-      // Just creating the object doesn't verify the code with the server.
+      // 2. ACTUALLY VERIFY with the server
       final currentUser = _auth.currentUser;
       if (currentUser != null) {
+        // CASE A: User is logged in (e.g. Google Sign-in Wizard). LINK the phone.
         try {
-          // If a user is logged in (e.g., Google Wizard or linking phone), try to LINK.
+          // 🚨 FIX: If the user already has a phone linked, unlink it first.
+          final hasPhone = currentUser.providerData.any((p) => p.providerId == 'phone');
+          if (hasPhone) {
+            debugPrint("📱 User already has a phone linked. Unlinking first...");
+            await currentUser.unlink('phone');
+          }
+
+          debugPrint("📱 Linking phone OTP to current user...");
           await currentUser.linkWithCredential(credential);
         } on FirebaseAuthException catch (e) {
-          if (e.code == 'user-not-found' || e.code == 'user-disabled') {
-            // ⚠️ Vital Fix: If the current user was deleted on the server,
-            // the local token is stale. linking will fail with 'user-not-found'.
-            // We must sign out and treat this as a fresh sign-in.
-            debugPrint(
-              "⚠️ Stale user detected (User deleted on server). Signing out and retrying...",
-            );
+          if (e.code == 'user-not-found' || e.code == 'user-disabled' || e.code == 'invalid-user-token') {
+            // 👻 STALE USER: The user was deleted on the server or the token is dead.
+            debugPrint("⚠️ Stale user detected. Signing out and retrying...");
             await _auth.signOut();
-            // We do NOT sign in here. The registration flow handles auth entirely.
-          } else {
-            rethrow; // Other errors (like invalid code) should be handled normally
+            return verifySmsCode(verificationId: verificationId, smsCode: smsCode); // Recursive retry as Guest
           }
+          rethrow;
+        }
+      } else {
+        // CASE B: No user logged in (e.g. Email Registration). 
+        // To verify the code is correct, we MUST attempt a sign-in.
+        debugPrint("📱 Verifying phone OTP via temporary sign-in...");
+        final userCred = await _auth.signInWithCredential(credential);
+        
+        // If we reached here, the code is 100% correct.
+        if (userCred.user != null) {
+          debugPrint("✅ Phone OTP verified. Signing out temporary session.");
+          await _auth.signOut();
         }
       }
 
-      // If we got here, the code is VALID. We do NOT sign in for new users here,
-      // because Email/Password registration handles the actual account creation later.
       return credential;
     } on FirebaseAuthException catch (e) {
+      debugPrint("❌ verifySmsCode Error: ${e.code} - ${e.message}");
       if (e.code == 'invalid-verification-code') {
-        throw "The code you entered is incorrect.";
+        throw "The code you entered is incorrect. Please check your messages and try again.";
       } else if (e.code == 'credential-already-in-use') {
-        // This is a specific case for linking: the phone is already used.
-        throw "This phone number is already linked to another account. If you started registration before, please try to sign in with that account.";
+        throw "This phone number is already linked to another account. Please use a different number.";
+      } else if (e.code == 'session-expired') {
+        throw "Verification session has expired. Please request a new code.";
+      } else if (e.code == 'app-not-authorized') {
+        throw "App not authorized. This usually means the SHA-1 fingerprint is missing in Firebase or the package name is mismatched. Please ensure you ran 'flutter clean'.";
       }
-      throw e.message ?? "Invalid OTP Code";
+      throw e.message ?? "Verification failed: ${e.code}";
     } catch (e) {
-      throw "An unknown error occurred verifying OTP.";
+      debugPrint("❌ verifySmsCode Unknown Error: $e");
+      throw "An unexpected error occurred during verification.";
     }
   }
 }

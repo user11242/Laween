@@ -10,6 +10,7 @@ import '../../../core/theme/colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../data/services/group_service.dart';
 import '../../../core/message/app_messenger.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CreateGroupPage extends StatefulWidget {
   const CreateGroupPage({super.key});
@@ -34,13 +35,8 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   }
 
   Future<void> _pickContacts() async {
-    final status = await Permission.contacts.request();
-    if (status.isPermanentlyDenied) {
-      openAppSettings();
-      return;
-    }
-
-    if (status.isGranted) {
+    // Use the package's built-in permission request for better compatibility
+    if (await FlutterContacts.requestPermission()) {
       final contacts = await FlutterContacts.getContacts(withProperties: true);
       if (!mounted) return;
 
@@ -62,11 +58,14 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
       }
     } else {
       if (mounted) {
+        // Only open settings if they really want to, otherwise show a clear message
         AppMessenger.showSnackBar(
           context,
-          title: "Error",
-          message: "Contact permission denied",
-          type: MessengerType.error,
+          title: AppLocalizations.of(context)!.isAr ? "الصلاحية مطلوبة" : "Permission Required",
+          message: AppLocalizations.of(context)!.isAr
+              ? "يرجى منح صلاحية الوصول لجهات الاتصال من الإعدادات"
+              : "Please grant contacts permission in settings to add friends",
+          type: MessengerType.info,
         );
       }
     }
@@ -87,7 +86,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
 
     setState(() => _isLoading = true);
 
-    final error = await _groupService.createGroup(
+    final result = await _groupService.createGroup(
       name: _nameController.text.trim(),
       memberPhoneNumbers: _selectedContacts
           .map((c) => c.phones.isNotEmpty ? c.phones.first.number : '')
@@ -95,27 +94,66 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
           .toList(),
       imageFile: _image,
     );
+    
+    final error = result?['error'];
+    final groupCode = result?['groupCode'];
 
     if (!mounted) return;
     setState(() => _isLoading = false);
 
     if (error == null) {
+      final l10n = AppLocalizations.of(context, listen: false)!;
+      // 🚀 SUCCESS: Trigger Invites if needed
+      if (groupCode != null) {
+        final invitees = _selectedContacts
+            .map((c) => c.phones.isNotEmpty ? c.phones.first.number : '')
+            .where((p) => p.isNotEmpty)
+            .toList();
+        
+        if (invitees.isNotEmpty) {
+          await _sendSMSInvites(invitees, groupCode);
+        }
+      }
+
       AppMessenger.showSnackBar(
         context,
-        title: AppLocalizations.of(context)!.isAr ? "نجاح" : "Success",
-        message: AppLocalizations.of(context)!.isAr
+        title: l10n.isAr ? "نجاح" : "Success",
+        message: l10n.isAr
             ? "تم إنشاء المجموعة بنجاح"
             : "Group created successfully",
         type: MessengerType.success,
       );
       Navigator.pop(context);
     } else {
+      final l10n = AppLocalizations.of(context, listen: false)!;
       AppMessenger.showSnackBar(
         context,
-        title: AppLocalizations.of(context)!.isAr ? "خطأ" : "Error",
+        title: l10n.isAr ? "خطأ" : "Error",
         message: error,
         type: MessengerType.error,
       );
+    }
+  }
+
+  Future<void> _sendSMSInvites(List<String> phones, String code) async {
+    final isAr = AppLocalizations.of(context)!.isAr;
+    final message = isAr
+        ? "أهلاً! انضم إلى مجموعتي في تطبيق لاوين (Laween) لتنسيق طلعاتنا. استخدم هذا الكود للانضمام: [$code]"
+        : "Hey! Join my group on Laween to coordinate our outings. Use this code to join: [$code]";
+
+    // Encode spaces as %20 instead of + to avoid the '+' issue in SMS apps
+    final encodedMessage = Uri.encodeComponent(message).replaceAll('+', '%20');
+    final String recipients = phones.join(',');
+    
+    // On iOS/Android, the separator and query param can vary, but this is the most compatible way
+    final Uri smsUri = Uri.parse('sms:$recipients?body=$encodedMessage');
+
+    try {
+      if (await canLaunchUrl(smsUri)) {
+        await launchUrl(smsUri);
+      }
+    } catch (e) {
+      debugPrint("Could not launch SMS: $e");
     }
   }
 
@@ -158,7 +196,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                         child: Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
+                            color: Colors.white.withOpacity(0.2),
                             shape: BoxShape.circle,
                           ),
                           child: Transform.flip(
@@ -211,8 +249,8 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                               gradient: _image == null
                                   ? LinearGradient(
                                       colors: [
-                                        AppColors.teal.withValues(alpha: 0.08),
-                                        AppColors.teal.withValues(alpha: 0.15),
+                                        AppColors.teal.withOpacity(0.08),
+                                        AppColors.teal.withOpacity(0.15),
                                       ],
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
@@ -220,7 +258,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                                   : null,
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: AppColors.teal.withValues(alpha: 0.3),
+                                color: AppColors.teal.withOpacity(0.3),
                                 width: 2,
                               ),
                               image: _image != null
@@ -298,7 +336,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                       border: Border.all(color: Colors.grey.shade200),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.03),
+                          color: Colors.black.withOpacity(0.03),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -370,12 +408,12 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: AppColors.teal.withValues(alpha: 0.4),
+                          color: AppColors.teal.withOpacity(0.4),
                           width: 1.5,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
+                            color: Colors.black.withOpacity(0.02),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -387,7 +425,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                           Container(
                             padding: const EdgeInsets.all(5),
                             decoration: BoxDecoration(
-                              color: AppColors.teal.withValues(alpha: 0.1),
+                              color: AppColors.teal.withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -425,10 +463,10 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                             vertical: 7,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.teal.withValues(alpha: 0.1),
+                            color: AppColors.teal.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: AppColors.teal.withValues(alpha: 0.2),
+                              color: AppColors.teal.withOpacity(0.2),
                             ),
                           ),
                           child: Row(
@@ -504,7 +542,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                           borderRadius: BorderRadius.circular(18),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.teal.withValues(alpha: 0.25),
+                              color: AppColors.teal.withOpacity(0.25),
                               blurRadius: 16,
                               offset: const Offset(0, 6),
                             ),
@@ -665,7 +703,7 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                     ),
                     if (_isCheckingUsers)
                       Text(
-                        "Finding friends...",
+                        AppLocalizations.of(context)!.isAr ? "جاري البحث عن أصدقاء..." : "Finding friends...",
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           color: Colors.grey,
@@ -673,7 +711,7 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                       )
                     else
                       Text(
-                        "${_tempSelected.length} chosen",
+                        AppLocalizations.of(context)!.isAr ? "تم اختيار ${_tempSelected.length}" : "${_tempSelected.length} chosen",
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           color: AppColors.teal,
@@ -685,7 +723,7 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                 TextButton(
                   onPressed: () => Navigator.pop(context, _tempSelected),
                   style: TextButton.styleFrom(
-                    backgroundColor: AppColors.teal.withValues(alpha: 0.1),
+                    backgroundColor: AppColors.teal.withOpacity(0.1),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 10,
@@ -717,7 +755,7 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
               child: TextField(
                 onChanged: (val) => setState(() => _searchQuery = val),
                 decoration: InputDecoration(
-                  hintText: "Search name or phone...",
+                  hintText: AppLocalizations.of(context)!.isAr ? "ابحث بالاسم أو الرقم..." : "Search name or phone...",
                   hintStyle: GoogleFonts.inter(
                     color: Colors.grey,
                     fontSize: 14,
@@ -767,7 +805,7 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                             CircleAvatar(
                               radius: 24,
                               backgroundColor: isOnApp
-                                  ? AppColors.teal.withValues(alpha: 0.1)
+                                  ? AppColors.teal.withOpacity(0.1)
                                   : Colors.grey.shade100,
                               child: Text(
                                 contact.displayName.isNotEmpty
@@ -827,12 +865,12 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.blue.withValues(alpha: 0.05),
+                              color: Colors.blue.withOpacity(0.05),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Text(
-                              "INVITE",
-                              style: TextStyle(
+                            child: Text(
+                              AppLocalizations.of(context)!.isAr ? "دعوة" : "INVITE",
+                              style: const TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.blue,

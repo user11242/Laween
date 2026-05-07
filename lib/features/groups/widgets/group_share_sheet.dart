@@ -36,7 +36,7 @@ class GroupShareSheet extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.85),
+            color: Colors.white.withOpacity(0.85),
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(30),
               topRight: Radius.circular(30),
@@ -52,7 +52,7 @@ class GroupShareSheet extends StatelessWidget {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 20),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.3),
+                    color: Colors.grey.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -86,7 +86,7 @@ class GroupShareSheet extends StatelessWidget {
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
+                        color: Colors.black.withOpacity(0.05),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -116,10 +116,10 @@ class GroupShareSheet extends StatelessWidget {
                     vertical: 16,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.teal.withValues(alpha: 0.05),
+                    color: AppColors.teal.withOpacity(0.05),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: AppColors.teal.withValues(alpha: 0.1),
+                      color: AppColors.teal.withOpacity(0.1),
                     ),
                   ),
                   child: Row(

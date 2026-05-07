@@ -105,7 +105,7 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.teal.withValues(alpha: 0.05),
+            color: AppColors.teal.withOpacity(0.05),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
@@ -187,19 +187,19 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
           },
           decoration: InputDecoration(
             hintText: l10n.phoneNumber,
-            hintStyle: TextStyle(color: AppColors.teal.withValues(alpha: 0.5)),
+            hintStyle: TextStyle(color: AppColors.teal.withOpacity(0.5)),
             filled: true,
-            fillColor: AppColors.teal.withValues(alpha: 0.05),
+            fillColor: AppColors.teal.withOpacity(0.05),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: AppColors.teal.withValues(alpha: 0.3),
+                color: AppColors.teal.withOpacity(0.3),
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: AppColors.teal.withValues(alpha: 0.3),
+                color: AppColors.teal.withOpacity(0.3),
               ),
             ),
             focusedBorder: OutlineInputBorder(
@@ -264,7 +264,13 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
     }
 
     if (await _validateCurrentStepInput()) {
-      _isFinalStep() ? await _finishWizard() : _stepForward();
+      if (_step == 1) {
+        // Trigger verification inside the OTP widget. 
+        // It will call _stepForward() itself via the onVerified callback if successful.
+        await _otpKey.currentState?.verifyAndSubmit();
+      } else {
+        _isFinalStep() ? await _finishWizard() : _stepForward();
+      }
     }
   }
 
@@ -359,7 +365,7 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
           children: [
             BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-              child: Container(color: Colors.black.withValues(alpha: 0.4)),
+              child: Container(color: Colors.black.withOpacity(0.4)),
             ),
             AnimatedPadding(
               duration: const Duration(milliseconds: 300),
@@ -378,15 +384,15 @@ class _GoogleRegisterWizardState extends State<GoogleRegisterWizard> {
                   ),
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.95),
+                    color: Colors.white.withOpacity(0.95),
                     borderRadius: BorderRadius.circular(28),
                     border: Border.all(
-                      color: AppColors.teal.withValues(alpha: 0.1),
+                      color: AppColors.teal.withOpacity(0.1),
                       width: 1.5,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
+                        color: Colors.black.withOpacity(0.2),
                         blurRadius: 30,
                         spreadRadius: 10,
                       ),

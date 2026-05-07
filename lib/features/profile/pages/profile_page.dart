@@ -9,7 +9,7 @@ import '../../../../l10n/app_localizations.dart';
 import 'package:laween/features/auth/pages/onboarding_page.dart';
 import 'package:laween/features/profile/pages/language_page.dart';
 import 'package:laween/features/profile/pages/edit_profile_page.dart';
-import 'package:laween/features/profile/pages/favorites_page.dart';
+import 'package:laween/features/groups/pages/global_outings_history_page.dart';
 import 'package:laween/features/profile/pages/settings_page.dart';
 import 'package:laween/features/profile/pages/about_page.dart';
 
@@ -75,7 +75,7 @@ class ProfilePage extends StatelessWidget {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.teal.withValues(alpha: 0.3),
+                              color: AppColors.teal.withOpacity(0.3),
                               blurRadius: 10,
                               offset: const Offset(0, 5),
                             ),
@@ -112,7 +112,7 @@ class ProfilePage extends StatelessWidget {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
+                                  color: Colors.black.withOpacity(0.1),
                                   blurRadius: 15,
                                   spreadRadius: 2,
                                   offset: const Offset(0, 8),
@@ -203,7 +203,7 @@ class ProfilePage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.03),
+                              color: Colors.black.withOpacity(0.03),
                               blurRadius: 10,
                               spreadRadius: 0,
                               offset: const Offset(0, 4),
@@ -214,7 +214,7 @@ class ProfilePage extends StatelessWidget {
                           children: [
                             _buildPremiumMenuItem(
                               icon: Icons.person_outline,
-                              iconBgColor: Colors.blue.withValues(alpha: 0.15),
+                              iconBgColor: Colors.blue.withOpacity(0.15),
                               iconColor: Colors.blue.shade700,
                               title: l10n.editProfile,
                               onTap: () => Navigator.push(
@@ -230,14 +230,14 @@ class ProfilePage extends StatelessWidget {
                               color: Color(0xFFEDF2F7),
                             ),
                             _buildPremiumMenuItem(
-                              icon: Icons.favorite_border,
-                              iconBgColor: Colors.pink.withValues(alpha: 0.15),
-                              iconColor: Colors.pink.shade600,
-                              title: l10n.myFavorites,
+                              icon: Icons.history_rounded,
+                              iconBgColor: Colors.orange.withOpacity(0.15),
+                              iconColor: Colors.orange.shade600,
+                              title: l10n.outingsHistory,
                               onTap: () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const FavoritesPage(),
+                                  builder: (context) => const GlobalOutingsHistoryPage(),
                                 ),
                               ),
                             ),
@@ -265,7 +265,7 @@ class ProfilePage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.03),
+                              color: Colors.black.withOpacity(0.03),
                               blurRadius: 10,
                               spreadRadius: 0,
                               offset: const Offset(0, 4),
@@ -339,11 +339,11 @@ class ProfilePage extends StatelessWidget {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: Colors.red.withValues(alpha: 0.1),
+                            color: Colors.red.withOpacity(0.1),
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.red.withValues(alpha: 0.05),
+                              color: Colors.red.withOpacity(0.05),
                               blurRadius: 10,
                               spreadRadius: 0,
                               offset: const Offset(0, 4),
@@ -352,7 +352,7 @@ class ProfilePage extends StatelessWidget {
                         ),
                         child: _buildPremiumMenuItem(
                           icon: Icons.logout,
-                          iconBgColor: Colors.red.withValues(alpha: 0.1),
+                          iconBgColor: Colors.red.withOpacity(0.1),
                           iconColor: Colors.red.shade600,
                           title: l10n.logout,
                           textColor: Colors.red.shade600,
@@ -429,7 +429,7 @@ class ProfilePage extends StatelessWidget {
                 Icons.arrow_forward_ios,
                 size: 14,
                 color: isDestructive
-                    ? Colors.red.withValues(alpha: 0.3)
+                    ? Colors.red.withOpacity(0.3)
                     : Colors.grey.shade400,
               ),
             ],

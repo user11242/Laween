@@ -71,7 +71,7 @@ class _BiometricAuthDialogState extends State<BiometricAuthDialog> {
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
       child: Dialog(
-        backgroundColor: Colors.white.withValues(alpha: 0.9),
+        backgroundColor: Colors.white.withOpacity(0.9),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -81,7 +81,7 @@ class _BiometricAuthDialogState extends State<BiometricAuthDialog> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.teal.withValues(alpha: 0.1),
+                  color: AppColors.teal.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(

@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/colors.dart';
 import '../data/models/outing_session_model.dart';
+import 'package:laween/l10n/app_localizations.dart';
 
 class ReceiptItem {
   String name;
@@ -64,7 +65,7 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
 
           if (price != null && price > 0.0) {
             var name = text.substring(0, match.start).replaceAll(RegExp(r'[\.\-]+'), '').trim();
-            if (name.isEmpty) name = "Item #${extracted.length + 1}";
+            if (name.isEmpty) name = "${AppLocalizations.of(context)?.itemNumber ?? 'Item #'} ${extracted.length + 1}";
             extracted.add(ReceiptItem(name: name, price: price));
           }
         }
@@ -90,14 +91,14 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
         final priceController = TextEditingController();
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text("Add Custom Item", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+          title: Text(AppLocalizations.of(context)?.addCustomItem ?? "Add Custom Item", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
                 decoration: InputDecoration(
-                  labelText: "Item Name",
+                  labelText: AppLocalizations.of(context)?.itemName ?? "Item Name",
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
@@ -106,7 +107,7 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
                 controller: priceController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: InputDecoration(
-                  labelText: "Price",
+                  labelText: AppLocalizations.of(context)?.price ?? "Price",
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
@@ -115,7 +116,7 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
+              child: Text(AppLocalizations.of(context)?.cancel ?? "Cancel"),
             ),
             ElevatedButton(
               onPressed: () {
@@ -129,7 +130,7 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
                 }
               },
               style: ElevatedButton.styleFrom(backgroundColor: AppColors.teal),
-              child: const Text("Add"),
+              child: Text(AppLocalizations.of(context)?.add ?? "Add"),
             ),
           ],
         );
@@ -154,7 +155,7 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Assign: ${item.name}",
+                    "${AppLocalizations.of(context)?.assignLabel ?? 'Assign'}: ${item.name}",
                     style: GoogleFonts.outfit(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -162,7 +163,7 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
                     ),
                   ),
                   Text(
-                    "Select who ate or shared this item",
+                    AppLocalizations.of(context)?.selectWhoShared ?? "Select who shared this item",
                     style: GoogleFonts.outfit(
                       fontSize: 14,
                       color: Colors.grey.shade600,
@@ -239,7 +240,7 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         title: Text(
-          "Receipt Splitter",
+          AppLocalizations.of(context)?.receiptSplitter ?? "Receipt Splitter",
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         backgroundColor: Colors.white,
@@ -259,7 +260,7 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
+                      color: Colors.black.withOpacity(0.04),
                       blurRadius: 15,
                       offset: const Offset(0, 5),
                     ),
@@ -273,7 +274,7 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
                           child: ElevatedButton.icon(
                             onPressed: () => _pickImage(ImageSource.camera),
                             icon: const Icon(Icons.camera_alt_rounded, color: Colors.white),
-                            label: const Text("Scan Receipt"),
+                            label: Text(AppLocalizations.of(context)?.scanReceipt ?? "Scan Receipt"),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.teal,
                               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -287,7 +288,7 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
                           child: OutlinedButton.icon(
                             onPressed: _addNewItem,
                             icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.teal),
-                            label: const Text("Add Custom"),
+                            label: Text(AppLocalizations.of(context)?.addCustom ?? "Add Custom"),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.teal,
                               side: const BorderSide(color: AppColors.teal),
@@ -302,7 +303,7 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
                       const SizedBox(height: 16),
                       const LinearProgressIndicator(color: AppColors.teal),
                       const SizedBox(height: 8),
-                      Text("Scanning with Apple Vision AI...", style: GoogleFonts.outfit(fontSize: 13, color: Colors.grey)),
+                      Text(AppLocalizations.of(context)?.scanningWithAI ?? "Scanning with Apple Vision AI...", style: GoogleFonts.outfit(fontSize: 13, color: Colors.grey)),
                     ],
                   ],
                 ),
@@ -347,15 +348,15 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
                           ElevatedButton(
                             onPressed: () => _showAssignBottomSheet(item),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: item.sharedWithUids.isEmpty ? Colors.grey.shade200 : AppColors.teal.withValues(alpha: 0.1),
+                              backgroundColor: item.sharedWithUids.isEmpty ? Colors.grey.shade200 : AppColors.teal.withOpacity(0.1),
                               elevation: 0,
                               foregroundColor: item.sharedWithUids.isEmpty ? Colors.grey.shade700 : AppColors.teal,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                             child: Text(
                               item.sharedWithUids.isEmpty
-                                  ? "Assign"
-                                  : "${item.sharedWithUids.length} Selected",
+                                  ? (AppLocalizations.of(context)?.assignLabel ?? "Assign")
+                                  : "${item.sharedWithUids.length} ${AppLocalizations.of(context)?.selectedLabel ?? 'Selected'}",
                               style: const TextStyle(fontWeight: FontWeight.bold),
                             ),
                           ),
@@ -383,7 +384,7 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Extra Adjustments",
+                        AppLocalizations.of(context)?.extraAdjustments ?? "Extra Adjustments",
                         style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       const SizedBox(height: 12),
@@ -393,7 +394,7 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
                             child: TextField(
                               keyboardType: const TextInputType.numberWithOptions(decimal: true),
                               decoration: InputDecoration(
-                                labelText: "Tax %",
+                                labelText: AppLocalizations.of(context)?.taxPercent ?? "Tax %",
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                               ),
                               onChanged: (val) {
@@ -406,7 +407,7 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
                             child: TextField(
                               keyboardType: const TextInputType.numberWithOptions(decimal: true),
                               decoration: InputDecoration(
-                                labelText: "Tip %",
+                                labelText: AppLocalizations.of(context)?.tipPercent ?? "Tip %",
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                               ),
                               onChanged: (val) {
@@ -435,10 +436,10 @@ class _ReceiptSplitterScreenState extends State<ReceiptSplitterScreen> {
                       margin: const EdgeInsets.only(bottom: 8),
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: amt > 0 ? AppColors.teal.withValues(alpha: 0.05) : Colors.white,
+                        color: amt > 0 ? AppColors.teal.withOpacity(0.05) : Colors.white,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: amt > 0 ? AppColors.teal.withValues(alpha: 0.3) : Colors.grey.shade100,
+                          color: amt > 0 ? AppColors.teal.withOpacity(0.3) : Colors.grey.shade100,
                         ),
                       ),
                       child: Row(

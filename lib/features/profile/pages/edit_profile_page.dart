@@ -285,7 +285,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.teal.withValues(alpha: 0.3),
+                            color: AppColors.teal.withOpacity(0.3),
                             blurRadius: 12,
                             offset: const Offset(0, 6),
                           ),
@@ -356,7 +356,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             boxShadow: [
               if (enabled)
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
+                  color: Colors.black.withOpacity(0.03),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),

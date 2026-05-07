@@ -38,20 +38,20 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
   }
 
   Future<void> _leaveGroup() async {
-    final isAr = AppLocalizations.of(context)?.isAr == true;
+    final l10n = AppLocalizations.of(context, listen: false)!;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(isAr ? 'مغادرة المجموعة' : 'Leave Group'),
-        content: Text(isAr ? 'هل أنت متأكد أنك تريد مغادرة هذه المجموعة؟' : 'Are you sure you want to leave this group?'),
+        title: Text(l10n.leaveGroup),
+        content: Text(l10n.leaveGroupConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(isAr ? 'إلغاء' : 'Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(isAr ? 'مغادرة' : 'Leave', style: const TextStyle(color: Colors.red)),
+            child: Text(l10n.leave, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -79,24 +79,20 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
   }
 
   Future<void> _deleteGroup() async {
-    final isAr = AppLocalizations.of(context)?.isAr == true;
+    final l10n = AppLocalizations.of(context, listen: false)!;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(isAr ? 'حذف المجموعة' : 'Delete Group'),
-        content: Text(
-          isAr
-              ? 'هل أنت متأكد أنك تريد حذف هذه المجموعة نهائياً؟ لا يمكن التراجع عن هذا الإجراء.'
-              : 'Are you sure you want to permanently delete this group? This action cannot be undone.',
-        ),
+        title: Text(l10n.deleteGroup),
+        content: Text(l10n.deleteGroupConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(isAr ? 'إلغاء' : 'Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(isAr ? 'حذف' : 'Delete', style: const TextStyle(color: Colors.red)),
+            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -189,7 +185,7 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                         width: 90,
                         height: 90,
                         decoration: BoxDecoration(
-                          color: AppColors.teal.withValues(alpha: 0.1),
+                          color: AppColors.teal.withOpacity(0.1),
                           shape: BoxShape.circle,
                           image: newImage != null
                               ? DecorationImage(
@@ -359,11 +355,11 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                       height: 140,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppColors.teal.withValues(alpha: 0.1),
+                        color: AppColors.teal.withOpacity(0.1),
                         border: Border.all(color: Colors.white, width: 4),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
+                            color: Colors.black.withOpacity(0.08),
                             blurRadius: 15,
                             offset: const Offset(0, 5),
                           ),
@@ -424,7 +420,7 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.02),
+                          color: Colors.black.withOpacity(0.02),
                           blurRadius: 5,
                           offset: const Offset(0, 2),
                         ),
@@ -507,7 +503,7 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.02),
+                              color: Colors.black.withOpacity(0.02),
                               blurRadius: 5,
                               offset: const Offset(0, 2),
                             ),
@@ -530,7 +526,7 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                                 width: 40,
                                 height: 40,
                                 decoration: BoxDecoration(
-                                  color: AppColors.teal.withValues(alpha: 0.1),
+                                  color: AppColors.teal.withOpacity(0.1),
                                   shape: BoxShape.circle,
                                 ),
                                 child: ClipRRect(

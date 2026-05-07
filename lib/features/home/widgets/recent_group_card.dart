@@ -32,13 +32,13 @@ class RecentGroupCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.white.withValues(alpha: 0.05)
-                : AppColors.slate.withValues(alpha: 0.1),
+                ? Colors.white.withOpacity(0.05)
+                : AppColors.slate.withOpacity(0.1),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
+              color: Colors.black.withOpacity(0.03),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -111,7 +111,7 @@ class RecentGroupCard extends StatelessWidget {
       width: 52,
       height: 52,
       decoration: BoxDecoration(
-        color: AppColors.teal.withValues(alpha: 0.15),
+        color: AppColors.teal.withOpacity(0.15),
         shape: BoxShape.circle,
         border: Border.all(
           color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
@@ -119,7 +119,7 @@ class RecentGroupCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.teal.withValues(alpha: 0.2),
+            color: AppColors.teal.withOpacity(0.2),
             blurRadius: 8,
           ),
         ],
@@ -151,7 +151,7 @@ class RecentGroupCard extends StatelessWidget {
         style: GoogleFonts.outfit(
           fontSize: 20,
           fontWeight: FontWeight.bold,
-          color: AppColors.teal.withValues(alpha: 0.8),
+          color: AppColors.teal.withOpacity(0.8),
         ),
       ),
     );

@@ -27,7 +27,6 @@ import '../widgets/outing_message_bubble.dart';
 import '../widgets/create_outing_sheet.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'group_settings_page.dart';
-import 'history_feed_screen.dart';
 import '../widgets/voice_message_bubble.dart';
 import '../data/services/outing_service.dart';
 import 'outing_memory_upload_screen.dart';
@@ -229,7 +228,7 @@ class _ChatPageState extends State<ChatPage> {
 
     final text = _messageController.text;
     debugPrint(
-      "⌨️ [Typing] Text changed: '${text}' | Current _isTyping: $_isTyping",
+      "⌨️ [Typing] Text changed: '$text' | Current _isTyping: $_isTyping",
     );
 
     if (text.trim().isNotEmpty) {
@@ -674,6 +673,7 @@ class _ChatPageState extends State<ChatPage> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) {
+        final l10n = AppLocalizations.of(context)!;
         // Flatten reactions into a list of (uid, emoji)
         final List<MapEntry<String, String>> reactors = [];
         message.reactions.forEach((emoji, uids) {
@@ -708,7 +708,7 @@ class _ChatPageState extends State<ChatPage> {
                   vertical: 8,
                 ),
                 child: Text(
-                  "Reactions",
+                  l10n.reactionsLabel,
                   style: GoogleFonts.outfit(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -731,7 +731,7 @@ class _ChatPageState extends State<ChatPage> {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: AppColors.teal.withValues(alpha: 0.1),
+                          color: AppColors.teal.withOpacity(0.1),
                           shape: BoxShape.circle,
                           image: photoUrl != null
                               ? DecorationImage(
@@ -837,7 +837,7 @@ class _ChatPageState extends State<ChatPage> {
                           border: Border.all(color: Colors.white, width: 2),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
+                              color: Colors.black.withOpacity(0.1),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -852,7 +852,7 @@ class _ChatPageState extends State<ChatPage> {
                                     color: Colors.grey.shade200,
                                   ),
                                   errorWidget: (context, url, error) => Container(
-                                    color: AppColors.teal.withValues(alpha: 0.1),
+                                    color: AppColors.teal.withOpacity(0.1),
                                     child: const Icon(
                                       Icons.person,
                                       size: 20,
@@ -861,7 +861,7 @@ class _ChatPageState extends State<ChatPage> {
                                   ),
                                 )
                               : Container(
-                                  color: AppColors.teal.withValues(alpha: 0.1),
+                                  color: AppColors.teal.withOpacity(0.1),
                                   child: const Icon(
                                     Icons.person,
                                     size: 20,
@@ -906,7 +906,7 @@ class _ChatPageState extends State<ChatPage> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
+                          color: Colors.black.withOpacity(0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 2),
                         ),
@@ -1103,16 +1103,16 @@ class _ChatPageState extends State<ChatPage> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
+          border: Border.all(color: color.withOpacity(0.2)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.2),
+                color: color.withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 24),
@@ -1191,14 +1191,14 @@ class _ChatPageState extends State<ChatPage> {
                             filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                             child: Container(
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.85),
+                                color: Colors.white.withOpacity(0.85),
                                 borderRadius: BorderRadius.circular(28),
                                 border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.4),
+                                  color: Colors.white.withOpacity(0.4),
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.1),
+                                    color: Colors.black.withOpacity(0.1),
                                     blurRadius: 30,
                                     offset: const Offset(0, 15),
                                   ),
@@ -1500,7 +1500,7 @@ class _ChatPageState extends State<ChatPage> {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
+                              color: Colors.black.withOpacity(0.1),
                               blurRadius: 6,
                             ),
                           ],
@@ -1537,16 +1537,16 @@ class _ChatPageState extends State<ChatPage> {
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          border: Border.all(color: AppColors.teal.withValues(alpha: 0.3), width: 1.5),
+                          border: Border.all(color: AppColors.teal.withOpacity(0.3), width: 1.5),
                           borderRadius: BorderRadius.circular(16),
-                          color: AppColors.teal.withValues(alpha: 0.04),
+                          color: AppColors.teal.withOpacity(0.04),
                         ),
                         child: Row(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: AppColors.teal.withValues(alpha: 0.15),
+                                color: AppColors.teal.withOpacity(0.15),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.my_location, color: AppColors.teal, size: 22),
@@ -1587,7 +1587,7 @@ class _ChatPageState extends State<ChatPage> {
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.withValues(alpha: 0.2), width: 1.5),
+                          border: Border.all(color: Colors.grey.withOpacity(0.2), width: 1.5),
                           borderRadius: BorderRadius.circular(16),
                           color: Colors.grey.shade50,
                         ),
@@ -1596,7 +1596,7 @@ class _ChatPageState extends State<ChatPage> {
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: Colors.grey.withValues(alpha: 0.1),
+                                color: Colors.grey.withOpacity(0.1),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.map_outlined, color: Colors.grey, size: 22),
@@ -1694,7 +1694,7 @@ class _ChatPageState extends State<ChatPage> {
                 height: 76,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                  border: Border.all(color: Colors.grey.withOpacity(0.2)),
                   image: DecorationImage(
                     image: FileImage(_selectedImages[index]),
                     fit: BoxFit.cover,
@@ -1748,7 +1748,7 @@ class _ChatPageState extends State<ChatPage> {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
+                color: color.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 20),
@@ -1759,13 +1759,13 @@ class _ChatPageState extends State<ChatPage> {
               style: GoogleFonts.outfit(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: AppColors.darkSlate.withValues(alpha: 0.9),
+                color: AppColors.darkSlate.withOpacity(0.9),
               ),
             ),
             const Spacer(),
             Icon(
               Icons.chevron_right_rounded,
-              color: Colors.grey.withValues(alpha: 0.4),
+              color: Colors.grey.withOpacity(0.4),
               size: 20,
             ),
           ],
@@ -1973,7 +1973,7 @@ class _ChatPageState extends State<ChatPage> {
                         horizontal: 16,
                         vertical: 8,
                       ),
-                      color: AppColors.teal.withValues(alpha: 0.1),
+                      color: AppColors.teal.withOpacity(0.1),
                       child: Row(
                         children: [
                           const Icon(
@@ -2018,7 +2018,7 @@ class _ChatPageState extends State<ChatPage> {
                         color: Colors.white,
                         border: Border(
                           top: BorderSide(
-                            color: Colors.grey.withValues(alpha: 0.1),
+                            color: Colors.grey.withOpacity(0.1),
                           ),
                         ),
                       ),
@@ -2104,7 +2104,7 @@ class _ChatPageState extends State<ChatPage> {
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
                   child: Container(
-                    color: Colors.white.withValues(alpha: 0.3),
+                    color: Colors.white.withOpacity(0.3),
                     child: const Center(
                       child: CircularProgressIndicator(color: AppColors.teal),
                     ),
@@ -2129,7 +2129,7 @@ class _ChatPageState extends State<ChatPage> {
         color: Colors.white,
         border: Border(
           bottom: BorderSide(
-            color: Colors.grey.withValues(alpha: 0.1),
+            color: Colors.grey.withOpacity(0.1),
             width: 1.5,
           ),
         ),
@@ -2149,9 +2149,9 @@ class _ChatPageState extends State<ChatPage> {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: AppColors.teal.withValues(alpha: 0.08),
+              color: AppColors.teal.withOpacity(0.08),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+              border: Border.all(color: Colors.grey.withOpacity(0.1)),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(23),
@@ -2217,19 +2217,6 @@ class _ChatPageState extends State<ChatPage> {
           ),
           const SizedBox(width: 4),
           IconButton(
-            icon: const Icon(Icons.photo_album_rounded, color: AppColors.teal, size: 22),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => HistoryFeedScreen(groupId: widget.group.id),
-                ),
-              );
-            },
-            tooltip: "Memories",
-          ),
-          const SizedBox(width: 4),
-          IconButton(
             icon: const Icon(Icons.info_outline, color: AppColors.teal),
             onPressed: () {
               Navigator.push(
@@ -2279,7 +2266,7 @@ class _ChatPageState extends State<ChatPage> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: AppColors.teal.withValues(alpha: 0.3),
+                color: AppColors.teal.withOpacity(0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
@@ -2290,7 +2277,7 @@ class _ChatPageState extends State<ChatPage> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: Colors.white.withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 24),
@@ -2311,7 +2298,7 @@ class _ChatPageState extends State<ChatPage> {
                     Text(
                       "Ends in $hoursLeft hours",
                       style: GoogleFonts.inter(
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: Colors.white.withOpacity(0.8),
                         fontSize: 12,
                       ),
                     ),
@@ -2367,7 +2354,7 @@ class _ChatPageState extends State<ChatPage> {
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: Colors.black.withOpacity(0.08),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -2392,7 +2379,7 @@ class _ChatPageState extends State<ChatPage> {
                     icon: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppColors.teal.withValues(alpha: 0.1),
+                        color: AppColors.teal.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -2411,6 +2398,9 @@ class _ChatPageState extends State<ChatPage> {
                     ),
                     child: TextField(
                       controller: _messageController,
+                      textAlign: AppLocalizations.of(context)?.isAr == true 
+                          ? TextAlign.right 
+                          : TextAlign.left,
                       maxLines: null,
                       textInputAction: TextInputAction.newline,
                       onChanged: (val) => setState(() {}),
@@ -2420,7 +2410,7 @@ class _ChatPageState extends State<ChatPage> {
                       ),
                       decoration: InputDecoration(
                         hintText: AppLocalizations.of(context)?.isAr == true
-                            ? "اكتب رسالة..."
+                            ? "...اكتب رسالة"
                             : "Type a message...",
                         hintStyle: GoogleFonts.inter(
                           color: Colors.grey.shade400,
@@ -2586,7 +2576,7 @@ class _ChatPageState extends State<ChatPage> {
                         boxShadow: [
                           BoxShadow(
                             color: (_isCanceling ? Colors.red : AppColors.teal)
-                                .withValues(alpha: 0.3),
+                                .withOpacity(0.3),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -2656,7 +2646,7 @@ class _ChatPageState extends State<ChatPage> {
           height: 4 + (amp * 30), // Min height 4, max 34
           margin: const EdgeInsets.symmetric(horizontal: 1),
           decoration: BoxDecoration(
-            color: Colors.red.withValues(alpha: 0.6),
+            color: Colors.red.withOpacity(0.6),
             borderRadius: BorderRadius.circular(2),
           ),
         );
@@ -2665,6 +2655,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildEmptyChat() {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -2676,7 +2667,7 @@ class _ChatPageState extends State<ChatPage> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
+                  color: Colors.black.withOpacity(0.03),
                   blurRadius: 20,
                 ),
               ],
@@ -2689,7 +2680,7 @@ class _ChatPageState extends State<ChatPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            "No messages yet",
+            l10n.noMessagesYet,
             style: GoogleFonts.outfit(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -2698,7 +2689,7 @@ class _ChatPageState extends State<ChatPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            "Say hello to start the conversation!",
+            l10n.sayHello,
             style: GoogleFonts.inter(color: Colors.grey.shade500),
           ),
         ],
@@ -2749,7 +2740,7 @@ class _MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (message.isDeleted) {
-      return _buildDeletedMessage();
+      return _buildDeletedMessage(context);
     }
 
     final ambientDirection = Directionality.of(context);
@@ -3071,7 +3062,7 @@ class _MessageBubble extends StatelessWidget {
 
     if (isHighlighted) {
       return messageContent.animate().shimmer(
-        color: AppColors.teal.withValues(alpha: 0.3),
+        color: AppColors.teal.withOpacity(0.3),
         duration: 1000.ms,
       );
     }
@@ -3126,7 +3117,7 @@ class _MessageBubble extends StatelessWidget {
                           end: Alignment.bottomCenter,
                           colors: [
                             Colors.transparent,
-                            Colors.black.withValues(alpha: 0.3),
+                            Colors.black.withOpacity(0.3),
                           ],
                         ),
                       ),
@@ -3267,7 +3258,7 @@ class _MessageBubble extends StatelessWidget {
                 total: urls.length,
               ),
               Container(
-                color: Colors.black.withValues(alpha: 0.5),
+                color: Colors.black.withOpacity(0.5),
                 child: Center(
                   child: Text(
                     "+${urls.length - 3}",
@@ -3378,7 +3369,7 @@ class _MessageBubble extends StatelessWidget {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -3436,7 +3427,7 @@ class _MessageBubble extends StatelessWidget {
         : '?';
 
     return Container(
-      color: AppColors.teal.withValues(alpha: isLoading ? 0.04 : 0.08),
+      color: AppColors.teal.withOpacity(isLoading ? 0.04 : 0.08),
       alignment: Alignment.center,
       child: isLoading
           ? const SizedBox(
@@ -3459,6 +3450,7 @@ class _MessageBubble extends StatelessWidget {
   }
 
   Widget _buildSosLocationBubble(BuildContext context, MessageModel message) {
+    final l10n = AppLocalizations.of(context)!;
     // 🚨 Intercept SOS / Google Maps links to create a gorgeous map/SOS card
     final hasSos = message.text.contains("SOS!") || (message.senderName == "🚨 EMERGENCY");
     final urlRegex = RegExp(r'(https?://[^\s]+)');
@@ -3489,7 +3481,7 @@ class _MessageBubble extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  hasSos ? "🚨 EMERGENCY" : "📍 Shared Location",
+                  hasSos ? l10n.emergencyLabel : l10n.sharedLocationLabel,
                   style: GoogleFonts.outfit(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -3521,7 +3513,7 @@ class _MessageBubble extends StatelessWidget {
                 },
                 icon: const Icon(Icons.map_rounded, color: Colors.white, size: 18),
                 label: Text(
-                  "Open in Google Maps",
+                  l10n.openInGoogleMaps,
                   style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -3561,7 +3553,7 @@ class _MessageBubble extends StatelessWidget {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
+                  color: Colors.black.withOpacity(0.08),
                   blurRadius: 10,
                   offset: const Offset(0, 3),
                 ),
@@ -3684,16 +3676,16 @@ class _MessageBubble extends StatelessWidget {
     }
   }
 
-  Widget _buildDeletedMessage() {
+  Widget _buildDeletedMessage(BuildContext context) {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12, top: 4),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.grey.withValues(alpha: 0.06),
+          color: Colors.grey.withOpacity(0.06),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+          border: Border.all(color: Colors.grey.withOpacity(0.15)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -3701,7 +3693,9 @@ class _MessageBubble extends StatelessWidget {
             Icon(Icons.block, size: 14, color: Colors.grey.shade400),
             const SizedBox(width: 8),
             Text(
-              isMe ? "You deleted this message" : "This message was deleted",
+              AppLocalizations.of(context)?.isAr == true
+                  ? (isMe ? "لقد قمت بحذف هذه الرسالة" : "تم حذف هذه الرسالة")
+                  : (isMe ? "You deleted this message" : "This message was deleted"),
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontStyle: FontStyle.italic,
@@ -3734,6 +3728,7 @@ class _MessageOptionsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final List<String> popularEmojis = [
       "❤️",
       "👍",
@@ -3768,12 +3763,12 @@ class _MessageOptionsSheet extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.8),
+            color: Colors.white.withOpacity(0.8),
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(30),
               topRight: Radius.circular(30),
             ),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
           ),
           child: SafeArea(
             child: Column(
@@ -3785,7 +3780,7 @@ class _MessageOptionsSheet extends StatelessWidget {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 20),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.3),
+                    color: Colors.grey.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -3818,12 +3813,12 @@ class _MessageOptionsSheet extends StatelessWidget {
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? AppColors.teal.withValues(alpha: 0.15)
-                                : Colors.white.withValues(alpha: 0.5),
+                                ? AppColors.teal.withOpacity(0.15)
+                                : Colors.white.withOpacity(0.5),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: isSelected
-                                  ? AppColors.teal.withValues(alpha: 0.3)
+                                  ? AppColors.teal.withOpacity(0.3)
                                   : Colors.transparent,
                             ),
                           ),
@@ -3853,32 +3848,85 @@ class _MessageOptionsSheet extends StatelessWidget {
                             if (isMe)
                               _buildActionItem(
                                 icon: Icons.edit_rounded,
-                                title: "Edit Message",
+                                title: l10n.editMessage,
                                 onTap: onEdit,
                               ),
                             if (isMe)
                               _buildActionItem(
                                 icon: Icons.info_rounded,
-                                title: "Message Info",
+                                title: l10n.messageInfo,
                                 onTap: onInfo,
                               ),
                             if (isMe)
                               _buildActionItem(
                                 icon: Icons.delete_sweep_rounded,
-                                title: "Delete for everyone",
+                                title: l10n.deleteForEveryone,
                                 color: canDeleteForEveryone
                                     ? Colors.redAccent
                                     : Colors.grey,
                                 onTap: canDeleteForEveryone
-                                    ? () => onDelete(true)
+                                    ? () async {
+                                        final bool? confirm =
+                                            await showDialog<bool>(
+                                              context: context,
+                                              builder:
+                                                  (ctx) => AlertDialog(
+                                                    title: Text(
+                                                      l10n.deleteForEveryoneTitle,
+                                                      style: GoogleFonts.outfit(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    content: Text(
+                                                      l10n.deleteForEveryoneContent,
+                                                      style: GoogleFonts.inter(),
+                                                    ),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed:
+                                                            () => Navigator.pop(
+                                                              ctx,
+                                                              false,
+                                                            ),
+                                                        child: Text(
+                                                          l10n.cancel,
+                                                          style: GoogleFonts.inter(
+                                                            color: Colors.grey,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      TextButton(
+                                                        onPressed:
+                                                            () => Navigator.pop(
+                                                              ctx,
+                                                              true,
+                                                            ),
+                                                        child: Text(
+                                                          l10n.deleteAction,
+                                                          style: GoogleFonts.inter(
+                                                            color:
+                                                                Colors.redAccent,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                            );
+                                        if (confirm == true) {
+                                          onDelete(true);
+                                        }
+                                      }
                                     : null,
                                 subtitle: canDeleteForEveryone
-                                    ? "Permanent removal"
-                                    : "Timed out (1h)",
+                                    ? l10n.permanentRemoval
+                                    : (AppLocalizations.of(context)?.isAr == true ? "انتهى الوقت (ساعة واحدة)" : "Timed out (1h)"),
                               ),
                             _buildActionItem(
                               icon: Icons.delete_outline_rounded,
-                              title: "Delete for me",
+                              title: l10n.deleteForMe,
                               color: Colors.redAccent,
                               onTap: () => onDelete(false),
                             ),
@@ -3936,6 +3984,7 @@ class _MessageInfoSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ClipRRect(
       borderRadius: const BorderRadius.only(
         topLeft: Radius.circular(30),
@@ -3946,7 +3995,7 @@ class _MessageInfoSheet extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.85),
+            color: Colors.white.withOpacity(0.85),
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(30),
               topRight: Radius.circular(30),
@@ -3961,7 +4010,7 @@ class _MessageInfoSheet extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "Message Info",
+                      l10n.messageInfo,
                       style: GoogleFonts.outfit(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -3978,10 +4027,10 @@ class _MessageInfoSheet extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppColors.teal.withValues(alpha: 0.05),
+                    color: AppColors.teal.withOpacity(0.05),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: AppColors.teal.withValues(alpha: 0.1),
+                      color: AppColors.teal.withOpacity(0.1),
                     ),
                   ),
                   child: Row(
@@ -3997,7 +4046,7 @@ class _MessageInfoSheet extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Read by",
+                              l10n.readBy,
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -4005,7 +4054,7 @@ class _MessageInfoSheet extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              "${message.readBy.length} members",
+                              "${message.readBy.length} ${l10n.membersLabel}",
                               style: GoogleFonts.inter(
                                 fontSize: 12,
                                 color: Colors.grey.shade600,
@@ -4023,7 +4072,7 @@ class _MessageInfoSheet extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     child: Center(
                       child: Text(
-                        "No one has read this yet",
+                        l10n.noOneReadYet,
                         style: GoogleFonts.inter(
                           color: Colors.grey,
                           fontStyle: FontStyle.italic,
@@ -4053,7 +4102,7 @@ class _MessageInfoSheet extends StatelessWidget {
                                   height: 36,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: Colors.grey.withValues(alpha: 0.1),
+                                    color: Colors.grey.withOpacity(0.1),
                                   ),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(18),
@@ -4146,7 +4195,7 @@ class _DateDivider extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -4184,7 +4233,7 @@ class _UnreadDivider extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: Colors.black.withOpacity(0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
@@ -4267,7 +4316,7 @@ class _FullScreenImagePageState extends State<FullScreenImagePage> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.black.withValues(alpha: 0.8),
+        backgroundColor: Colors.black.withOpacity(0.8),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),

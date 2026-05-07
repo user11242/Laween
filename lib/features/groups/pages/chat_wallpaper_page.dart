@@ -224,12 +224,12 @@ class ChatWallpaperPage extends StatelessWidget {
                       border: Border.all(
                         color: isActive
                             ? AppColors.darkSlate
-                            : Colors.black.withValues(alpha: 0.05),
+                            : Colors.black.withOpacity(0.05),
                         width: isActive ? 3 : 1,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: gradient.colors.first.withValues(alpha: 0.3),
+                          color: gradient.colors.first.withOpacity(0.3),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -295,12 +295,12 @@ class ChatWallpaperPage extends StatelessWidget {
                       border: Border.all(
                         color: isActive
                             ? AppColors.darkSlate
-                            : Colors.black.withValues(alpha: 0.1),
+                            : Colors.black.withOpacity(0.1),
                         width: isActive ? 3 : 1,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
+                          color: Colors.black.withOpacity(0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -339,16 +339,16 @@ class ChatWallpaperPage extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
+          color: color.withOpacity(0.08),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withValues(alpha: 0.15)),
+          border: Border.all(color: color.withOpacity(0.15)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
+                color: color.withOpacity(0.15),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 24),

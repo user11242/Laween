@@ -92,8 +92,14 @@ class FcmService {
     await _localNotifications.initialize(
       const InitializationSettings(android: androidSettings, iOS: iosSettings),
       onDidReceiveNotificationResponse: (details) {
-        // Handle notification tap while app is in foreground
-        debugPrint("🔔 Notification Tapped: ${details.payload}");
+        if (details.payload != null) {
+          try {
+            final Map<String, dynamic> data = jsonDecode(details.payload!);
+            _navigateToChat(data);
+          } catch (e) {
+            debugPrint("❌ Error parsing notification payload: $e");
+          }
+        }
       },
     );
 
@@ -120,12 +126,14 @@ class FcmService {
     });
 
     // 4. Handle notification tap (when app is in background or closed)
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
+    FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      _navigateToChat(message.data);
+    });
 
     // 5. Handle initial message (when app is launched from terminated state)
     RemoteMessage? initialMessage = await _messaging.getInitialMessage();
     if (initialMessage != null) {
-      _handleNotificationTap(initialMessage);
+      _navigateToChat(initialMessage.data);
     }
 
     // 6. Listen for token refreshes automatically
@@ -235,26 +243,37 @@ class FcmService {
     }
   }
 
-  Future<void> _handleNotificationTap(RemoteMessage message) async {
-    final groupId = message.data['groupId'];
-    final sessionId = message.data['sessionId'];
+  Future<void> _navigateToChat(Map<String, dynamic> data) async {
+    final groupId = data['groupId'];
+    final sessionId = data['sessionId'];
+
+    debugPrint("🚀 [FCM] Navigating to Chat for group: $groupId");
+
     if (groupId != null) {
       LocationService().setActiveSession(groupId, sessionId);
     }
-    if (groupId == null) return;
+
+    if (groupId == null) {
+      debugPrint("⚠️ [FCM] Cannot navigate: groupId is null");
+      return;
+    }
 
     try {
       final doc = await _firestore.collection('groups').doc(groupId).get();
       if (doc.exists) {
-        final data = doc.data()!;
-        data['id'] = doc.id; // Map constructor expects id field
-        final group = GroupModel.fromMap(data);
+        final groupData = doc.data()!;
+        groupData['id'] = doc.id;
+        final group = GroupModel.fromMap(groupData);
 
-        // For SOS, we could potentially navigate directly to tracking if it's active
-        // But the overlay logic in ChatPage/MapPage will handle it if we just go to the group
+        // If app is not yet initialized or context is weird, navigatorKey might be null
+        // but since we are using a GlobalKey, it should work as long as MaterialApp is built.
         navigatorKey.currentState?.push(
-          MaterialPageRoute(builder: (context) => ChatPage(group: group)),
+          MaterialPageRoute(
+            builder: (context) => ChatPage(group: group),
+          ),
         );
+      } else {
+        debugPrint("⚠️ [FCM] Group $groupId not found in Firestore");
       }
     } catch (e) {
       debugPrint("❌ Error navigating from notification: $e");

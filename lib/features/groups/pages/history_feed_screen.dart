@@ -6,6 +6,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/colors.dart';
 import '../data/models/outing_session_model.dart';
+import 'history_detail_page.dart';
+import 'package:laween/l10n/app_localizations.dart';
 
 class HistoryFeedScreen extends StatefulWidget {
   final String groupId;
@@ -18,6 +20,7 @@ class HistoryFeedScreen extends StatefulWidget {
 
 class _HistoryFeedScreenState extends State<HistoryFeedScreen> {
   final String myUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+  bool _showOnlyFavorites = false;
 
   Future<void> _toggleFavorite(OutingSessionModel session) async {
     final sessionRef = FirebaseFirestore.instance
@@ -39,15 +42,16 @@ class _HistoryFeedScreenState extends State<HistoryFeedScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: AppColors.darkSlate),
         title: Text(
-          "Memories",
+          l10n.squadHistory,
           style: GoogleFonts.outfit(
             color: AppColors.darkSlate,
             fontWeight: FontWeight.bold,
@@ -55,240 +59,256 @@ class _HistoryFeedScreenState extends State<HistoryFeedScreen> {
           ),
         ),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('groups')
-            .doc(widget.groupId)
-            .collection('outings')
-            .where('status', isEqualTo: OutingStatus.archived.name)
-            .orderBy('createdAt', descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}"));
-          }
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.teal));
-          }
+      body: Column(
+        children: [
+          // --- FILTER TOGGLE ---
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            child: Row(
+              children: [
+                _buildFilterChip(l10n.allLabel, !_showOnlyFavorites),
+                const SizedBox(width: 12),
+                _buildFilterChip(l10n.favoritesLabel, _showOnlyFavorites),
+              ],
+            ),
+          ),
+          
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: _getStream(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Center(child: Text("Error: ${snapshot.error}"));
+                }
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator(color: AppColors.teal));
+                }
 
-          final docs = snapshot.data?.docs ?? [];
-          if (docs.isEmpty) {
-            return Center(
+                final docs = snapshot.data?.docs ?? [];
+                if (docs.isEmpty) {
+                  return _buildEmptyState();
+                }
+
+                return ListView.separated(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                  itemCount: docs.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 32),
+                  itemBuilder: (context, index) {
+                    final session = OutingSessionModel.fromMap(docs[index].data() as Map<String, dynamic>);
+                    return _buildHistoryCard(session, index);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Stream<QuerySnapshot> _getStream() {
+    var query = FirebaseFirestore.instance
+        .collection('groups')
+        .doc(widget.groupId)
+        .collection('outings')
+        .where('status', isEqualTo: OutingStatus.archived.name);
+
+    if (_showOnlyFavorites) {
+      query = query.where('favoritedBy', arrayContains: myUid);
+    }
+
+    return query.orderBy('createdAt', descending: true).snapshots();
+  }
+
+  Widget _buildFilterChip(String label, bool active) {
+    final l10n = AppLocalizations.of(context)!;
+    return GestureDetector(
+      onTap: () => setState(() => _showOnlyFavorites = label == l10n.favoritesLabel),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: active ? AppColors.darkSlate : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
+            color: active ? Colors.white : Colors.grey.shade500,
+            letterSpacing: 1,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHistoryCard(OutingSessionModel session, int index) {
+    final l10n = AppLocalizations.of(context)!;
+    final bool isFavorite = session.favoritedBy.contains(myUid);
+    final String title = session.memoryTitle ?? l10n.epicOutingLabel;
+    
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context, 
+        MaterialPageRoute(builder: (_) => HistoryDetailPage(session: session))
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 30,
+              offset: const Offset(0, 10),
+            )
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Cover Photo
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                  child: Container(
+                    height: 220,
+                    width: double.infinity,
+                    color: Colors.grey.shade100,
+                    child: session.coverPhotoUrl != null
+                        ? CachedNetworkImage(
+                            imageUrl: session.coverPhotoUrl!,
+                            fit: BoxFit.cover,
+                          )
+                        : const Icon(Icons.photo_library_rounded, size: 48, color: Colors.grey),
+                  ),
+                ),
+                // Favorite Button
+                Positioned(
+                  top: 20,
+                  right: 20,
+                  child: GestureDetector(
+                    onTap: () => _toggleFavorite(session),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                          )
+                        ]
+                      ),
+                      child: Icon(
+                        isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                        color: isFavorite ? Colors.redAccent : Colors.grey.shade400,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                ),
+                // Photo Count
+                if ((session.memoryPhotos?.length ?? 0) > 0)
+                  Positioned(
+                    bottom: 16,
+                    left: 20,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.photo_library_rounded, size: 14, color: Colors.white),
+                          const SizedBox(width: 6),
+                          Text(
+                            l10n.photosLabel(session.memoryPhotos!.length),
+                            style: GoogleFonts.inter(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            // Content
+            Padding(
+              padding: const EdgeInsets.all(24),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.history_rounded, size: 64, color: Colors.grey.shade300),
-                  const SizedBox(height: 16),
                   Text(
-                    "No memories yet",
-                    style: GoogleFonts.outfit(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.darkSlate,
+                    "${session.createdAt.day}/${session.createdAt.month}/${session.createdAt.year}",
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.teal,
+                      letterSpacing: 1,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "Finish an outing to save it here!",
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      color: Colors.grey.shade500,
+                    title,
+                    style: GoogleFonts.outfit(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.darkSlate,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
+                  const SizedBox(height: 12),
+                  if (session.memoryRecap != null)
+                    Text(
+                      session.memoryRecap!,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                        height: 1.5,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                 ],
               ),
-            );
-          }
+            ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 400.ms, delay: (index * 100).ms).slideY(begin: 0.1);
+  }
 
-          return ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            itemCount: docs.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 24),
-            itemBuilder: (context, index) {
-              final session = OutingSessionModel.fromMap(docs[index].data() as Map<String, dynamic>);
-              final bool isFavorite = session.favoritedBy.contains(myUid);
-              final String title = session.memoryTitle ?? "Outing at \${session.winner?['name'] ?? session.category}";
-              final String recap = session.memoryRecap ?? "No recap generated.";
-              
-              // Formatting the date nicely
-              final month = session.createdAt.month;
-              final day = session.createdAt.day;
-              final year = session.createdAt.year;
-
-              return Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 15,
-                      offset: const Offset(0, 4),
-                    )
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Cover Photo Area
-                    Stack(
-                      children: [
-                        ClipRRect(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                          child: Container(
-                            height: 200,
-                            color: Colors.grey.shade200,
-                            width: double.infinity,
-                            child: session.coverPhotoUrl != null
-                                ? CachedNetworkImage(
-                                    imageUrl: session.coverPhotoUrl!,
-                                    fit: BoxFit.cover,
-                                  )
-                                : const Icon(Icons.restaurant_rounded, size: 48, color: Colors.grey),
-                          ),
-                        ),
-                        // Date Badge
-                        Positioned(
-                          top: 16,
-                          left: 16,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.6),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              "\$month/\$day/\$year",
-                              style: GoogleFonts.inter(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Favorite Heart Button
-                        Positioned(
-                          top: 12,
-                          right: 12,
-                          child: GestureDetector(
-                            onTap: () => _toggleFavorite(session),
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.9),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                color: isFavorite ? Colors.redAccent : Colors.grey.shade400,
-                                size: 20,
-                              ),
-                            ).animate(target: isFavorite ? 1 : 0).scaleXY(end: 1.1, duration: 150.ms),
-                          ),
-                        ),
-                        // Picture Count Badge
-                        if ((session.memoryPhotos?.length ?? 0) > 1)
-                          Positioned(
-                            bottom: 12,
-                            right: 12,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.6),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.photo_library_rounded, size: 12, color: Colors.white),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    "\${session.memoryPhotos!.length}",
-                                    style: GoogleFonts.inter(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    // Content Area (AI Roast & Recap)
-                    Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            style: GoogleFonts.outfit(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.darkSlate,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppColors.teal.withValues(alpha: 0.05),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.teal.withValues(alpha: 0.1)),
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text("🤖 ", style: TextStyle(fontSize: 16)),
-                                Expanded(
-                                  child: Text(
-                                    recap,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 14,
-                                      color: AppColors.darkSlate,
-                                      height: 1.5,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Participants icons below
-                          const SizedBox(height: 16),
-                          Row(
-                            children: session.participants.take(5).map((p) {
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 6),
-                                child: CircleAvatar(
-                                  radius: 12,
-                                  backgroundColor: AppColors.getUserColor(p.uid).withValues(alpha: 0.2),
-                                  backgroundImage: p.photoUrl != null && p.photoUrl!.isNotEmpty
-                                      ? CachedNetworkImageProvider(p.photoUrl!)
-                                      : null,
-                                  child: p.photoUrl == null || p.photoUrl!.isEmpty
-                                      ? Text(p.name.isNotEmpty ? p.name[0].toUpperCase() : '?',
-                                          style: GoogleFonts.outfit(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppColors.getUserColor(p.uid),
-                                          ))
-                                      : null,
-                                ),
-                              );
-                            }).toList(),
-                          )
-                        ],
-                      ),
-                    )
-                  ],
-                ),
-              ).animate().fadeIn(duration: 400.ms, delay: (index * 100).ms).slideY(begin: 0.1);
-            },
-          );
-        },
+  Widget _buildEmptyState() {
+    final l10n = AppLocalizations.of(context)!;
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.history_rounded, size: 64, color: Colors.grey.shade200),
+          const SizedBox(height: 16),
+          Text(
+            _showOnlyFavorites ? l10n.noFavoritesYet : l10n.noMemoriesYetLabel,
+            style: GoogleFonts.outfit(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppColors.darkSlate,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _showOnlyFavorites ? l10n.tapHeartToSave : l10n.finishOutingToSaveMemories,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: Colors.grey.shade400,
+            ),
+          ),
+        ],
       ),
     );
   }

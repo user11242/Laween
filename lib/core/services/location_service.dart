@@ -86,10 +86,10 @@ class LocationService {
     // 2. Cancel existing if any
     await stopTracking(userId);
 
-    // 3. Mark as active in Firestore & Default to Ghost Mode
+    // 3. Mark as active in Firestore & Default to Sharing Mode
     await FirebaseFirestore.instance.collection('users').doc(userId).update({
       'isTrackingActive': true,
-      'isGhostMode': true, // Privacy by default
+      'isGhostMode': false, // Sharing by default
     });
 
     // 4. Start Position Stream

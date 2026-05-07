@@ -236,7 +236,7 @@ class _SettingsPageState extends State<SettingsPage> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.teal.withValues(alpha: 0.1),
+              color: AppColors.teal.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: AppColors.teal, size: 22),

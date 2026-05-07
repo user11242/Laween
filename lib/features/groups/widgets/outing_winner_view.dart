@@ -48,9 +48,9 @@ class OutingWinnerView extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.1),
+                color: Colors.amber.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                border: Border.all(color: Colors.amber.withOpacity(0.3)),
               ),
               child: Row(
                 children: [
@@ -78,17 +78,17 @@ class OutingWinnerView extends StatelessWidget {
         // Winner Card
         Container(
           decoration: BoxDecoration(
-            color: isMe ? Colors.white.withValues(alpha: 0.15) : Colors.white,
+            color: isMe ? Colors.white.withOpacity(0.15) : Colors.white,
             borderRadius: BorderRadius.circular(28),
             border: Border.all(
               color: isMe
-                  ? Colors.white.withValues(alpha: 0.2)
-                  : Colors.black.withValues(alpha: 0.05),
+                  ? Colors.white.withOpacity(0.2)
+                  : Colors.black.withOpacity(0.05),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.teal.withValues(alpha: 0.1),
+                color: AppColors.teal.withOpacity(0.1),
                 blurRadius: 30,
                 offset: const Offset(0, 15),
               ),
@@ -119,7 +119,7 @@ class OutingWinnerView extends StatelessWidget {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.6),
+                          color: Colors.black.withOpacity(0.6),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(

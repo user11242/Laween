@@ -27,6 +27,31 @@ class OutingService {
   final LiveActivities _liveActivitiesPlugin = LiveActivities();
   String? _activityId;
   String? _lastParticipantsJson;
+  
+  // Fetch IDs of places favorited by the current user in this group's history
+  Future<Set<String>> getGroupFavoritePlaceIds(String groupId, String userId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('groups')
+          .doc(groupId)
+          .collection('outings')
+          .where('status', isEqualTo: OutingStatus.archived.name)
+          .where('favoritedBy', arrayContains: userId)
+          .get();
+
+      final Set<String> favoriteIds = {};
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        if (data['winner'] != null && data['winner']['id'] != null) {
+          favoriteIds.add(data['winner']['id'].toString());
+        }
+      }
+      return favoriteIds;
+    } catch (e) {
+      debugPrint("Error fetching group favorites: $e");
+      return {};
+    }
+  }
 
   // Create a direct outing session to a specific place
   Future<String> createDirectSession({
@@ -317,12 +342,21 @@ class OutingService {
     String sessionId,
     OutingStatus status,
   ) async {
+    final updates = <String, dynamic>{'status': status.name};
+    
+    // When an outing moves to 'completed' (Journey starts), set 10-hour life
+    if (status == OutingStatus.completed) {
+      updates['expiresAt'] = Timestamp.fromDate(
+        DateTime.now().add(const Duration(hours: 10)),
+      );
+    }
+
     await _firestore
         .collection('groups')
         .doc(groupId)
         .collection('outings')
         .doc(sessionId)
-        .update({'status': status.name});
+        .update(updates);
 
     // End Live Activity if terminal state
     if (status == OutingStatus.completed || status == OutingStatus.cancelled) {
@@ -528,11 +562,15 @@ class OutingService {
       destinations: destinations,
     );
 
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final favoritePlaceIds = await getGroupFavoritePlaceIds(groupId, userId);
+
     List<Map<String, dynamic>> processedVenues = [];
 
     for (int i = 0; i < limitedPlaces.length; i++) {
       final place = limitedPlaces[i];
       final String placeId = place['id'].toString();
+      final bool isFav = favoritePlaceIds.contains(placeId);
       
       final venueRoutes = routeMatrix.where((r) => r['destinationIndex'] == i).toList();
       
@@ -596,6 +634,14 @@ class OutingService {
         if (maxDistKm > 20) {
           distanceFairnessScore += (maxDistKm - 20) * 1.2;
         }
+
+        // --- FAVORITE BOOST ---
+        // If this place is already a favorite, we give it a massive fairness bonus
+        // This effectively ranks it much higher in the sorted list
+        if (isFav) {
+          timeFairnessScore -= 10.0; // Boost by roughly 10 minutes advantage
+          distanceFairnessScore -= 5.0; // Boost by roughly 5km advantage
+        }
       }
 
       // Add failure penalties to BOTH scores
@@ -631,6 +677,7 @@ class OutingService {
         'rating': place['rating'],
         'userRatingCount': place['userRatingCount'],
         'location': place['location'],
+        'isFavorite': isFav, // Add favorite flag for UI
         'photoReference': (place['photos'] != null && place['photos'].isNotEmpty)
             ? place['photos'][0]['name']
             : null,
@@ -788,6 +835,9 @@ class OutingService {
           transaction.update(sessionRef, {
             'status': OutingStatus.completed.name,
             'winner': winner,
+            'expiresAt': Timestamp.fromDate(
+              DateTime.now().add(const Duration(hours: 10)),
+            ),
           });
         } else {
           // If no venues, just complete without a winner or cancel
@@ -813,7 +863,12 @@ class OutingService {
     final List topVenues = List.from(data['finalLocation']['topVenues']);
 
     if (topVenues.isEmpty) {
-      await sessionRef.update({'status': OutingStatus.completed.name});
+      await sessionRef.update({
+        'status': OutingStatus.completed.name,
+        'expiresAt': Timestamp.fromDate(
+          DateTime.now().add(const Duration(hours: 10)),
+        ),
+      });
       return;
     }
 
@@ -856,6 +911,9 @@ class OutingService {
     await sessionRef.update({
       'status': OutingStatus.completed.name,
       'winner': winner,
+      'expiresAt': Timestamp.fromDate(
+        DateTime.now().add(const Duration(hours: 10)),
+      ),
     });
   }
 
@@ -1165,17 +1223,26 @@ class OutingService {
        firstArrived = sortedP.first.name; // Fallback
     }
     
-    // Simulate finding who "held up the squad"
+    final venueName = session.winner?['name'] ?? session.category;
+    
     if (sortedP.length > 1) {
       lastArrived = sortedP.last.name;
-      generatedRecap = "Epic night at ${session.winner?['name'] ?? session.category}! 🔥 $firstArrived secured the table early and was the true MVP, while $lastArrived made everyone starve waiting. Ultimately worth it. 10/10 vibes.";
+      final templates = [
+        "Epic night at $venueName! 🔥 $firstArrived secured the table early and was the true MVP, while $lastArrived made everyone starve waiting. Ultimately worth it. 10/10 vibes.",
+        "Unforgettable moments at $venueName with the squad. $firstArrived was leading the way as always, and $lastArrived eventually caught up. Pure magic!",
+        "The food at $venueName was top tier, but the company was better. Shoutout to $firstArrived for the early arrival, and $lastArrived for making it fashionably late.",
+        "Classic outing at $venueName. $firstArrived was on point, while $lastArrived was definitely on 'their own time'. Great times all around!"
+      ];
+      final int templateIdx = DateTime.now().millisecond % templates.length;
+      generatedRecap = templates[templateIdx];
     } else {
-      generatedRecap = "A perfect solo trip or intimate hangout at ${session.winner?['name']}. Good food, great vibes!";
+      generatedRecap = "A perfect solo trip or intimate hangout at $venueName. Good food, great vibes!";
     }
 
     if (session.winner != null && session.winner?['name'] != null) {
       final terms = ["Midnight feast", "Unreal cravings", "Legendary dinner", "Vibe check passed"];
-      generatedTitle = "${terms[DateTime.now().microsecond % terms.length]} at ${session.winner!['name']}";
+      final int idx = DateTime.now().microsecond % terms.length;
+      generatedTitle = "${terms[idx]} at ${session.winner!['name']}";
     }
 
     // 3. Save to Firestore as Archived

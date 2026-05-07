@@ -79,12 +79,12 @@ class OutingVotingView extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: isMe ? Colors.white.withValues(alpha: 0.1) : Colors.white,
+        color: isMe ? Colors.white.withOpacity(0.1) : Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: isMe
-              ? Colors.white.withValues(alpha: 0.2)
-              : Colors.black.withValues(alpha: 0.05),
+              ? Colors.white.withOpacity(0.2)
+              : Colors.black.withOpacity(0.05),
         ),
       ),
       child: ClipRRect(
@@ -142,6 +142,33 @@ class OutingVotingView extends StatelessWidget {
                             ),
                           ],
                         ),
+                        if (venue['isFavorite'] == true) ...[
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.teal.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.teal.withOpacity(0.2)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.favorite_rounded, color: AppColors.teal, size: 10),
+                                const SizedBox(width: 6),
+                                Text(
+                                  "GROUP FAVORITE",
+                                  style: GoogleFonts.inter(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppColors.teal,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),

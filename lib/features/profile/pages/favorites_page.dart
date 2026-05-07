@@ -36,7 +36,7 @@ class FavoritesPage extends StatelessWidget {
             const Icon(Icons.favorite_border, size: 100, color: AppColors.teal),
             const SizedBox(height: 20),
             Text(
-              "My Favorites coming soon",
+              l10n.favoritesComingSoon,
               style: GoogleFonts.inter(fontSize: 18, color: Colors.grey),
             ),
           ],

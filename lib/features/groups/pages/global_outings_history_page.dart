@@ -7,9 +7,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/colors.dart';
 import '../data/models/outing_session_model.dart';
 import 'package:laween/l10n/app_localizations.dart';
+import 'history_detail_page.dart';
+import 'package:laween/core/services/google_maps_service.dart';
 
 class GlobalOutingsHistoryPage extends StatefulWidget {
-  const GlobalOutingsHistoryPage({super.key});
+  final bool showFavoritesOnly;
+  const GlobalOutingsHistoryPage({super.key, this.showFavoritesOnly = false});
 
   @override
   State<GlobalOutingsHistoryPage> createState() => _GlobalOutingsHistoryPageState();
@@ -18,11 +21,14 @@ class GlobalOutingsHistoryPage extends StatefulWidget {
 class _GlobalOutingsHistoryPageState extends State<GlobalOutingsHistoryPage> {
   final String myUid = FirebaseAuth.instance.currentUser?.uid ?? '';
   bool _isLoading = true;
-  List<_GlobalOutingItem> _outings = [];
+  bool _showOnlyFavorites = false;
+  List<_GlobalOutingItem> _allOutings = [];
+  List<_GlobalOutingItem> _filteredOutings = [];
 
   @override
   void initState() {
     super.initState();
+    _showOnlyFavorites = widget.showFavoritesOnly;
     _loadAllOutings();
   }
 
@@ -33,15 +39,13 @@ class _GlobalOutingsHistoryPageState extends State<GlobalOutingsHistoryPage> {
     }
 
     try {
-      // 1. Fetch user groups
       final groupsSnapshot = await FirebaseFirestore.instance
           .collection('groups')
           .where('memberIds', arrayContains: myUid)
           .get();
 
-      List<_GlobalOutingItem> allOutings = [];
+      List<_GlobalOutingItem> allItems = [];
 
-      // 2. Fetch all archived outings for each group
       for (var groupDoc in groupsSnapshot.docs) {
         final groupData = groupDoc.data();
         final groupName = groupData['name'] ?? 'Group';
@@ -54,20 +58,21 @@ class _GlobalOutingsHistoryPageState extends State<GlobalOutingsHistoryPage> {
         for (var outingDoc in outingsSnapshot.docs) {
           final outingData = outingDoc.data();
           final session = OutingSessionModel.fromMap(outingData);
-          allOutings.add(_GlobalOutingItem(
+          allItems.add(_GlobalOutingItem(
             session: session,
             groupName: groupName,
             groupId: groupDoc.id,
+            totalGroupMembers: (groupData['memberIds'] as List?)?.length ?? 0,
           ));
         }
       }
 
-      // 3. Sort by createdAt descending
-      allOutings.sort((a, b) => b.session.createdAt.compareTo(a.session.createdAt));
+      allItems.sort((a, b) => b.session.createdAt.compareTo(a.session.createdAt));
 
       if (mounted) {
         setState(() {
-          _outings = allOutings;
+          _allOutings = allItems;
+          _applyFilter();
           _isLoading = false;
         });
       }
@@ -76,6 +81,16 @@ class _GlobalOutingsHistoryPageState extends State<GlobalOutingsHistoryPage> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  void _applyFilter() {
+    setState(() {
+      if (_showOnlyFavorites) {
+        _filteredOutings = _allOutings.where((item) => item.session.favoritedBy.contains(myUid)).toList();
+      } else {
+        _filteredOutings = List.from(_allOutings);
+      }
+    });
   }
 
   Future<void> _toggleFavorite(OutingSessionModel session, String groupId) async {
@@ -90,235 +105,273 @@ class _GlobalOutingsHistoryPageState extends State<GlobalOutingsHistoryPage> {
       await sessionRef.update({
         'favoritedBy': FieldValue.arrayRemove([myUid])
       });
+      session.favoritedBy.remove(myUid);
     } else {
       await sessionRef.update({
         'favoritedBy': FieldValue.arrayUnion([myUid])
       });
+      session.favoritedBy.add(myUid);
     }
 
-    // Live update local state
-    setState(() {
-      if (isFav) {
-        session.favoritedBy.remove(myUid);
-      } else {
-        session.favoritedBy.add(myUid);
-      }
-    });
+    _applyFilter();
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        scrolledUnderElevation: 0,
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.darkSlate),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: Navigator.canPop(context)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.darkSlate),
+                onPressed: () => Navigator.pop(context),
+              )
+            : null,
         title: Text(
           l10n.outingsHistory,
           style: GoogleFonts.outfit(
             color: AppColors.darkSlate,
             fontWeight: FontWeight.bold,
-            fontSize: 18,
+            fontSize: 20,
           ),
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.teal))
-          : _outings.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.history_rounded, size: 64, color: Colors.grey.shade300),
-                      const SizedBox(height: 16),
-                      Text(
-                        l10n.noMemoriesYet,
-                        style: GoogleFonts.outfit(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.darkSlate,
+      body: Column(
+        children: [
+          // Filter Chips
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            child: Row(
+              children: [
+                _buildFilterChip(l10n.allLabel, !_showOnlyFavorites),
+                const SizedBox(width: 12),
+                _buildFilterChip(l10n.favoritesLabel, _showOnlyFavorites),
+              ],
+            ),
+          ),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator(color: AppColors.teal))
+                : _filteredOutings.isEmpty
+                    ? _buildEmptyState(l10n)
+                    : RefreshIndicator(
+                        onRefresh: _loadAllOutings,
+                        color: AppColors.teal,
+                        child: ListView.separated(
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                          itemCount: _filteredOutings.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 32),
+                          itemBuilder: (context, index) {
+                            final item = _filteredOutings[index];
+                            return _buildHistoryCard(item, index);
+                          },
                         ),
                       ),
-                      const SizedBox(height: 8),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, bool active) {
+    final l10n = AppLocalizations.of(context)!;
+    return GestureDetector(
+      onTap: () {
+        setState(() => _showOnlyFavorites = label == l10n.favoritesLabel);
+        _applyFilter();
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: active ? AppColors.darkSlate : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
+            color: active ? Colors.white : Colors.grey.shade500,
+            letterSpacing: 1,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHistoryCard(_GlobalOutingItem item, int index) {
+    final l10n = AppLocalizations.of(context)!;
+    final session = item.session;
+    final bool isFavorite = session.favoritedBy.contains(myUid);
+    final String venueName = session.winner?['name'] ?? l10n.epicOutingLabel;
+    
+    // Fetch venue image from photoReference if available
+    final String? venuePhotoRef = session.winner?['photoReference'];
+    final String? venuePhotoUrl = GoogleMapsService().getPlacePhotoUrl(venuePhotoRef);
+
+    final int joinedCount = session.participants.length;
+    final int totalCount = item.totalGroupMembers;
+
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => HistoryDetailPage(session: session)),
+      ),
+      child: Container(
+        height: 120,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            )
+          ],
+        ),
+        child: Row(
+          children: [
+            // 1. Image (Venue Image first, then cover photo)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                width: 96,
+                height: 96,
+                color: Colors.grey.shade100,
+                child: venuePhotoUrl != null
+                    ? CachedNetworkImage(
+                        imageUrl: venuePhotoUrl,
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) => const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : session.coverPhotoUrl != null
+                        ? CachedNetworkImage(
+                            imageUrl: session.coverPhotoUrl!,
+                            fit: BoxFit.cover,
+                          )
+                        : const Icon(Icons.location_on_rounded, color: Colors.grey),
+              ),
+            ),
+            const SizedBox(width: 16),
+            // 2. Info
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.groupName.toUpperCase(),
+                    style: GoogleFonts.inter(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.teal,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    venueName,
+                    style: GoogleFonts.outfit(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.darkSlate,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.people_alt_rounded,
+                        size: 14,
+                        color: Colors.grey.shade400,
+                      ),
+                      const SizedBox(width: 4),
                       Text(
-                        l10n.finishOutingToSave,
+                        l10n.participantCount(joinedCount, totalCount),
                         style: GoogleFonts.inter(
-                          fontSize: 14,
-                          color: Colors.grey.shade500,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey.shade600,
                         ),
                       ),
                     ],
                   ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _loadAllOutings,
-                  color: AppColors.teal,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: _outings.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 20),
-                    itemBuilder: (context, index) {
-                      final item = _outings[index];
-                      final session = item.session;
-                      final bool isFavorite = session.favoritedBy.contains(myUid);
-                      final String title = session.memoryTitle ??
-                          "Outing at ${session.winner?['name'] ?? session.category}";
-                      final String recap = session.memoryRecap ?? "No recap recorded.";
-
-                      // Date formatting
-                      final month = session.createdAt.month;
-                      final day = session.createdAt.day;
-                      final year = session.createdAt.year;
-
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.04),
-                              blurRadius: 16,
-                              offset: const Offset(0, 4),
-                            )
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            // Cover photo
-                            Stack(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                                  child: Container(
-                                    height: 170,
-                                    color: Colors.grey.shade100,
-                                    width: double.infinity,
-                                    child: session.coverPhotoUrl != null
-                                        ? CachedNetworkImage(
-                                            imageUrl: session.coverPhotoUrl!,
-                                            fit: BoxFit.cover,
-                                          )
-                                        : const Icon(Icons.restaurant_rounded, size: 40, color: Colors.grey),
-                                  ),
-                                ),
-                                // Date badge
-                                Positioned(
-                                  top: 14,
-                                  left: 14,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black.withValues(alpha: 0.65),
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    child: Text(
-                                      "$month/$day/$year",
-                                      style: GoogleFonts.inter(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 11,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                // Group badge
-                                Positioned(
-                                  top: 14,
-                                  right: 54,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.teal.withValues(alpha: 0.9),
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    child: Text(
-                                      item.groupName,
-                                      style: GoogleFonts.inter(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 11,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                // Favorite button
-                                Positioned(
-                                  top: 10,
-                                  right: 10,
-                                  child: GestureDetector(
-                                    onTap: () => _toggleFavorite(session, item.groupId),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.9),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(
-                                        isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                        color: isFavorite ? Colors.redAccent : Colors.grey.shade400,
-                                        size: 18,
-                                      ),
-                                    ).animate(target: isFavorite ? 1 : 0).scaleXY(end: 1.1, duration: 150.ms),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            // Content
-                            Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    title,
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.darkSlate,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.teal.withValues(alpha: 0.04),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: AppColors.teal.withValues(alpha: 0.08)),
-                                    ),
-                                    child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        const Text("🤖 ", style: TextStyle(fontSize: 14)),
-                                        Expanded(
-                                          child: Text(
-                                            recap,
-                                            style: GoogleFonts.inter(
-                                              fontSize: 13,
-                                              color: AppColors.darkSlate,
-                                              height: 1.4,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          ],
-                        ),
-                      ).animate().fadeIn(duration: 400.ms, delay: (index * 80).ms).slideY(begin: 0.08);
-                    },
+                ],
+              ),
+            ),
+            // 3. Actions & Date
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  onPressed: () => _toggleFavorite(session, item.groupId),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  icon: Icon(
+                    isFavorite
+                        ? Icons.favorite_rounded
+                        : Icons.favorite_border_rounded,
+                    color: isFavorite ? Colors.redAccent : Colors.grey.shade300,
+                    size: 22,
                   ),
                 ),
+                Text(
+                  "${session.createdAt.day}/${session.createdAt.month}/${session.createdAt.year}",
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    color: Colors.grey.shade400,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 4),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 400.ms, delay: (index * 80).ms).slideX(
+      begin: 0.1,
+      end: 0,
+    );
+  }
+
+  Widget _buildEmptyState(AppLocalizations l10n) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.history_rounded, size: 64, color: Colors.grey.shade200),
+          const SizedBox(height: 16),
+          Text(
+            _showOnlyFavorites ? l10n.noFavoritesYet : l10n.noMemoriesYetLabel,
+            style: GoogleFonts.outfit(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppColors.darkSlate,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _showOnlyFavorites ? l10n.tapHeartToSave : l10n.finishOutingToSaveMemories,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: Colors.grey.shade400,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -327,10 +380,12 @@ class _GlobalOutingItem {
   final OutingSessionModel session;
   final String groupName;
   final String groupId;
+  final int totalGroupMembers;
 
   _GlobalOutingItem({
     required this.session,
     required this.groupName,
     required this.groupId,
+    required this.totalGroupMembers,
   });
 }

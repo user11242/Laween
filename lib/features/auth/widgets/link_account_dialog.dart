@@ -89,7 +89,7 @@ class _LinkAccountDialogState extends State<LinkAccountDialog> {
                   hintText: l10n.password,
                   hintStyle: const TextStyle(color: AppColors.white54),
                   filled: true,
-                  fillColor: AppColors.white.withValues(alpha: 0.1),
+                  fillColor: AppColors.white.withOpacity(0.1),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,

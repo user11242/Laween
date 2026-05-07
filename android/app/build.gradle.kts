@@ -4,6 +4,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
 }
 
 val keystorePropertiesFile = rootProject.file("key.properties")
@@ -13,7 +14,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.company.laween"
+    namespace = "com.compay.laween"
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
@@ -33,7 +34,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.company.laween"
+        applicationId = "com.compay.laween"
         minSdk = 24
         targetSdk = 35 // Keeping target at 35 for now to avoid behavioral changes, but compile at 36
         versionCode = flutter.versionCode

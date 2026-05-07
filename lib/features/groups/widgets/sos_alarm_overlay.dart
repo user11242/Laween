@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:laween/l10n/app_localizations.dart';
 
 class SosAlarmOverlay extends StatefulWidget {
   final String userName;
@@ -53,6 +54,7 @@ class _SosAlarmOverlayState extends State<SosAlarmOverlay> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Material(
       color: Colors.transparent,
       child: Stack(
@@ -86,8 +88,8 @@ class _SosAlarmOverlayState extends State<SosAlarmOverlay> {
                   padding: const EdgeInsets.all(40),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.1),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 2),
+                    color: Colors.white.withOpacity(0.1),
+                    border: Border.all(color: Colors.white.withOpacity(0.2), width: 2),
                   ),
                   child: const Icon(
                     Icons.emergency_rounded,
@@ -102,7 +104,7 @@ class _SosAlarmOverlayState extends State<SosAlarmOverlay> {
                 const SizedBox(height: 48),
 
                 Text(
-                  "SOS ACTIVE",
+                  l10n.sosActiveLabel,
                   style: GoogleFonts.outfit(
                     fontSize: 40,
                     fontWeight: FontWeight.w900,
@@ -117,12 +119,12 @@ class _SosAlarmOverlayState extends State<SosAlarmOverlay> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 40),
                   child: Text(
-                    "${widget.userName} NEEDS HELP!",
+                    "${widget.userName}${l10n.needsHelpSuffix}",
                     textAlign: TextAlign.center,
                     style: GoogleFonts.outfit(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: Colors.white.withOpacity(0.9),
                     ),
                   ),
                 ),
@@ -145,7 +147,7 @@ class _SosAlarmOverlayState extends State<SosAlarmOverlay> {
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.2),
+                                color: Colors.black.withOpacity(0.2),
                                 blurRadius: 20,
                                 offset: const Offset(0, 10),
                               )
@@ -153,7 +155,7 @@ class _SosAlarmOverlayState extends State<SosAlarmOverlay> {
                           ),
                           child: Center(
                             child: Text(
-                              "STOP ALARM",
+                              l10n.stopAlarm,
                               style: GoogleFonts.outfit(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w900,
@@ -171,7 +173,7 @@ class _SosAlarmOverlayState extends State<SosAlarmOverlay> {
                         onPressed: widget.onSeeMap,
                         icon: const Icon(Icons.location_on_rounded, color: Colors.white),
                         label: Text(
-                          "SEE ON MAP",
+                          l10n.seeOnMap,
                           style: GoogleFonts.outfit(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -180,7 +182,7 @@ class _SosAlarmOverlayState extends State<SosAlarmOverlay> {
                         ),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-                          backgroundColor: Colors.white.withValues(alpha: 0.15),
+                          backgroundColor: Colors.white.withOpacity(0.15),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                             side: const BorderSide(color: Colors.white24),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -26,10 +27,29 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
   bool _isLoading = false;
   bool _isScanMode = true;
 
+  String _convertArabicToEnglish(String input) {
+    const englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+
+    for (int i = 0; i < 10; i++) {
+      input = input.replaceAll(arabicDigits[i], englishDigits[i]);
+    }
+    return input;
+  }
+
   void _onPinChanged(String value, int index) {
-    if (value.isNotEmpty && index < 5) {
+    final convertedValue = _convertArabicToEnglish(value);
+
+    if (convertedValue != value) {
+      _pinControllers[index].text = convertedValue;
+      _pinControllers[index].selection = TextSelection.fromPosition(
+        TextPosition(offset: convertedValue.length),
+      );
+    }
+
+    if (convertedValue.isNotEmpty && index < 5) {
       _focusNodes[index + 1].requestFocus();
-    } else if (value.isEmpty && index > 0) {
+    } else if (convertedValue.isEmpty && index > 0) {
       _focusNodes[index - 1].requestFocus();
     }
 
@@ -122,7 +142,7 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
                         child: Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
+                            color: Colors.white.withOpacity(0.2),
                             shape: BoxShape.circle,
                           ),
                           child: Transform.flip(
@@ -168,7 +188,7 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
                       border: Border.all(color: Colors.grey.shade200),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.03),
+                          color: Colors.black.withOpacity(0.03),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -246,7 +266,7 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
           boxShadow: isActive
               ? [
                   BoxShadow(
-                    color: AppColors.teal.withValues(alpha: 0.25),
+                    color: AppColors.teal.withOpacity(0.25),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -292,7 +312,7 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
                 borderRadius: BorderRadius.circular(40),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
+                    color: Colors.black.withOpacity(0.1),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -333,16 +353,16 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
               decoration: BoxDecoration(
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.teal.withValues(alpha: 0.5),
+                    color: AppColors.teal.withOpacity(0.5),
                     blurRadius: 10,
                     spreadRadius: 2,
                   ),
                 ],
                 gradient: LinearGradient(
                   colors: [
-                    AppColors.teal.withValues(alpha: 0.01),
+                    AppColors.teal.withOpacity(0.01),
                     AppColors.teal,
-                    AppColors.teal.withValues(alpha: 0.01),
+                    AppColors.teal.withOpacity(0.01),
                   ],
                 ),
               ),
@@ -455,9 +475,9 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
           width: 110,
           height: 110,
           decoration: BoxDecoration(
-            color: AppColors.teal.withValues(alpha: 0.08),
+            color: AppColors.teal.withOpacity(0.08),
             shape: BoxShape.circle,
-            border: Border.all(color: AppColors.teal.withValues(alpha: 0.1)),
+            border: Border.all(color: AppColors.teal.withOpacity(0.1)),
           ),
           child: const Icon(
             Icons.keyboard_command_key_rounded,
@@ -525,7 +545,7 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.teal.withValues(alpha: 0.25),
+                    color: AppColors.teal.withOpacity(0.25),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),
@@ -580,48 +600,63 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withOpacity(0.06),
             blurRadius: 15,
             spreadRadius: 1,
             offset: const Offset(0, 8),
           ),
           BoxShadow(
-            color: AppColors.teal.withValues(alpha: 0.05),
+            color: AppColors.teal.withOpacity(0.05),
             blurRadius: 5,
             spreadRadius: -2,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: TextField(
-        controller: _pinControllers[index],
-        focusNode: _focusNodes[index],
-        textAlign: TextAlign.center,
-        keyboardType: TextInputType.number,
-        maxLength: 1,
-        style: GoogleFonts.outfit(
-          fontSize: 22,
-          fontWeight: FontWeight.bold,
-          color: AppColors.darkSlate,
+      child: KeyboardListener(
+        focusNode: FocusNode(), // Dummy focus node for listener
+        onKeyEvent: (event) {
+          if (event is KeyDownEvent &&
+              event.logicalKey == LogicalKeyboardKey.backspace &&
+              _pinControllers[index].text.isEmpty &&
+              index > 0) {
+            _pinControllers[index - 1].clear();
+            _focusNodes[index - 1].requestFocus();
+          }
+        },
+        child: TextField(
+          controller: _pinControllers[index],
+          focusNode: _focusNodes[index],
+          textAlign: TextAlign.center,
+          keyboardType: TextInputType.number,
+          maxLength: 1,
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[0-9٠-٩]')),
+          ],
+          style: GoogleFonts.outfit(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: AppColors.darkSlate,
+          ),
+          decoration: InputDecoration(
+            counterText: "",
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: Colors.grey.shade200),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: Colors.grey.shade300, width: 1.2),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.teal, width: 2.5),
+            ),
+          ),
+          onChanged: (value) => _onPinChanged(value, index),
         ),
-        decoration: InputDecoration(
-          counterText: "",
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.grey.shade200),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.grey.shade300, width: 1.2),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: AppColors.teal, width: 2.5),
-          ),
-        ),
-        onChanged: (value) => _onPinChanged(value, index),
       ),
     );
   }

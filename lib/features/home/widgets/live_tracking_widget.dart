@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:math' as math;
 import '../../../core/theme/colors.dart';
 import '../../groups/data/models/outing_session_model.dart';
+import 'package:laween/l10n/app_localizations.dart';
 import '../../groups/pages/outing_tracking_screen.dart';
 
 class LiveTrackingDashboardWidget extends StatelessWidget {
@@ -32,7 +35,6 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
-        // Direct stream to the specific active session
         return StreamBuilder<DocumentSnapshot>(
           stream: FirebaseFirestore.instance
               .collection('groups')
@@ -49,33 +51,35 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
               sessionSnapshot.data!.data() as Map<String, dynamic>,
             );
 
-            return _buildCareemStyleWidget(context, session);
+            return _buildModernTrackingCard(context, session);
           },
         );
       },
     );
   }
 
-  Widget _buildCareemStyleWidget(
+  Widget _buildModernTrackingCard(
     BuildContext context,
     OutingSessionModel session,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final winner = session.winner;
     if (winner == null) return const SizedBox.shrink();
 
-    // Calculate overall team progress
-    // Progress = (StartDist - CurrentDist) / StartDist
-    double totalProgress = 0;
-    int participantCount = 0;
+    final dest = winner['location'];
+    final dLat = (dest['latitude'] as num).toDouble();
+    final dLng = (dest['longitude'] as num).toDouble();
+
+    // Prepare participants with their individual progress
+    final List<Map<String, dynamic>> participantProgress = [];
+    int arrivedCount = 0;
 
     for (var p in session.participants) {
-      if (p.location != null &&
-          p.startLocation != null &&
-          winner['location'] != null) {
-        final dest = winner['location'];
-        final dLat = (dest['latitude'] as num).toDouble();
-        final dLng = (dest['longitude'] as num).toDouble();
-
+      double pProgress = 0.0;
+      if (p.arrived) {
+        pProgress = 1.0;
+        arrivedCount++;
+      } else if (p.location != null && p.startLocation != null) {
         final startDist = _calculateDistance(
           p.startLocation!.latitude,
           p.startLocation!.longitude,
@@ -88,19 +92,24 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
           dLat,
           dLng,
         );
-
-        if (startDist > 0) {
-          final pProgress = (startDist - currentDist) / startDist;
-          totalProgress += pProgress.clamp(0.0, 1.0);
-          participantCount++;
+        if (startDist > 0.01) {
+          pProgress = (1.0 - (currentDist / startDist)).clamp(0.0, 1.0);
         }
       }
+      
+      participantProgress.add({
+        'participant': p,
+        'progress': pProgress,
+      });
     }
 
-    final displayProgress = participantCount > 0
-        ? (totalProgress / participantCount)
-        : 0.0;
-    final percentage = (displayProgress * 100).toInt();
+    // Hide widget if everyone has arrived
+    if (arrivedCount == session.participants.length && arrivedCount > 0) {
+      return const SizedBox.shrink();
+    }
+
+    // Sort by progress so they layer correctly
+    participantProgress.sort((a, b) => (a['progress'] as double).compareTo(b['progress'] as double));
 
     return GestureDetector(
       onTap: () {
@@ -115,60 +124,65 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 24),
-        padding: const EdgeInsets.all(20),
+        margin: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: AppColors.slate.withValues(alpha: 0.1),
-            width: 1,
-          ),
+          borderRadius: BorderRadius.circular(32),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 30,
+              offset: const Offset(0, 12),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.teal.withValues(alpha: 0.2),
+                    color: AppColors.teal.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.navigation_rounded,
-                    color: AppColors.teal,
-                    size: 20,
-                  ),
+                  child: const Icon(Icons.gps_fixed_rounded, color: AppColors.teal, size: 20)
+                      .animate(onPlay: (c) => c.repeat())
+                      .shimmer(duration: 2000.ms),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "LIVE TRACKING",
-                        style: GoogleFonts.inter(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.teal,
-                          letterSpacing: 1.2,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            l10n.liveTracking.toUpperCase(),
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.teal,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                          ).animate(onPlay: (c) => c.repeat()).fadeIn(duration: 800.ms).fadeOut(delay: 800.ms),
+                        ],
                       ),
                       Text(
-                        winner['name'] ?? "Destination",
+                        winner['name'] ?? l10n.destination,
                         style: GoogleFonts.outfit(
-                          fontSize: 18,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
+                          color: AppColors.darkSlate,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -176,85 +190,114 @@ class LiveTrackingDashboardWidget extends StatelessWidget {
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.teal.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    "$percentage%",
-                    style: GoogleFonts.inter(
-                      color: AppColors.teal,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
+                Icon(Icons.arrow_forward_ios_rounded, color: Colors.grey.shade300, size: 14),
               ],
             ),
-            const SizedBox(height: 20),
-            Stack(
-              children: [
-                Container(
-                  height: 6,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: AppColors.slate.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-                AnimatedContainer(
-                  duration: const Duration(seconds: 1),
-                  height: 6,
-                  width:
-                      (MediaQuery.of(context).size.width - 88) *
-                      displayProgress,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: AppColors.tealGradient),
-                    borderRadius: BorderRadius.circular(3),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.teal.withValues(alpha: 0.5),
-                        blurRadius: 8,
-                        spreadRadius: 1,
+            
+            const SizedBox(height: 32),
+
+            // Journey Line with Avatars
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final trackWidth = constraints.maxWidth - 28; // Account for avatar size
+                final isRtl = Directionality.of(context) == TextDirection.rtl;
+                
+                return Stack(
+                  clipBehavior: Clip.none,
+                  alignment: isRtl ? Alignment.centerRight : Alignment.centerLeft,
+                  children: [
+                    // Background Track
+                    Container(
+                      height: 4,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(2),
                       ),
-                    ],
-                  ),
-                ),
-              ],
+                    ),
+                    
+                    // Destination Marker
+                    Positioned(
+                      left: isRtl ? -4 : null,
+                      right: isRtl ? null : -4,
+                      child: const Icon(Icons.flag_rounded, color: AppColors.teal, size: 24),
+                    ),
+
+                    // Individual Avatars
+                    ...participantProgress.map((item) {
+                      final p = item['participant'] as OutingParticipant;
+                      final progress = item['progress'] as double;
+                      
+                      return AnimatedPositioned(
+                        duration: const Duration(seconds: 2),
+                        curve: Curves.easeInOut,
+                        left: isRtl ? null : trackWidth * progress,
+                        right: isRtl ? trackWidth * progress : null,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              )
+                            ],
+                            border: Border.all(
+                              color: p.arrived ? AppColors.teal : Colors.white,
+                              width: 2,
+                            ),
+                          ),
+                          child: CircleAvatar(
+                            radius: 12,
+                            backgroundColor: AppColors.getUserColor(p.uid).withOpacity(0.2),
+                            backgroundImage: p.photoUrl != null && p.photoUrl!.isNotEmpty
+                                ? CachedNetworkImageProvider(p.photoUrl!)
+                                : null,
+                            child: p.photoUrl == null || p.photoUrl!.isEmpty
+                                ? Text(
+                                    p.name.isNotEmpty ? p.name[0].toUpperCase() : '?',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.getUserColor(p.uid),
+                                    ),
+                                  )
+                                : null,
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
+                );
+              },
             ),
-            const SizedBox(height: 12),
+
+            const SizedBox(height: 32),
+
+            // Status Text
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "${session.participants.length} friends moving",
+                  arrivedCount == session.participants.length
+                      ? l10n.everyoneArrived
+                      : l10n.arrivedStatusLabel(arrivedCount, session.participants.length),
                   style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: AppColors.slate,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.darkSlate.withOpacity(0.6),
                   ),
                 ),
-                Row(
-                  children: [
-                    Text(
-                      "On my way",
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: AppColors.teal,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    const Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      color: AppColors.teal,
-                      size: 10,
-                    ),
-                  ],
+                Text(
+                  l10n.viewDetails,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.teal,
+                  ),
                 ),
               ],
             ),

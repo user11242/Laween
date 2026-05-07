@@ -1,23 +1,27 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:pin_code_fields/pin_code_fields.dart';
-import 'package:laween/l10n/app_localizations.dart';
-import '../../../auth/data/services/auth_service.dart';
-import '../../../../core/message/app_messenger.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/colors.dart';
 import '../../../../core/utils/numeric_utils.dart';
+import '../../../../core/message/app_messenger.dart';
+import '../../data/services/otp_auth_service.dart';
+import '../../data/services/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../material_pin_field.dart';
 
 class UniversalOtpStep extends StatefulWidget {
   final String destination;
   final VoidCallback onVerified;
-  final bool isLight; // ✅ Added for flexibility
+  final bool isLight;
 
   const UniversalOtpStep({
     super.key,
     required this.destination,
     required this.onVerified,
-    this.isLight = false, // Default to dark for legacy backwards compatibility
+    this.isLight = false,
   });
 
   @override
@@ -26,7 +30,7 @@ class UniversalOtpStep extends StatefulWidget {
 
 class UniversalOtpStepState extends State<UniversalOtpStep> {
   final AuthService _authService = AuthService();
-  late PinInputController otpController;
+  final TextEditingController otpController = TextEditingController();
 
   String? _verificationId;
   int? _resendToken;
@@ -41,7 +45,6 @@ class UniversalOtpStepState extends State<UniversalOtpStep> {
   @override
   void initState() {
     super.initState();
-    otpController = PinInputController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _sendOtp();
     });
@@ -78,21 +81,11 @@ class UniversalOtpStepState extends State<UniversalOtpStep> {
     try {
       if (_isEmail) {
         _generatedEmailOtp = (Random().nextInt(900000) + 100000).toString();
-        _otpExpiry = DateTime.now().add(
-          const Duration(minutes: 10),
-        ); // Set expiry
-        await _authService.sendEmailOtp(
-          widget.destination,
-          _generatedEmailOtp!,
-        );
+        _otpExpiry = DateTime.now().add(const Duration(minutes: 10));
+        await _authService.sendEmailOtp(widget.destination, _generatedEmailOtp!);
         _startCooldown();
         if (!mounted) return;
-        AppMessenger.showSnackBar(
-          context,
-          title: l10n.otpSent,
-          message: l10n.checkInbox,
-          type: MessengerType.success,
-        );
+        AppMessenger.showSnackBar(context, title: l10n.otpSent, message: l10n.checkInbox, type: MessengerType.success);
       } else {
         await _authService.startPhoneVerification(
           phone: widget.destination,
@@ -104,34 +97,19 @@ class UniversalOtpStepState extends State<UniversalOtpStep> {
                 isLoading = false;
               });
               _startCooldown();
-              AppMessenger.showSnackBar(
-                context,
-                title: l10n.smsSent,
-                message: l10n.checkMessages,
-                type: MessengerType.success,
-              );
+              AppMessenger.showSnackBar(context, title: l10n.smsSent, message: l10n.checkMessages, type: MessengerType.success);
             }
           },
           forceResendingToken: _resendToken,
           onError: (err) {
-            AppMessenger.showSnackBar(
-              context,
-              title: l10n.smsError,
-              message: err,
-              type: MessengerType.error,
-            );
+            AppMessenger.showSnackBar(context, title: l10n.smsError, message: err, type: MessengerType.error);
             if (mounted) setState(() => isLoading = false);
           },
         );
       }
     } catch (e) {
       if (!mounted) return;
-      AppMessenger.showSnackBar(
-        context,
-        title: l10n.error,
-        message: e.toString(),
-        type: MessengerType.error,
-      );
+      AppMessenger.showSnackBar(context, title: l10n.error, message: e.toString(), type: MessengerType.error);
     } finally {
       if (_isEmail && mounted) setState(() => isLoading = false);
     }
@@ -143,17 +121,8 @@ class UniversalOtpStepState extends State<UniversalOtpStep> {
     final rawCode = otpController.text.trim();
     final smsCode = NumericUtils.normalize(rawCode);
 
-    debugPrint(
-      "DEBUG: verifyAndSubmit called for ${widget.destination} with code: $smsCode",
-    );
-
     if (smsCode.length != 6) {
-      AppMessenger.showSnackBar(
-        context,
-        title: l10n.inputError,
-        message: l10n.enter6Digits,
-        type: MessengerType.error,
-      );
+      AppMessenger.showSnackBar(context, title: l10n.inputError, message: l10n.enter6Digits, type: MessengerType.error);
       return false;
     }
 
@@ -161,67 +130,32 @@ class UniversalOtpStepState extends State<UniversalOtpStep> {
     try {
       bool success = false;
       if (_isEmail) {
-        debugPrint(
-          "DEBUG: Comparing email OTP: $smsCode vs $_generatedEmailOtp",
-        );
-
-        // CHECK EXPIRY
         if (_otpExpiry != null && DateTime.now().isAfter(_otpExpiry!)) {
-          AppMessenger.showSnackBar(
-            context,
-            title: l10n.error,
-            message: l10n.isAr
-                ? "انتهت صلاحية الرمز. يرجى طلب رمز جديد."
-                : "OTP code has expired. Please request a new one.",
-            type: MessengerType.error,
-          );
+          AppMessenger.showSnackBar(context, title: l10n.error, message: "OTP code has expired.", type: MessengerType.error);
           setState(() => isLoading = false);
           return false;
         }
-
         success = (smsCode == _generatedEmailOtp);
       } else {
         if (_verificationId == null) {
-          debugPrint("DEBUG: Error: _verificationId is null for phone OTP");
-          AppMessenger.showSnackBar(
-            context,
-            title: l10n.error,
-            message: l10n.idMissing,
-            type: MessengerType.error,
-          );
+          AppMessenger.showSnackBar(context, title: l10n.error, message: l10n.idMissing, type: MessengerType.error);
           return false;
         }
-        debugPrint("DEBUG: Verifying phone OTP for ID: $_verificationId");
-        final cred = await _authService.verifySmsCode(
-          verificationId: _verificationId!,
-          smsCode: smsCode,
-        );
+        final cred = await _authService.verifySmsCode(verificationId: _verificationId!, smsCode: smsCode);
         success = (cred != null);
       }
 
-      debugPrint("DEBUG: Verification result: $success");
       if (success) {
         widget.onVerified();
         return true;
       } else {
         if (!mounted) return false;
-        AppMessenger.showSnackBar(
-          context,
-          title: l10n.incorrectCode,
-          message: l10n.pleaseTryAgain,
-          type: MessengerType.error,
-        );
+        AppMessenger.showSnackBar(context, title: l10n.incorrectCode, message: l10n.pleaseTryAgain, type: MessengerType.error);
         return false;
       }
     } catch (e) {
-      debugPrint("DEBUG: OTP verification exception: $e");
       if (!mounted) return false;
-      AppMessenger.showSnackBar(
-        context,
-        title: l10n.error,
-        message: l10n.verificationFailed,
-        type: MessengerType.error,
-      );
+      AppMessenger.showSnackBar(context, title: l10n.error, message: e.toString(), type: MessengerType.error);
       return false;
     } finally {
       if (mounted) setState(() => isLoading = false);
@@ -231,72 +165,124 @@ class UniversalOtpStepState extends State<UniversalOtpStep> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          l10n.enterCodeSentTo(NumericUtils.normalize(widget.destination)),
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: widget.isLight ? Colors.black87 : Colors.white70,
-            fontSize: 16,
-            height: 1.4,
+        // Destination Icon & Text
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: widget.isLight ? AppColors.teal.withOpacity(0.05) : Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(20),
           ),
-        ),
-        const SizedBox(height: 30),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.teal.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  _isEmail ? Icons.email_outlined : Icons.phone_android_rounded,
+                  color: AppColors.teal,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _isEmail ? l10n.verifyEmail : l10n.verifyPhone,
+                      style: TextStyle(
+                        color: widget.isLight ? Colors.black54 : Colors.white60,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      NumericUtils.normalize(widget.destination),
+                      style: TextStyle(
+                        color: widget.isLight ? Colors.black87 : Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ).animate().fadeIn().slideY(begin: 0.1),
+
+        const SizedBox(height: 32),
+
+        // OTP Input Fields
         Directionality(
           textDirection: TextDirection.ltr,
           child: MaterialPinField(
             length: 6,
-            pinController: otpController,
-            keyboardType: TextInputType.number,
-            theme: MaterialPinTheme(
-              shape: MaterialPinShape.outlined,
-              borderRadius: BorderRadius.circular(10),
-              cellSize: const Size(40, 50),
-              borderColor: widget.isLight
-                  ? Colors.black.withValues(alpha: 0.15)
-                  : Colors.white.withValues(alpha: 0.3),
-              focusedBorderColor: AppColors.teal,
-              filledBorderColor: AppColors.teal,
-              fillColor: widget.isLight
-                  ? Colors.grey.withValues(alpha: 0.05)
-                  : Colors.white.withValues(alpha: 0.05),
-              focusedFillColor: AppColors.teal.withValues(alpha: 0.1),
-              filledFillColor: AppColors.teal.withValues(alpha: 0.05),
-              textStyle: TextStyle(
-                color: widget.isLight ? Colors.black : Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-              boxShadows: widget.isLight
-                  ? [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ]
-                  : [],
-            ),
-            inputFormatters: [NumericUtils.digitFormatter],
+            controller: otpController,
+            isLight: widget.isLight,
             onChanged: (v) {
               if (v.length == 6) verifyAndSubmit();
             },
           ),
-        ),
-        TextButton(
-          onPressed: (isLoading || _resendCooldown > 0) ? null : _sendOtp,
-          child: Text(
-            _resendCooldown > 0
-                ? l10n.resendIn(_resendCooldown)
-                : l10n.resendCode,
-            style: TextStyle(
-              color: _resendCooldown > 0
-                  ? (widget.isLight ? Colors.grey.shade600 : Colors.grey)
-                  : AppColors.teal,
+        ).animate().fadeIn(delay: 200.ms).scale(begin: const Offset(0.95, 0.95)),
+
+        const SizedBox(height: 32),
+
+        // Resend Timer / Button
+        if (isLoading)
+          const SizedBox(
+            height: 48,
+            child: Center(
+              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.teal),
             ),
+          )
+        else
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: _resendCooldown > 0
+                ? Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.03),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.timer_outlined, size: 14, color: widget.isLight ? Colors.black45 : Colors.white38),
+                        const SizedBox(width: 8),
+                        Text(
+                          l10n.resendIn(_resendCooldown),
+                          style: TextStyle(
+                            color: widget.isLight ? Colors.black54 : Colors.white54,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : TextButton.icon(
+                    onPressed: _sendOtp,
+                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    label: Text(l10n.resendCode),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.teal,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
           ),
-        ),
+        const SizedBox(height: 10),
       ],
     );
   }

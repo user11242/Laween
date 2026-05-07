@@ -22,7 +22,7 @@ class CreateJoinDialog extends StatelessWidget {
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
+            color: Colors.black.withOpacity(0.15),
             blurRadius: 30,
             offset: const Offset(0, 15),
           ),
@@ -48,7 +48,7 @@ class CreateJoinDialog extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.05),
+                    color: Colors.grey.withOpacity(0.05),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -176,8 +176,8 @@ class _AnimatedOptionCardState extends State<_AnimatedOptionCard>
           widget.onTap();
         },
         borderRadius: BorderRadius.circular(20),
-        highlightColor: Colors.grey.withValues(alpha: 0.05),
-        splashColor: widget.baseColor.withValues(alpha: 0.1),
+        highlightColor: Colors.grey.withOpacity(0.05),
+        splashColor: widget.baseColor.withOpacity(0.1),
         child: AnimatedBuilder(
           animation: _scaleAnimation,
           builder: (context, child) => Transform.scale(
@@ -189,7 +189,7 @@ class _AnimatedOptionCardState extends State<_AnimatedOptionCard>
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
+                    color: Colors.black.withOpacity(0.03),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -202,7 +202,7 @@ class _AnimatedOptionCardState extends State<_AnimatedOptionCard>
                     width: 50,
                     height: 50,
                     decoration: BoxDecoration(
-                      color: widget.baseColor.withValues(alpha: 0.1),
+                      color: widget.baseColor.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(widget.icon, color: widget.baseColor, size: 26),

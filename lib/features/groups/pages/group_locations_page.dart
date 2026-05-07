@@ -80,7 +80,7 @@ class GroupLocationsPage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
+                      color: Colors.black.withOpacity(0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -91,7 +91,7 @@ class GroupLocationsPage extends StatelessWidget {
                   leading: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.teal.withValues(alpha: 0.1),
+                      color: AppColors.teal.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(

@@ -266,7 +266,7 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble>
                   color: hasPlayed
                       ? (widget.isMe ? Colors.white : AppColors.teal)
                       : (widget.isMe
-                          ? Colors.white.withValues(alpha: 0.35)
+                          ? Colors.white.withOpacity(0.35)
                           : Colors.grey.shade300),
                   borderRadius: BorderRadius.circular(2),
                 ),
@@ -300,8 +300,8 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble>
               height: 40,
               decoration: BoxDecoration(
                 color: widget.isMe
-                    ? Colors.white.withValues(alpha: 0.2)
-                    : AppColors.teal.withValues(alpha: 0.1),
+                    ? Colors.white.withOpacity(0.2)
+                    : AppColors.teal.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -356,8 +356,8 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble>
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
               decoration: BoxDecoration(
                 color: widget.isMe
-                    ? Colors.white.withValues(alpha: 0.1)
-                    : AppColors.teal.withValues(alpha: 0.05),
+                    ? Colors.white.withOpacity(0.1)
+                    : AppColors.teal.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(

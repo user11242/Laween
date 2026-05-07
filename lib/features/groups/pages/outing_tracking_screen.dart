@@ -15,6 +15,7 @@ import '../data/models/outing_session_model.dart';
 import '../data/services/outing_service.dart';
 import '../../../core/services/location_service.dart';
 import '../widgets/sos_alarm_overlay.dart';
+import 'package:laween/l10n/app_localizations.dart';
 
 class OutingTrackingScreen extends StatefulWidget {
   final String groupId;
@@ -92,7 +93,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
 
     // Outer glow ring (strong, colored)
     final glowPaint = Paint()
-      ..color = color.withValues(alpha: 0.6)
+      ..color = color.withOpacity(0.6)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
     canvas.drawCircle(Offset(radius, radius), radius - 8, glowPaint);
 
@@ -235,7 +236,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
           icon: BitmapDescriptor.defaultMarkerWithHue(
             BitmapDescriptor.hueOrange,
           ),
-          infoWindow: InfoWindow(title: winner?['name'] ?? "Destination"),
+          infoWindow: InfoWindow(title: winner?['name'] ?? (AppLocalizations.of(context)?.destination ?? "Destination")),
         ),
       );
     }
@@ -489,10 +490,10 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppColors.darkSlate.withValues(alpha: 0.7),
+                        color: AppColors.darkSlate.withOpacity(0.7),
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.1),
+                          color: Colors.white.withOpacity(0.1),
                           width: 1,
                         ),
                       ),
@@ -534,7 +535,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                                      .then().scale(duration: 1000.ms, begin: const Offset(1.2, 1.2), end: const Offset(0.8, 0.8)),
                                     const SizedBox(width: 6),
                                     Text(
-                                      "LIVE TRACKING",
+                                      AppLocalizations.of(context)?.liveTracking ?? "LIVE TRACKING",
                                       style: GoogleFonts.inter(
                                         fontSize: 9,
                                         color: Colors.white70,
@@ -545,7 +546,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                                   ],
                                 ),
                                 Text(
-                                  winner?['name'] ?? "Destination",
+                                  winner?['name'] ?? (AppLocalizations.of(context)?.destination ?? "Destination"),
                                   style: GoogleFonts.outfit(
                                     color: Colors.white,
                                     fontSize: 17,
@@ -562,12 +563,12 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               margin: const EdgeInsets.only(right: 8),
                               decoration: BoxDecoration(
-                                color: AppColors.teal.withValues(alpha: 0.2),
+                                color: AppColors.teal.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: AppColors.teal.withValues(alpha: 0.3)),
+                                border: Border.all(color: AppColors.teal.withOpacity(0.3)),
                               ),
                               child: Text(
-                                "FOLLOWING",
+                                AppLocalizations.of(context)?.following ?? "FOLLOWING",
                                 style: GoogleFonts.outfit(
                                   fontSize: 8,
                                   color: AppColors.teal,
@@ -613,7 +614,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
               _buildETASheet(session, winner),
 
               // --- 4. PRIVACY PILL ---
-              _buildPrivacyPill(),
+              _buildPrivacyPill(context),
             ],
           );
         },
@@ -673,7 +674,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
+                  color: Colors.black.withOpacity(0.15),
                   blurRadius: 30,
                   offset: const Offset(0, -10),
                 ),
@@ -703,7 +704,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      "Friends Arrival Times",
+                      AppLocalizations.of(context)?.friendsArrivalTimes ?? "Friends Arrival Times",
                       style: GoogleFonts.outfit(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -794,7 +795,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
       curve: Curves.easeInOut,
       padding: EdgeInsets.symmetric(vertical: 16, horizontal: isSelected ? 12 : 0),
       decoration: BoxDecoration(
-        color: isSelected ? AppColors.getUserColor(p.uid).withValues(alpha: 0.1) : Colors.transparent,
+        color: isSelected ? AppColors.getUserColor(p.uid).withOpacity(0.1) : Colors.transparent,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -860,7 +861,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                 Row(
                   children: [
                     Text(
-                      p.name + (isMe ? " (You)" : ""),
+                      p.name + (isMe ? " (${AppLocalizations.of(context)?.youLabel ?? 'You'})" : ""),
                       style: GoogleFonts.outfit(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -872,11 +873,11 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: AppColors.getUserColor(p.uid).withValues(alpha: 0.1),
+                          color: AppColors.getUserColor(p.uid).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          "ME",
+                          AppLocalizations.of(context)?.meLabel ?? "ME",
                           style: GoogleFonts.inter(
                             fontSize: 8,
                             fontWeight: FontWeight.w900,
@@ -896,7 +897,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                       width: 120,
                       child: LinearProgressIndicator(
                         value: progress,
-                        backgroundColor: AppColors.getUserColor(p.uid).withValues(alpha: 0.1),
+                        backgroundColor: AppColors.getUserColor(p.uid).withOpacity(0.1),
                         valueColor: AlwaysStoppedAnimation<Color>(AppColors.getUserColor(p.uid)),
                       ),
                     ),
@@ -904,7 +905,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                   const SizedBox(height: 4),
                 ],
                 Text(
-                  isArrived ? "Joined the masterpiece" : "${dist.toStringAsFixed(1)} km left",
+                  isArrived ? (AppLocalizations.of(context)?.joinedMasterpiece ?? "Joined the masterpiece") : "${dist.toStringAsFixed(1)} ${AppLocalizations.of(context)?.kmLeft ?? 'km left'}",
                   style: GoogleFonts.inter(
                     color: Colors.grey.shade500,
                     fontSize: 12,
@@ -920,11 +921,11 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: AppColors.teal.withValues(alpha: 0.1),
+                color: AppColors.teal.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Text(
-                "ARRIVED",
+                AppLocalizations.of(context)?.arrivedStatus ?? "ARRIVED",
                 style: GoogleFonts.inter(
                   fontWeight: FontWeight.w900,
                   fontSize: 10,
@@ -946,7 +947,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.amber.withValues(alpha: 0.3),
+                    color: Colors.amber.withOpacity(0.3),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -965,11 +966,11 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    "min",
+                    AppLocalizations.of(context)?.minLabel ?? "min",
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: Colors.white.withOpacity(0.9),
                     ),
                   ),
                 ],
@@ -980,7 +981,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
     );
   }
 
-  Widget _buildPrivacyPill() {
+  Widget _buildPrivacyPill(BuildContext context) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return const SizedBox();
 
@@ -1007,20 +1008,20 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: isGhost
-                    ? AppColors.darkSlate.withValues(alpha: 0.8)
-                    : AppColors.teal.withValues(alpha: 0.9),
+                    ? AppColors.darkSlate.withOpacity(0.8)
+                    : AppColors.teal.withOpacity(0.9),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
+                    color: Colors.black.withOpacity(0.2),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
                 ],
                 border: Border.all(
                   color: isGhost
-                      ? Colors.white.withValues(alpha: 0.1)
-                      : Colors.white.withValues(alpha: 0.3),
+                      ? Colors.white.withOpacity(0.1)
+                      : Colors.white.withOpacity(0.3),
                 ),
               ),
               child: Row(
@@ -1035,7 +1036,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    isGhost ? "PRIVATE (GHOST)" : "SHARING LOCATION",
+                    isGhost ? (AppLocalizations.of(context)?.privateGhost ?? "PRIVATE (GHOST)") : (AppLocalizations.of(context)?.sharingLocation ?? "SHARING LOCATION"),
                     style: GoogleFonts.outfit(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -1058,10 +1059,8 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
       child: Stack(
         children: [
           // Shimmery Map Placeholder
-          Opacity(
-            opacity: 0.1,
-            child: Container(color: Colors.white),
-          ).animate(onPlay: (controller) => controller.repeat())
+          Container(color: Colors.white.withOpacity(0.1))
+            .animate(onPlay: (controller) => controller.repeat())
             .shimmer(duration: 1500.ms, color: Colors.white24),
           
           // Header Skeleton
@@ -1146,19 +1145,19 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
             height: 50,
             decoration: BoxDecoration(
               color: active
-                  ? AppColors.teal.withValues(alpha: 0.8)
-                  : AppColors.darkSlate.withValues(alpha: 0.6),
+                  ? AppColors.teal.withOpacity(0.8)
+                  : AppColors.darkSlate.withOpacity(0.6),
               shape: BoxShape.circle,
               border: Border.all(
                 color: active
-                    ? Colors.white.withValues(alpha: 0.5)
-                    : Colors.white.withValues(alpha: 0.1),
+                    ? Colors.white.withOpacity(0.5)
+                    : Colors.white.withOpacity(0.1),
                 width: 1,
               ),
               boxShadow: [
                 if (active)
                   BoxShadow(
-                    color: AppColors.teal.withValues(alpha: 0.3),
+                    color: AppColors.teal.withOpacity(0.3),
                     blurRadius: 15,
                     spreadRadius: 2,
                   ),

@@ -45,7 +45,9 @@ class GoogleAuthService {
   Future<void> initialize() async {
     if (!_isInitialized) {
       // In v7.x Initialize must be called exactly once.
-      await _googleSignIn.initialize();
+      await _googleSignIn.initialize(
+        serverClientId: '833749469320-onmofbtb76m40g2o2b33jt79s1u1uhjv.apps.googleusercontent.com',
+      );
       _isInitialized = true;
     }
   }

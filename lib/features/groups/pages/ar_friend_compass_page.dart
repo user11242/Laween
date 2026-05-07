@@ -9,6 +9,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:geomag/geomag.dart';
+import 'package:laween/l10n/app_localizations.dart';
 
 class ArFriendCompassPage extends StatefulWidget {
   final double friendLat;
@@ -37,6 +38,7 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
   bool _isCameraReady = false;
   
   double? _userHeading;
+  double? _headingAccuracy;
   
   Position? _userPosition;
   StreamSubscription? _compassSubscription;
@@ -126,8 +128,7 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
     _compassSubscription = FlutterCompass.events!.listen((event) {
       if (mounted && event.heading != null) {
         setState(() {
-          // Keep internal heading tracking for debug if needed, 
-          // but we rely on _updateFusedHeading now
+          _headingAccuracy = event.accuracy;
         });
       }
     });
@@ -175,7 +176,6 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
           // Weighted filter for smoothness
           _userHeading = _smoothAngle(_userHeading!, trueHeading, 0.15);
         }
-        _lastTrueHeading = trueHeading;
       });
     }
   }
@@ -244,7 +244,7 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
               const CircularProgressIndicator(color: Colors.white),
               const SizedBox(height: 16),
               Text(
-                "Initializing AR Friend Compass...",
+                AppLocalizations.of(context)?.initializingArCompass ?? "Initializing AR Friend Compass...",
                 style: GoogleFonts.outfit(color: Colors.white70, fontSize: 16),
               ),
             ],
@@ -284,25 +284,25 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
     if (widget.friendLastUpdate != null) {
       final age = DateTime.now().difference(widget.friendLastUpdate!);
       if (age.inMinutes >= 2) {
-        warningMessage = "Waiting for updated friend location.";
+        warningMessage = AppLocalizations.of(context)?.waitingForUpdate ?? "Waiting for updated friend location.";
       } else if (age.inSeconds >= 30) {
-        warningMessage = "Friend location may be outdated.";
+        warningMessage = AppLocalizations.of(context)?.locationOutdated ?? "Friend location may be outdated.";
       }
     }
 
     if (warningMessage == null && _headingAccuracy != null && _headingAccuracy! > 30) {
-      warningMessage = "Move phone in a figure-8 to calibrate compass.";
+      warningMessage = AppLocalizations.of(context)?.calibrateCompass ?? "Move phone in a figure-8 to calibrate compass.";
     }
 
     if (warningMessage == null && widget.friendAccuracy != null) {
       double combinedAccuracy = math.sqrt(math.pow(_userPosition!.accuracy, 2) + math.pow(widget.friendAccuracy!, 2));
       if (combinedAccuracy > distance || combinedAccuracy > 15) {
-        warningMessage = "Location accuracy is weak indoors.";
+        warningMessage = AppLocalizations.of(context)?.weakAccuracyIndoors ?? "Location accuracy is weak indoors.";
       }
     }
 
     if (warningMessage == null && distance < 12) {
-      warningMessage = "Nearby — GPS may be inaccurate indoors.";
+      warningMessage = AppLocalizations.of(context)?.nearbyGpsInaccurate ?? "Nearby — GPS may be inaccurate indoors.";
     }
 
     return Scaffold(
@@ -330,7 +330,7 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
                       ),
                       Expanded(
                         child: Text(
-                          "AR FRIEND COMPASS",
+                          AppLocalizations.of(context)?.arFriendCompassTitle ?? "AR FRIEND COMPASS",
                           textAlign: TextAlign.center,
                           style: GoogleFonts.outfit(
                             fontSize: 18,
@@ -369,7 +369,7 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        "away from ${widget.friendName}",
+                        "${AppLocalizations.of(context)?.awayFrom ?? 'away from'} ${widget.friendName}",
                         style: GoogleFonts.outfit(
                           color: Colors.white,
                           fontSize: 16,
@@ -553,12 +553,12 @@ class _ArFriendCompassPageState extends State<ArFriendCompassPage> {
               ),
               child: Text(
                 isOnScreen
-                    ? "✨ Point directly at ${widget.friendName}."
+                    ? "${AppLocalizations.of(context)?.pointAtFriend ?? '✨ Point directly at'} ${widget.friendName}."
                     : relativeBearing.abs() > 135
-                        ? "🔄 ${widget.friendName} is behind you. Turn around."
+                        ? AppLocalizations.of(context)?.friendBehindYou ?? "🔄 Friend is behind you. Turn around."
                         : relativeBearing > 0 
-                            ? "🔄 Turn right to find ${widget.friendName}."
-                            : "🔄 Turn left to find ${widget.friendName}.",
+                            ? "${AppLocalizations.of(context)?.turnRightToFind ?? '🔄 Turn right to find'} ${widget.friendName}."
+                            : "${AppLocalizations.of(context)?.turnLeftToFind ?? '🔄 Turn left to find'} ${widget.friendName}.",
                 textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
                   color: isOnScreen ? Colors.green.shade300 : Colors.amber.shade300,

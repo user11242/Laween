@@ -11,6 +11,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../data/models/outing_session_model.dart';
 import '../data/services/outing_service.dart';
 import '../pages/outing_map_screen.dart';
+import 'package:laween/l10n/app_localizations.dart';
 
 class OutingWaitingRoomSheet extends StatefulWidget {
   final String groupId;
@@ -27,6 +28,7 @@ class OutingWaitingRoomSheet extends StatefulWidget {
 }
 
 class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
+  bool get isAr => AppLocalizations.of(context)?.isAr ?? false;
   final OutingService _outingService = OutingService();
   int _totalGroupMembers = 1;
   Timer? _timer;
@@ -84,10 +86,10 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
       filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.9),
+          color: Colors.white.withOpacity(0.9),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.5),
+            color: Colors.white.withOpacity(0.5),
             width: 1.5,
           ),
         ),
@@ -139,7 +141,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
             if (session.status == OutingStatus.cancelled) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted && _errorMessage == null) {
-                  _showError("Session cancelled: Not enough participants joined.");
+                  _showError(AppLocalizations.of(context)?.sessionCancelledNoParticipants ?? "Session cancelled: Not enough participants joined.");
                   // Delay closure so user can read the message
                   Future.delayed(const Duration(seconds: 3), () {
                     if (context.mounted && Navigator.canPop(context)) {
@@ -176,7 +178,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                   height: 5,
                   margin: const EdgeInsets.only(bottom: 24),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.2),
+                    color: Colors.grey.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
@@ -196,7 +198,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                             width: 14,
                             height: 14,
                             decoration: BoxDecoration(
-                              color: Colors.redAccent.withValues(alpha: 0.3),
+                              color: Colors.redAccent.withOpacity(0.3),
                               shape: BoxShape.circle,
                             ),
                           )
@@ -223,7 +225,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Outing Waiting Room",
+                            AppLocalizations.of(context)?.outingWaitingRoom ?? "Outing Waiting Room",
                             style: GoogleFonts.outfit(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -239,11 +241,11 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.redAccent.withValues(alpha: 0.1),
+                                  color: Colors.redAccent.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
-                                  "LIVE",
+                                  AppLocalizations.of(context)?.live ?? "LIVE",
                                   style: GoogleFonts.inter(
                                     fontSize: 8,
                                     fontWeight: FontWeight.w900,
@@ -254,7 +256,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                "Session #${widget.sessionId.substring(0, 4).toUpperCase()}",
+                                "${AppLocalizations.of(context)?.sessionNumber ?? 'Session #'} ${widget.sessionId.substring(0, 4).toUpperCase()}",
                                 style: GoogleFonts.inter(
                                   fontSize: 12,
                                   color: Colors.grey.shade400,
@@ -281,17 +283,17 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(36),
                       border: Border.all(
-                        color: Colors.black.withValues(alpha: 0.05),
+                        color: Colors.black.withOpacity(0.05),
                         width: 1,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
+                          color: Colors.black.withOpacity(0.05),
                           blurRadius: 30,
                           offset: const Offset(0, 15),
                         ),
                         BoxShadow(
-                          color: AppColors.teal.withValues(alpha: 0.03),
+                          color: AppColors.teal.withOpacity(0.03),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -308,7 +310,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                               height: 160,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: AppColors.teal.withValues(alpha: 0.02),
+                                color: AppColors.teal.withOpacity(0.02),
                               ),
                             )
                                 .animate(onPlay: (c) => c.repeat())
@@ -344,7 +346,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                                     vertical: 6,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppColors.teal.withValues(alpha: 0.08),
+                                    color: AppColors.teal.withOpacity(0.08),
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Row(
@@ -357,7 +359,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
-                                        "${session.participants.length} / $_totalGroupMembers Members Joined",
+                                        "${session.participants.length} / $_totalGroupMembers ${AppLocalizations.of(context)?.membersJoined ?? 'Members Joined'}",
                                         style: GoogleFonts.inter(
                                           fontSize: 12,
                                           fontWeight: FontWeight.bold,
@@ -385,11 +387,11 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: AppColors.teal.withValues(alpha: 0.3),
+                          color: AppColors.teal.withOpacity(0.3),
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.03),
+                            color: Colors.black.withOpacity(0.03),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -400,7 +402,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.teal.withValues(alpha: 0.1),
+                              color: AppColors.teal.withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -415,7 +417,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "TARGET DESTINATION",
+                                  AppLocalizations.of(context)?.targetDestination ?? "TARGET DESTINATION",
                                   style: GoogleFonts.inter(
                                     fontSize: 10,
                                     color: Colors.grey.shade400,
@@ -446,8 +448,8 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                       children: [
                         _buildActionTile(
                           context,
-                          "Outing Mode",
-                          session.calculationMode,
+                          AppLocalizations.of(context)?.outingMode ?? "Outing Mode",
+                          _getLocalizedValue(session.calculationMode, context),
                           Icons.timer_outlined,
                           ['Time', 'KM'],
                           AppColors.teal,
@@ -460,8 +462,8 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                         const SizedBox(width: 16),
                         _buildActionTile(
                           context,
-                          "Discovering",
-                          session.category,
+                          AppLocalizations.of(context)?.discovering ?? "Discovering",
+                          _getLocalizedValue(session.category, context),
                           Icons.explore_outlined,
                           [
                             'Restaurant',
@@ -487,7 +489,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      "PARTICIPANTS",
+                      AppLocalizations.of(context)?.participantsLabel ?? "PARTICIPANTS",
                       style: GoogleFonts.outfit(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -526,7 +528,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                                           ),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: userColor.withValues(alpha: 0.15),
+                                              color: userColor.withOpacity(0.15),
                                               blurRadius: 12,
                                               spreadRadius: 2,
                                             ),
@@ -535,7 +537,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                                         child: CircleAvatar(
                                           radius: 28,
                                           backgroundColor:
-                                              userColor.withValues(alpha: 0.12),
+                                              userColor.withOpacity(0.12),
                                           backgroundImage: p.photoUrl != null &&
                                                   p.photoUrl!.isNotEmpty
                                               ? NetworkImage(p.photoUrl!)
@@ -578,7 +580,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                                   const SizedBox(height: 10),
                                   Text(
                                     isMe
-                                        ? "You"
+                                        ? (AppLocalizations.of(context)?.youLabel ?? "You")
                                         : (p.name.isNotEmpty
                                             ? p.name.split(' ')[0]
                                             : 'User'),
@@ -620,7 +622,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.redAccent.withValues(alpha: 0.3),
+                    color: Colors.redAccent.withOpacity(0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -675,7 +677,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                             foregroundColor: Colors.redAccent,
                           ),
                           child: Text(
-                            "Leave Session",
+                            AppLocalizations.of(context)?.leaveSession ?? "Leave Session",
                             style: GoogleFonts.outfit(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -697,7 +699,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.teal.withValues(alpha: 0.3),
+                                  color: AppColors.teal.withOpacity(0.3),
                                   blurRadius: 15,
                                   offset: const Offset(0, 8),
                                 ),
@@ -706,7 +708,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                             child: ElevatedButton(
                               onPressed: () {
                                 if (session.participants.length < 2) {
-                                  _showError("You need at least 2 people to start an outing!");
+                                  _showError(AppLocalizations.of(context)?.needAtLeast2People ?? "You need at least 2 people to start an outing!");
                                   return;
                                 }
                                 _outingService.updateStatus(
@@ -727,7 +729,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    "Start Journey Now",
+                                    AppLocalizations.of(context)?.startJourneyNow ?? "Start Journey Now",
                                     style: GoogleFonts.outfit(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
@@ -770,7 +772,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -808,7 +810,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.9),
+                  color: Colors.white.withOpacity(0.9),
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(40),
                   ),
@@ -820,13 +822,13 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                       width: 45,
                       height: 5,
                       decoration: BoxDecoration(
-                        color: Colors.grey.withValues(alpha: 0.2),
+                        color: Colors.grey.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(3),
                       ),
                     ),
                     const SizedBox(height: 32),
                     Text(
-                      "Select $label",
+                      isAr ? "اختر $label" : "Select $label",
                       style: GoogleFonts.outfit(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -855,7 +857,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
                             ),
                             child: Center(
                               child: Text(
-                                opt,
+                                _getLocalizedValue(opt, context),
                                 style: GoogleFonts.outfit(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -878,10 +880,10 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+            border: Border.all(color: Colors.black.withOpacity(0.05)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
+                color: Colors.black.withOpacity(0.03),
                 blurRadius: 15,
                 offset: const Offset(0, 8),
               ),
@@ -893,7 +895,7 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.1),
+                  color: accentColor.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, size: 18, color: accentColor),
@@ -922,5 +924,29 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
         ),
       ),
     );
+  }
+
+  String _getLocalizedValue(String value, BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    switch (value) {
+      case 'Time':
+        return l10n?.timeLabel ?? value;
+      case 'KM':
+        return l10n?.kmLabel ?? value;
+      case 'Restaurant':
+        return l10n?.restaurant ?? value;
+      case 'Cafe':
+        return l10n?.cafe ?? value;
+      case 'Park':
+        return l10n?.park ?? value;
+      case 'Mall':
+        return l10n?.mall ?? value;
+      case 'Sporty':
+        return l10n?.sporty ?? value;
+      case 'Cinema':
+        return l10n?.cinema ?? value;
+      default:
+        return value;
+    }
   }
 }

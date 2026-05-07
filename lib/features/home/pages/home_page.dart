@@ -14,22 +14,25 @@ import '../widgets/recent_group_card.dart';
 import '../../groups/pages/create_group_page.dart';
 import '../../groups/pages/join_group_page.dart';
 import '../../groups/pages/global_outings_history_page.dart';
+import '../../groups/pages/explore_map_page.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final int initialIndex;
+  const HomePage({super.key, this.initialIndex = 0});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  int _currentIndex = 0;
+  late int _currentIndex;
   late Stream<int> _totalUnreadStream;
   final _auth = FirebaseAuth.instance;
 
   @override
   void initState() {
     super.initState();
+    _currentIndex = widget.initialIndex;
     _initUnreadStream();
   }
 
@@ -66,7 +69,7 @@ class _HomePageState extends State<HomePage> {
     final List<Widget> pages = [
       _buildHomeContent(user),
       const GroupsPage(),
-      _buildHomeContent(user), // Placeholder for Favorite
+      const GlobalOutingsHistoryPage(showFavoritesOnly: true),
       const ProfilePage(),
     ];
 
@@ -79,7 +82,7 @@ class _HomePageState extends State<HomePage> {
           color: isDark ? const Color(0xFF1F1F1F) : Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
+              color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
               blurRadius: 10,
               offset: const Offset(0, -5),
             ),
@@ -163,7 +166,7 @@ class _HomePageState extends State<HomePage> {
                   height: 300,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFF6366F1).withValues(alpha: 0.08),
+                    color: const Color(0xFF6366F1).withOpacity(0.08),
                   ),
                 ),
               )
@@ -179,7 +182,7 @@ class _HomePageState extends State<HomePage> {
               height: 250,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.teal.withValues(alpha: 0.05),
+                color: AppColors.teal.withOpacity(0.05),
               ),
             ),
           ).animate().fadeIn(delay: 500.ms, duration: 2.seconds),
@@ -203,7 +206,7 @@ class _HomePageState extends State<HomePage> {
 
                   // 4. QUICK ACTIONS GRID (2x2)
                   Text(
-                    l10n.isAr ? "الإجراءات السريعة" : "Quick Actions",
+                    l10n.quickActions,
                     style: GoogleFonts.inter(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -221,7 +224,7 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        l10n.isAr ? "النشطة مؤخراً" : "Recently Active",
+                        l10n.recentActivity,
                         style: GoogleFonts.inter(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -231,9 +234,9 @@ class _HomePageState extends State<HomePage> {
                       TextButton(
                         onPressed: () => setState(() => _currentIndex = 1),
                         child: Text(
-                          l10n.isAr ? "عرض الكل" : "See All",
+                          l10n.viewAll,
                           style: GoogleFonts.inter(
-                            color: AppColors.teal.withValues(alpha: 0.8),
+                            color: AppColors.teal.withOpacity(0.8),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -299,12 +302,12 @@ class _HomePageState extends State<HomePage> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: AppColors.slate.withValues(alpha: 0.1),
+                  color: AppColors.slate.withOpacity(0.1),
                   width: 2,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: Colors.black.withOpacity(0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -338,7 +341,7 @@ class _HomePageState extends State<HomePage> {
   String _getGreeting(AppLocalizations l10n) {
     final hour = DateTime.now().hour;
     if (hour < 12) return l10n.isAr ? "صباح الخير" : "Good Morning";
-    if (hour < 17) return l10n.isAr ? "مساء الخير" : "Good Afternoon";
+    if (hour < 18) return l10n.isAr ? "مساء الخير" : "Good Afternoon";
     return l10n.isAr ? "مساء الخير" : "Good Evening";
   }
 
@@ -346,7 +349,7 @@ class _HomePageState extends State<HomePage> {
     final l10n = AppLocalizations.of(context)!;
     final List<Map<String, dynamic>> actions = [
       {
-        "title": l10n.isAr ? "إنشاء مجموعة" : "Create Group",
+        "title": l10n.createGroup,
         "icon": Icons.add_circle_outline_rounded,
         "color": const Color(0xFF6366F1), // Indigo
         "onTap": () {
@@ -357,7 +360,7 @@ class _HomePageState extends State<HomePage> {
         },
       },
       {
-        "title": l10n.isAr ? "الانضمام لمجموعة" : "Join Group",
+        "title": l10n.joinGroup,
         "icon": Icons.qr_code_scanner_rounded,
         "color": AppColors.teal,
         "onTap": () {
@@ -368,7 +371,7 @@ class _HomePageState extends State<HomePage> {
         },
       },
       {
-        "title": l10n.isAr ? "سجل الخرجات" : "Outings History",
+        "title": l10n.outingsHistory,
         "icon": Icons.history_rounded,
         "color": const Color(0xFFF59E0B),
         "onTap": () {
@@ -379,10 +382,15 @@ class _HomePageState extends State<HomePage> {
         },
       },
       {
-        "title": l10n.isAr ? "البحث العام" : "Global Search",
-        "icon": Icons.search_rounded,
+        "title": l10n.isAr ? "استكشاف الخريطة" : "Explore Map",
+        "icon": Icons.map_rounded,
         "color": const Color(0xFFEC4899),
-        "onTap": () {},
+        "onTap": () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ExploreMapPage()),
+          );
+        },
       },
     ];
 
@@ -406,12 +414,12 @@ class _HomePageState extends State<HomePage> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: AppColors.slate.withValues(alpha: 0.1),
+                color: AppColors.slate.withOpacity(0.1),
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
+                  color: Colors.black.withOpacity(0.05),
                   blurRadius: 15,
                   offset: const Offset(0, 5),
                 ),
@@ -424,7 +432,7 @@ class _HomePageState extends State<HomePage> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: (action['color'] as Color).withValues(alpha: 0.15),
+                    color: (action['color'] as Color).withOpacity(0.15),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -460,6 +468,7 @@ class _HomePageState extends State<HomePage> {
           .limit(3)
           .snapshots(),
       builder: (context, snapshot) {
+        final l10n = AppLocalizations.of(context)!;
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Container(
             padding: const EdgeInsets.symmetric(vertical: 40),
@@ -469,11 +478,11 @@ class _HomePageState extends State<HomePage> {
                 Icon(
                   Icons.chat_bubble_outline_rounded,
                   size: 48,
-                  color: AppColors.slate.withValues(alpha: 0.3),
+                  color: AppColors.slate.withOpacity(0.3),
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  "No recent activity",
+                  l10n.noRecentActivity,
                   style: GoogleFonts.inter(color: AppColors.slate),
                 ),
               ],

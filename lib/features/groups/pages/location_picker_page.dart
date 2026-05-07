@@ -192,7 +192,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.teal.withValues(alpha: 0.4),
+                              color: AppColors.teal.withOpacity(0.4),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
@@ -232,7 +232,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
+                        color: Colors.black.withOpacity(0.1),
                         blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),
@@ -284,7 +284,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
+                          color: Colors.black.withOpacity(0.08),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -329,7 +329,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                   color: Colors.white,
                   shape: BoxShape.circle,
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 8),
+                    BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 8),
                   ],
                 ),
                 child: const Icon(Icons.my_location, color: AppColors.teal, size: 22),
@@ -349,7 +349,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
+                    color: Colors.black.withOpacity(0.08),
                     blurRadius: 16,
                     offset: const Offset(0, -4),
                   ),
@@ -363,7 +363,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: AppColors.teal.withValues(alpha: 0.1),
+                          color: AppColors.teal.withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.location_on, color: AppColors.teal, size: 18),
@@ -404,7 +404,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                         borderRadius: BorderRadius.circular(14),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.teal.withValues(alpha: 0.35),
+                            color: AppColors.teal.withOpacity(0.35),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),

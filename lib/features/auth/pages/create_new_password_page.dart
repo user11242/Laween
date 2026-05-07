@@ -89,7 +89,7 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
                         children: [
                           Container(
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
+                              color: Colors.white.withOpacity(0.2),
                               shape: BoxShape.circle,
                             ),
                             child: IconButton(
@@ -140,7 +140,7 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
                         width: 140,
                         height: 140,
                         decoration: BoxDecoration(
-                          color: AppColors.teal.withValues(alpha: 0.05),
+                          color: AppColors.teal.withOpacity(0.05),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -148,7 +148,7 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
                         width: 100,
                         height: 100,
                         decoration: BoxDecoration(
-                          color: AppColors.teal.withValues(alpha: 0.1),
+                          color: AppColors.teal.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Icon(

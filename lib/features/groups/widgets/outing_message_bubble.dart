@@ -14,6 +14,9 @@ import '../pages/location_picker_screen.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../pages/outing_memory_upload_screen.dart';
+import '../pages/history_detail_page.dart';
+import 'package:laween/l10n/app_localizations.dart';
 
 class OutingMessageBubble extends StatefulWidget {
   final MessageModel message;
@@ -151,6 +154,22 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
               OutingMapScreen(groupId: widget.groupId, sessionId: session.id),
         ),
       );
+    } else if (session.status == OutingStatus.finished) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              OutingMemoryUploadScreen(session: session),
+        ),
+      );
+    } else if (session.status == OutingStatus.archived) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              HistoryDetailPage(session: session),
+        ),
+      );
     }
   }
 
@@ -205,7 +224,7 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
                           BoxShadow(
                             color: const Color(
                               0xFFFFD700,
-                            ).withValues(alpha: 0.3),
+                            ).withOpacity(0.3),
                             blurRadius: 30,
                             spreadRadius: 5,
                           ),
@@ -227,9 +246,9 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
           onTap: () {
             if (!canAccess) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
+                SnackBar(
                   content: Text(
-                    "Session closed. Only participants can view details.",
+                    AppLocalizations.of(context)!.onlyParticipantsDetails,
                   ),
                 ),
               );
@@ -249,7 +268,7 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
                   : null,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
+                  color: Colors.black.withOpacity(0.1),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -275,7 +294,7 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        "Outing Session",
+                        AppLocalizations.of(context)!.outingSession,
                         style: GoogleFonts.inter(
                           fontSize: 18,
                           fontWeight: FontWeight.w900,
@@ -291,7 +310,7 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
                   children: [
                     if (isWaiting && !_remaining.isNegative) ...[
                       Text(
-                        "Live",
+                        AppLocalizations.of(context)!.liveLabel,
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
@@ -306,7 +325,7 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
                         ),
                       ),
                       Text(
-                        "${_remaining.inMinutes}:${(_remaining.inSeconds % 60).toString().padLeft(2, '0')} min remaining",
+                        AppLocalizations.of(context)!.minRemaining(_remaining.inMinutes),
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           color: Colors.grey.shade600,
@@ -315,7 +334,7 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
                       ),
                     ] else if (isCompleted) ...[
                       Text(
-                            "Destination Locked",
+                            AppLocalizations.of(context)!.destinationLocked,
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -325,11 +344,29 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
                           .animate(onPlay: (c) => c.repeat())
                           .shimmer(
                             duration: 2000.ms,
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: Colors.white.withOpacity(0.5),
                           ),
+                    ] else if (session.status == OutingStatus.finished) ...[
+                      Text(
+                        AppLocalizations.of(context)!.collectingMemories,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange,
+                        ),
+                      ),
+                    ] else if (session.status == OutingStatus.archived) ...[
+                      Text(
+                        AppLocalizations.of(context)!.savedInHistory,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blueGrey,
+                        ),
+                      ),
                     ] else ...[
                       Text(
-                        "Expired",
+                        AppLocalizations.of(context)!.expired,
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
@@ -370,8 +407,14 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
                             ),
                             child: Text(
                               isCelebration
-                                  ? "Celebrate!"
-                                  : (isCompleted ? "Winner" : "Join"),
+                                  ? AppLocalizations.of(context)!.celebrateLabel
+                                  : (isCompleted
+                                      ? AppLocalizations.of(context)!.winnerLabel
+                                      : (session.status == OutingStatus.finished
+                                          ? AppLocalizations.of(context)!.memoriesLabel
+                                          : (session.status == OutingStatus.archived
+                                              ? AppLocalizations.of(context)!.recapLabel
+                                              : AppLocalizations.of(context)!.joinLabel))),
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -384,7 +427,7 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
                           )
                           .shimmer(
                             duration: isCelebration ? 1500.ms : 0.ms,
-                            color: Colors.white.withValues(alpha: 0.3),
+                            color: Colors.white.withOpacity(0.3),
                           ),
                 ),
               ],
@@ -405,7 +448,7 @@ class _OutingMessageBubbleState extends State<OutingMessageBubble>
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
+                            color: Colors.black.withOpacity(0.2),
                             blurRadius: 8,
                           ),
                         ],

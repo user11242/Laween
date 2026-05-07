@@ -170,12 +170,12 @@ class _MessengerOverlayState extends State<_MessengerOverlay> {
             color: widget.primaryColor,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.25),
+              color: Colors.white.withOpacity(0.25),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: widget.primaryColor.withValues(alpha: 0.3),
+                color: widget.primaryColor.withOpacity(0.3),
                 blurRadius: 30,
                 offset: const Offset(0, 10),
               ),
@@ -186,7 +186,7 @@ class _MessengerOverlayState extends State<_MessengerOverlay> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: Colors.white.withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(widget.icon, color: Colors.white, size: 24),
@@ -209,7 +209,7 @@ class _MessengerOverlayState extends State<_MessengerOverlay> {
                     Text(
                       widget.message,
                       style: GoogleFonts.inter(
-                        color: Colors.white.withValues(alpha: 0.9),
+                        color: Colors.white.withOpacity(0.9),
                         fontSize: 13,
                         height: 1.4,
                         fontWeight: FontWeight.w500,
@@ -222,7 +222,7 @@ class _MessengerOverlayState extends State<_MessengerOverlay> {
               IconButton(
                 icon: Icon(
                   Icons.close,
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: Colors.white.withOpacity(0.7),
                   size: 18,
                 ),
                 onPressed: _close,

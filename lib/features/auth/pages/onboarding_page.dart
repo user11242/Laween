@@ -165,10 +165,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withValues(alpha: 0.2),
-                    Colors.black.withValues(alpha: 0.35),
-                    Colors.black.withValues(alpha: 0.65),
-                    Colors.black.withValues(alpha: 0.9),
+                    Colors.black.withOpacity(0.2),
+                    Colors.black.withOpacity(0.35),
+                    Colors.black.withOpacity(0.65),
+                    Colors.black.withOpacity(0.9),
                   ],
                   stops: const [0.0, 0.4, 0.7, 1.0],
                 ),
@@ -193,10 +193,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
+                  color: Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.3),
+                    color: Colors.white.withOpacity(0.3),
                   ),
                 ),
                 child: Row(
@@ -250,12 +250,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     style: loc.isAr
                         ? GoogleFonts.cairo(
                             fontSize: 20,
-                            color: Colors.white.withValues(alpha: 0.9),
+                            color: Colors.white.withOpacity(0.9),
                             height: 1.5,
                           )
                         : GoogleFonts.nunito(
                             fontSize: 17,
-                            color: Colors.white.withValues(alpha: 0.9),
+                            color: Colors.white.withOpacity(0.9),
                             height: 1.5,
                           ),
                   ),
@@ -266,12 +266,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     style: loc.isAr
                         ? GoogleFonts.cairo(
                             fontSize: 17,
-                            color: Colors.white.withValues(alpha: 0.7),
+                            color: Colors.white.withOpacity(0.7),
                             height: 1.5,
                           )
                         : GoogleFonts.nunito(
                             fontSize: 15,
-                            color: Colors.white.withValues(alpha: 0.7),
+                            color: Colors.white.withOpacity(0.7),
                             height: 1.5,
                           ),
                   ),

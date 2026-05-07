@@ -1,4 +1,4 @@
-package com.company.laween
+package com.compay.laween
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

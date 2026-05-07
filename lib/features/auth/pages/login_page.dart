@@ -110,28 +110,28 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             // ── 1. Organic gradient blobs ──
             _AnimatedBlob(
               controller: _breatheController,
-              top: -screenH * 0.12,
-              right: -80,
-              size: screenH * 0.42,
+              top: -screenH * 0.15,
+              right: -screenH * 0.1,
+              size: screenH * 0.5,
               color: AppColors.teal,
-              baseOpacity: 0.08,
+              baseOpacity: 0.12,
             ),
             _AnimatedBlob(
               controller: _breatheController,
-              bottom: screenH * 0.15,
-              left: -100,
-              size: screenH * 0.35,
+              bottom: -screenH * 0.1,
+              left: -screenH * 0.1,
+              size: screenH * 0.45,
               color: AppColors.tealLight,
-              baseOpacity: 0.06,
+              baseOpacity: 0.1,
               reversed: true,
             ),
             _AnimatedBlob(
               controller: _breatheController,
-              top: screenH * 0.4,
-              right: -60,
-              size: screenH * 0.18,
+              top: screenH * 0.35,
+              left: -screenH * 0.05,
+              size: screenH * 0.2,
               color: const Color(0xFF6C63FF),
-              baseOpacity: 0.04,
+              baseOpacity: 0.05,
             ),
 
             // ── 2. Scrollable Content ──
@@ -156,31 +156,34 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           scale: _logoScale,
                           child: FadeTransition(
                             opacity: _logoFade,
-                            child: Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(24),
-                                color: Colors.white,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.teal.withValues(alpha: 0.15),
-                                    blurRadius: 32,
-                                    spreadRadius: 0,
-                                    offset: const Offset(0, 8),
+                            child: Hero(
+                              tag: 'app_logo',
+                              child: Container(
+                                width: 90,
+                                height: 90,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(26),
+                                  color: Colors.white,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.teal.withOpacity(0.2),
+                                      blurRadius: 40,
+                                      spreadRadius: 0,
+                                      offset: const Offset(0, 12),
+                                    ),
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 15,
+                                      offset: const Offset(0, 5),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(26),
+                                  child: Image.asset(
+                                    'assets/logo/Laween_transparent_iphone.png',
+                                    fit: BoxFit.cover,
                                   ),
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.04),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(24),
-                                child: Image.asset(
-                                  'assets/logo/Laween_transparent_iphone.png',
-                                  fit: BoxFit.cover,
                                 ),
                               ),
                             ),
@@ -233,20 +236,21 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                             child: Container(
                               padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
                               decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(28),
+                                color: Colors.white.withOpacity(0.95),
+                                borderRadius: BorderRadius.circular(32),
+                                border: Border.all(color: Colors.white.withOpacity(0.5)),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.04),
-                                    blurRadius: 32,
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 40,
                                     spreadRadius: 0,
-                                    offset: const Offset(0, 8),
+                                    offset: const Offset(0, 10),
                                   ),
                                   BoxShadow(
-                                    color: AppColors.teal.withValues(alpha: 0.03),
-                                    blurRadius: 48,
+                                    color: AppColors.teal.withOpacity(0.04),
+                                    blurRadius: 60,
                                     spreadRadius: 0,
-                                    offset: const Offset(0, 16),
+                                    offset: const Offset(0, 20),
                                   ),
                                 ],
                               ),
@@ -272,7 +276,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 child: IconButton(
                   onPressed: () => Navigator.pop(context),
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.white.withValues(alpha: 0.8),
+                    backgroundColor: Colors.white.withOpacity(0.8),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -341,8 +345,8 @@ class _AnimatedBlob extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    color.withValues(alpha: opacity),
-                    color.withValues(alpha: 0.0),
+                    color.withOpacity(opacity),
+                    color.withOpacity(0.0),
                   ],
                   stops: const [0.0, 0.85],
                 ),

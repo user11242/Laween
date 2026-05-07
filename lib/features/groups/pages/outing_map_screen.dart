@@ -24,6 +24,7 @@ import '../../../core/services/google_maps_service.dart';
 import '../widgets/sos_alarm_overlay.dart';
 import 'ar_friend_compass_page.dart';
 import 'receipt_splitter_screen.dart';
+import 'package:laween/l10n/app_localizations.dart';
 
 class OutingMapScreen extends StatefulWidget {
   final String groupId;
@@ -180,14 +181,14 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
 
     // Outer glow ring — stronger when this member is the selected metric member
     final glowPaint = Paint()
-      ..color = color.withValues(alpha: isSelected ? 0.9 : 0.6)
+      ..color = color.withOpacity(isSelected ? 0.9 : 0.6)
       ..maskFilter = MaskFilter.blur(BlurStyle.normal, isSelected ? 22 : 14);
     canvas.drawCircle(Offset(radius, radius), radius - 6, glowPaint);
 
     // Extra white pulse ring for selected state
     if (isSelected) {
       final pulsePaint = Paint()
-        ..color = Colors.white.withValues(alpha: 0.55)
+        ..color = Colors.white.withOpacity(0.55)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 5;
       canvas.drawCircle(Offset(radius, radius), radius - 2, pulsePaint);
@@ -283,7 +284,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
 
     // Outer glow (More subtle)
     final glowPaint = Paint()
-      ..color = (isSelected ? AppColors.teal : Colors.pinkAccent).withValues(alpha: 0.3)
+      ..color = (isSelected ? AppColors.teal : Colors.pinkAccent).withOpacity(0.3)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
     canvas.drawCircle(Offset(radius, radius), radius - 8, glowPaint);
 
@@ -401,11 +402,11 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
   Widget _buildMapControl({required IconData icon, required VoidCallback onTap}) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
+        color: Colors.white.withOpacity(0.9),
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -745,7 +746,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
         borderRadius: BorderRadius.zero,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -765,12 +766,12 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
               child: Row(
                 children: [
                   _buildPillTab(
-                    label: '📍 Places',
+                    label: AppLocalizations.of(context)?.placesTab ?? '📍 Places',
                     selected: !_showChat,
                     onTap: () => setState(() => _showChat = false),
                   ),
                   _buildPillTab(
-                    label: '💬 Chat',
+                    label: AppLocalizations.of(context)?.chatTab ?? '💬 Chat',
                     selected: _showChat,
                     onTap: () => setState(() => _showChat = true),
                   ),
@@ -821,7 +822,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
             boxShadow: selected
                 ? [
                     BoxShadow(
-                      color: AppColors.teal.withValues(alpha: 0.25),
+                      color: AppColors.teal.withOpacity(0.25),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     )
@@ -870,7 +871,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
               if (messages.isEmpty) {
                 return Center(
                   child: Text(
-                    'No messages yet.\nBe the first to say hi! 👋',
+                    AppLocalizations.of(context)?.noMessagesYet ?? 'No messages yet.\nBe the first to say hi! 👋',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
                         fontSize: 13, color: Colors.grey.shade400),
@@ -905,7 +906,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                         if (!isMe) ...[
                           CircleAvatar(
                             radius: 12,
-                            backgroundColor: userColor.withValues(alpha: 0.15),
+                            backgroundColor: userColor.withOpacity(0.15),
                             backgroundImage: msg.senderPhotoUrl != null &&
                                     msg.senderPhotoUrl!.isNotEmpty
                                 ? NetworkImage(msg.senderPhotoUrl!)
@@ -941,7 +942,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                               ),
                               border: !isMe
                                   ? Border.all(
-                                      color: userColor.withValues(alpha: 0.3),
+                                      color: userColor.withOpacity(0.3),
                                       width: 1.5)
                                   : null,
                             ),
@@ -959,7 +960,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                   ),
                                 Text(
                                   msg.type == 'voice'
-                                      ? '🎤 Voice message'
+                                      ? (AppLocalizations.of(context)?.voiceMessage ?? '🎤 Voice message')
                                       : msg.text,
                                   style: GoogleFonts.inter(
                                     fontSize: 13,
@@ -999,7 +1000,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                   onSubmitted: (_) => _sendMessage(uid),
                   style: GoogleFonts.inter(fontSize: 14),
                   decoration: InputDecoration(
-                    hintText: 'Say something...',
+                    hintText: AppLocalizations.of(context)?.saySomething ?? 'Say something...',
                     hintStyle: GoogleFonts.inter(
                         fontSize: 13, color: Colors.grey.shade400),
                     contentPadding: const EdgeInsets.symmetric(
@@ -1128,7 +1129,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              hasVotedForThis ? "Unvote" : "Vote Now",
+                              hasVotedForThis ? (AppLocalizations.of(context)?.unvote ?? "Unvote") : (AppLocalizations.of(context)?.voteNow ?? "Vote Now"),
                               style: GoogleFonts.inter(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -1175,18 +1176,18 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: isSelected ? AppColors.teal.withValues(alpha: 0.3) : Colors.grey.shade100,
+                    color: isSelected ? AppColors.teal.withOpacity(0.3) : Colors.grey.shade100,
                     width: 1.5,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
+                      color: Colors.black.withOpacity(0.03),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
                     if (isSelected)
                       BoxShadow(
-                        color: AppColors.teal.withValues(alpha: 0.1),
+                        color: AppColors.teal.withOpacity(0.1),
                         blurRadius: 15,
                         offset: const Offset(0, 8),
                       )
@@ -1215,7 +1216,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: isSelected ? AppColors.teal.withValues(alpha: 0.1) : AppColors.darkSlate.withValues(alpha: 0.05),
+                                  color: isSelected ? AppColors.teal.withOpacity(0.1) : AppColors.darkSlate.withOpacity(0.05),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
@@ -1314,7 +1315,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                       metricLabel = '${distKm.toStringAsFixed(1)} km  •  $etaMin min';
                                     }
                                   } else {
-                                    metricLabel = 'Route unavailable';
+                                    metricLabel = AppLocalizations.of(context)?.routeUnavailable ?? 'Route unavailable';
                                   }
 
                                   final userColor = AppColors.getUserColor(pUid);
@@ -1327,7 +1328,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                       children: [
                                         CircleAvatar(
                                           radius: 9,
-                                          backgroundColor: userColor.withValues(alpha: 0.15),
+                                          backgroundColor: userColor.withOpacity(0.15),
                                           backgroundImage: p.photoUrl != null && p.photoUrl!.isNotEmpty
                                               ? NetworkImage(p.photoUrl!)
                                               : null,
@@ -1406,7 +1407,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                   margin: const EdgeInsets.only(right: 8),
                                   decoration: BoxDecoration(
-                                    color: Colors.orange.withValues(alpha: 0.1),
+                                    color: Colors.orange.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: const Icon(Icons.bolt_rounded, color: Colors.orange, size: 14),
@@ -1422,7 +1423,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                   ),
                                 ),
                                 child: Text(
-                                  "$votesCount Votes",
+                                  "$votesCount ${AppLocalizations.of(context)?.votesLabel ?? 'Votes'}",
                                   style: GoogleFonts.inter(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
@@ -1504,7 +1505,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                     icon: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppColors.darkSlate.withValues(alpha: 0.05),
+                        color: AppColors.darkSlate.withOpacity(0.05),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -1518,9 +1519,9 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.amber.withValues(alpha: 0.1),
+                      color: Colors.amber.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                      border: Border.all(color: Colors.amber.withOpacity(0.3)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -1528,7 +1529,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                         const Icon(Icons.celebration_rounded, color: Colors.amber, size: 16),
                         const SizedBox(width: 8),
                         Text(
-                          "WINNER DECIDED",
+                          AppLocalizations.of(context)?.winnerDecided ?? "WINNER DECIDED",
                           style: GoogleFonts.outfit(
                             fontSize: 11,
                             fontWeight: FontWeight.w900,
@@ -1612,7 +1613,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppColors.darkSlate.withValues(alpha: 0.03),
+                color: AppColors.darkSlate.withOpacity(0.03),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: Colors.grey.shade100),
               ),
@@ -1623,7 +1624,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                       const Icon(Icons.people_alt_rounded, color: AppColors.darkSlate, size: 18),
                       const SizedBox(width: 10),
                       Text(
-                        "Friends on the way",
+                        AppLocalizations.of(context)?.friendsOnTheWay ?? "Friends on the way",
                         style: GoogleFonts.outfit(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -1643,7 +1644,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                       final p = sortedP[i];
                       final userColor = AppColors.getUserColor(p.uid);
                       
-                      String statusText = "Calculating...";
+                      String statusText = AppLocalizations.of(context)?.calculating ?? "Calculating...";
                       bool isArrived = false;
 
                       if (p.location != null && vLat != null && vLng != null) {
@@ -1652,7 +1653,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                         
                         if (dist < 0.1) {
                           isArrived = true;
-                          statusText = "Arrived";
+                          statusText = AppLocalizations.of(context)?.arrived ?? "Arrived";
                         } else {
                           // Display Google ETA if fresh, otherwise fallback
                           if (p.etaMinutes != null) {
@@ -1682,7 +1683,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              p.name + (p.uid == myUid ? " (You)" : ""),
+                              p.name + (p.uid == myUid ? " (${AppLocalizations.of(context)?.youLabel ?? 'You'})" : ""),
                               style: GoogleFonts.inter(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -1693,7 +1694,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: isArrived ? AppColors.teal.withValues(alpha: 0.1) : Colors.amber.withValues(alpha: 0.1),
+                              color: isArrived ? AppColors.teal.withOpacity(0.1) : Colors.amber.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
@@ -1721,7 +1722,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                 gradient: const LinearGradient(colors: AppColors.tealGradient),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
-                  BoxShadow(color: AppColors.teal.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8)),
+                  BoxShadow(color: AppColors.teal.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8)),
                 ],
               ),
               child: ElevatedButton.icon(
@@ -1730,7 +1731,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                   if (loc != null) _glideToVenue(loc['latitude'], loc['longitude']);
                 },
                 icon: const Icon(Icons.navigation_rounded),
-                label: Text("Navigate to Venue", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+                label: Text(AppLocalizations.of(context)?.navigateToVenue ?? "Navigate to Venue", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   foregroundColor: Colors.white,
@@ -1759,12 +1760,12 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                   );
                 },
                 icon: const Icon(Icons.people_alt_rounded, color: AppColors.teal),
-                label: Text("Live Track Group", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.darkSlate)),
+                label: Text(AppLocalizations.of(context)?.liveTrackGroup ?? "Live Track Group", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.darkSlate)),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(color: AppColors.teal.withValues(alpha: 0.3)),
+                    side: BorderSide(color: AppColors.teal.withOpacity(0.3)),
                   ),
                 ),
               ),
@@ -1806,7 +1807,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "Outing Tools & Safety",
+                                  AppLocalizations.of(context)?.outingToolsSafety ?? "Outing Tools & Safety",
                                   style: GoogleFonts.outfit(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
@@ -1825,11 +1826,11 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                     ),
                                   ),
                                   title: Text(
-                                    mySosActive ? "Cancel SOS Emergency" : "SOS Emergency",
+                                    mySosActive ? (AppLocalizations.of(context)?.cancelSosEmergency ?? "Cancel SOS Emergency") : (AppLocalizations.of(context)?.sosEmergency ?? "SOS Emergency"),
                                     style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: mySosActive ? Colors.green.shade700 : Colors.red.shade700),
                                   ),
                                   subtitle: Text(
-                                    mySosActive ? "Click to clear your SOS alert" : "Alert everyone in case of emergency",
+                                    mySosActive ? (AppLocalizations.of(context)?.sosClickToClear ?? "Click to clear your SOS alert") : (AppLocalizations.of(context)?.sosAlertEveryone ?? "Alert everyone in case of emergency"),
                                     style: GoogleFonts.outfit(fontSize: 13),
                                   ),
                                   onTap: () async {
@@ -1841,21 +1842,21 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                       );
                                       if (mounted) {
                                         ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text("SOS Cleared")),
+                                          SnackBar(content: Text(AppLocalizations.of(context)?.sosCleared ?? "SOS Cleared")),
                                         );
                                       }
                                     } else {
                                       final confirm = await showDialog<bool>(
                                         context: context,
                                         builder: (context) => AlertDialog(
-                                          title: Text("🚨 Trigger SOS?", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.red)),
-                                          content: const Text("This will alert everyone in the session and send your location to the group chat. Continue?"),
+                                          title: Text(AppLocalizations.of(context)?.triggerSosTitle ?? "🚨 Trigger SOS?", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.red)),
+                                          content: Text(AppLocalizations.of(context)?.triggerSosContent ?? "This will alert everyone in the session and send your location to the group chat. Continue?"),
                                           actions: [
-                                            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancel")),
+                                            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppLocalizations.of(context)?.cancel ?? "Cancel")),
                                             TextButton(
                                               onPressed: () => Navigator.pop(context, true),
                                               style: TextButton.styleFrom(foregroundColor: Colors.red),
-                                              child: const Text("YES, SOS", style: TextStyle(fontWeight: FontWeight.bold)),
+                                              child: Text(AppLocalizations.of(context)?.yesSos ?? "YES, SOS", style: const TextStyle(fontWeight: FontWeight.bold)),
                                             ),
                                           ],
                                         ),
@@ -1898,14 +1899,14 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                     backgroundColor: AppColors.teal,
                                     child: Icon(Icons.explore_rounded, color: Colors.white),
                                   ),
-                                  title: Text("AR Friend Compass", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-                                  subtitle: const Text("Visual 3D pointer to find friends"),
+                                  title: Text(AppLocalizations.of(context)?.arFriendCompass ?? "AR Friend Compass", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                                  subtitle: Text(AppLocalizations.of(context)?.visual3DPointer ?? "Visual 3D pointer to find friends"),
                                   onTap: () {
                                     Navigator.pop(context);
                                     final others = session.participants.where((p) => p.uid != myUid).toList();
                                     if (others.isEmpty) {
                                       ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text("No other participants in this outing")),
+                                        SnackBar(content: Text(AppLocalizations.of(context)?.noOtherParticipants ?? "No other participants in this outing")),
                                       );
                                       return;
                                     }
@@ -1923,7 +1924,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                "🧭 AR Friend Compass",
+                                                AppLocalizations.of(context)?.arFriendCompass ?? "AR Friend Compass",
                                                 style: GoogleFonts.outfit(
                                                   fontSize: 20,
                                                   fontWeight: FontWeight.bold,
@@ -1965,7 +1966,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                                           );
                                                         } else {
                                                           ScaffoldMessenger.of(context).showSnackBar(
-                                                            const SnackBar(content: Text("No location available for this friend")),
+                                                            SnackBar(content: Text(AppLocalizations.of(context)?.noLocationAvailableFriend ?? "No location available for this friend")),
                                                           );
                                                         }
                                                       },
@@ -2026,8 +2027,8 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                     backgroundColor: AppColors.teal,
                                     child: Icon(Icons.receipt_long_rounded, color: Colors.white),
                                   ),
-                                  title: Text("Split Bill (AI)", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-                                  subtitle: const Text("Auto extract items and parse prices"),
+                                  title: Text(AppLocalizations.of(context)?.splitBillAI ?? "Split Bill (AI)", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                                  subtitle: Text(AppLocalizations.of(context)?.autoExtractItems ?? "Auto extract items and parse prices"),
                                   onTap: () {
                                     Navigator.pop(context);
                                     Navigator.push(
@@ -2049,7 +2050,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                   );
                 },
                 icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white),
-                label: Text("OUTING TOOLS & SAFETY", style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.white)),
+                label: Text(AppLocalizations.of(context)?.outingToolsSafety.toUpperCase() ?? "OUTING TOOLS & SAFETY", style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.white)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.teal,
                   padding: const EdgeInsets.symmetric(vertical: 18),
@@ -2070,11 +2071,11 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: Text("Finish Outing?", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-                        content: const Text("This will close the session for everyone. Are you sure you're done?"),
+                        title: Text(AppLocalizations.of(context)?.finishOutingTitle ?? "Finish Outing?", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                        content: Text(AppLocalizations.of(context)?.finishOutingContent ?? "This will close the session for everyone. Are you sure you're done?"),
                         actions: [
-                          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Not yet")),
-                          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("Yes, finish!", style: TextStyle(color: Colors.red))),
+                          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppLocalizations.of(context)?.notYet ?? "Not yet")),
+                          TextButton(onPressed: () => Navigator.pop(context, true), child: Text(AppLocalizations.of(context)?.yesFinish ?? "Yes, finish!", style: const TextStyle(color: Colors.red))),
                         ],
                       ),
                     );
@@ -2099,13 +2100,13 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                     }
                   },
                   icon: const Icon(Icons.check_circle_outline_rounded, size: 20),
-                  label: Text("Finish Outing", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+                  label: Text(AppLocalizations.of(context)?.finishOuting ?? "Finish Outing", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.redAccent,
-                    side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.2)),
+                    side: BorderSide(color: Colors.redAccent.withOpacity(0.2)),
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    backgroundColor: Colors.redAccent.withValues(alpha: 0.03),
+                    backgroundColor: Colors.redAccent.withOpacity(0.03),
                   ),
                 ),
               ),
@@ -2128,7 +2129,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),

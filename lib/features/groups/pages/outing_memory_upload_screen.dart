@@ -22,7 +22,7 @@ class OutingMemoryUploadScreen extends StatefulWidget {
 class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
   final List<File> _selectedImages = [];
   bool _isUploading = false;
-  final int _maxImages = 10;
+  final int _maxImages = 15;
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImages() async {
@@ -58,7 +58,9 @@ class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
     
     // Allow closing without photos if that's what the user wants
     if (_selectedImages.isEmpty) {
-      Navigator.pop(context);
+      setState(() => _isUploading = true);
+      await OutingService().finalizeAndArchive(widget.session);
+      if (mounted) Navigator.pop(context);
       return;
     }
 
@@ -69,10 +71,14 @@ class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
         session: widget.session,
         photos: _selectedImages,
       );
+      
+      // Auto-finalize to show in history immediately
+      await OutingService().finalizeAndArchive(widget.session);
+
       if (mounted) {
         Navigator.pop(context); // Go back to Group room
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Memories uploaded! They will appear in the history soon.')),
+          const SnackBar(content: Text('Memories saved to History!')),
         );
       }
     } catch (e) {
@@ -177,7 +183,7 @@ class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.1),
+                                      color: Colors.black.withOpacity(0.1),
                                       blurRadius: 4,
                                       offset: const Offset(0, 2),
                                     )
@@ -192,7 +198,7 @@ class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
                                   child: Container(
                                     padding: const EdgeInsets.all(4),
                                     decoration: BoxDecoration(
-                                      color: Colors.black.withValues(alpha: 0.5),
+                                      color: Colors.black.withOpacity(0.5),
                                       shape: BoxShape.circle,
                                     ),
                                     child: const Icon(Icons.close, size: 14, color: Colors.white),
@@ -211,9 +217,9 @@ class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
                           width: double.infinity,
                           height: 200,
                           decoration: BoxDecoration(
-                            color: AppColors.teal.withValues(alpha: 0.05),
+                            color: AppColors.teal.withOpacity(0.05),
                             borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: AppColors.teal.withValues(alpha: 0.3), width: 2, style: BorderStyle.solid),
+                            border: Border.all(color: AppColors.teal.withOpacity(0.3), width: 2, style: BorderStyle.solid),
                           ),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -221,14 +227,14 @@ class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
                               Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: AppColors.teal.withValues(alpha: 0.1),
+                                  color: AppColors.teal.withOpacity(0.1),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(Icons.add_photo_alternate_rounded, size: 48, color: AppColors.teal),
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                "Tap to add up to 10 photos",
+                                "Tap to add up to 15 photos",
                                 style: GoogleFonts.outfit(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -252,7 +258,7 @@ class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: Colors.black.withOpacity(0.05),
                     blurRadius: 10,
                     offset: const Offset(0, -4),
                   ),
@@ -289,7 +295,7 @@ class _OutingMemoryUploadScreenState extends State<OutingMemoryUploadScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          shadowColor: AppColors.teal.withValues(alpha: 0.4),
+                          shadowColor: AppColors.teal.withOpacity(0.4),
                           elevation: 8,
                         ),
                         child: _isUploading

@@ -17,6 +17,7 @@ import '../pages/location_picker_screen.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../../core/services/location_service.dart';
+import 'package:laween/l10n/app_localizations.dart';
 
 class CreateOutingSheet extends StatefulWidget {
   final String groupId;
@@ -116,9 +117,10 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
     // Validation: If in Direct Mode, a venue MUST be selected from the list
     if (_isDirectMode && _selectedVenue == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            "Please select a specific location from the suggestions",
+            AppLocalizations.of(context)?.selectSpecificLocation ??
+                "Please select a specific location from the suggestions",
           ),
           backgroundColor: Colors.orange,
           behavior: SnackBarBehavior.floating,
@@ -309,15 +311,15 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.9),
+          color: Colors.white.withOpacity(0.9),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.5),
+            color: Colors.white.withOpacity(0.5),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 30,
               offset: const Offset(0, -10),
             ),
@@ -341,7 +343,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                 width: 45,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.2),
+                  color: Colors.grey.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(3),
                 ),
               ),
@@ -364,7 +366,11 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _isDirectMode ? "Direct Outing" : "Create Outing",
+                      _isDirectMode
+                          ? (AppLocalizations.of(context)?.directOuting ??
+                              "Direct Outing")
+                          : (AppLocalizations.of(context)?.createOuting ??
+                              "Create Outing"),
                       style: GoogleFonts.outfit(
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
@@ -374,8 +380,10 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                     ),
                     Text(
                       _isDirectMode
-                          ? "Pick a destination and let's go!"
-                          : "Find the perfect mid-point",
+                          ? (AppLocalizations.of(context)?.pickDestinationAndGo ??
+                              "Pick a destination and let's go!")
+                          : (AppLocalizations.of(context)?.findPerfectMidpoint ??
+                              "Find the perfect mid-point"),
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         color: Colors.grey.shade500,
@@ -387,7 +395,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.teal.withValues(alpha: 0.1),
+                    color: AppColors.teal.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -407,7 +415,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
 
             // Section 1: Mode (Hidden in Direct Mode as it's not needed for discovery)
             if (!_isDirectMode) ...[
-              _buildSectionHeader("Calculation Mode"),
+              _buildSectionHeader(AppLocalizations.of(context)?.calculationMode ?? "Calculation Mode"),
               const SizedBox(height: 12),
               _buildModeSwitcher(),
               const SizedBox(height: 24),
@@ -415,7 +423,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
 
             // Section 2: Category (Only shown in Discovery Mode)
             if (!_isDirectMode) ...[
-              _buildSectionHeader("Select Category"),
+              _buildSectionHeader(AppLocalizations.of(context)?.selectCategory ?? "Select Category"),
               const SizedBox(height: 12),
               SizedBox(
                 height: 104,
@@ -431,14 +439,14 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
             ],
 
             // Section 3: Time Limit
-            _buildSectionHeader("Join Time Limit"),
+            _buildSectionHeader(AppLocalizations.of(context)?.joinTimeLimit ?? "Join Time Limit"),
             const SizedBox(height: 12),
             _buildTimeLimitRow(),
 
             const SizedBox(height: 24),
 
             // Section 4: Schedule
-            _buildSectionHeader("Schedule Session"),
+            _buildSectionHeader(AppLocalizations.of(context)?.scheduleSession ?? "Schedule Session"),
             const SizedBox(height: 12),
             _buildScheduleSection(),
 
@@ -460,7 +468,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
       style: GoogleFonts.outfit(
         fontSize: 12,
         fontWeight: FontWeight.bold,
-        color: AppColors.darkSlate.withValues(alpha: 0.4),
+        color: AppColors.darkSlate.withOpacity(0.4),
         letterSpacing: 1.2,
       ),
     );
@@ -476,14 +484,14 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
       ),
       child: Row(
         children: [
-          _buildModeOption("KM", Icons.social_distance_rounded),
-          _buildModeOption("Time", Icons.timer_rounded),
+          _buildModeOption("KM", Icons.social_distance_rounded, labelOverride: AppLocalizations.of(context)?.kmLabel),
+          _buildModeOption("Time", Icons.timer_rounded, labelOverride: AppLocalizations.of(context)?.timeLabel),
         ],
       ),
     );
   }
 
-  Widget _buildModeOption(String label, IconData icon) {
+  Widget _buildModeOption(String label, IconData icon, {String? labelOverride}) {
     final isSelected = _calculationMode == label;
     return Expanded(
       child: GestureDetector(
@@ -497,7 +505,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
+                      color: Colors.black.withOpacity(0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -514,7 +522,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
               ),
               const SizedBox(width: 8),
               Text(
-                label,
+                labelOverride ?? label,
                 style: GoogleFonts.outfit(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -543,7 +551,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
         decoration: BoxDecoration(
           color: isSelected
               ? Colors.white
-              : Colors.white.withValues(alpha: 0.5),
+              : Colors.white.withOpacity(0.5),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? AppColors.teal : Colors.transparent,
@@ -552,8 +560,8 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
           boxShadow: [
             BoxShadow(
               color: isSelected
-                  ? AppColors.teal.withValues(alpha: 0.15)
-                  : Colors.black.withValues(alpha: 0.03),
+                  ? AppColors.teal.withOpacity(0.15)
+                  : Colors.black.withOpacity(0.03),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -565,14 +573,14 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
+                color: color.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(cat['icon'], color: color, size: 20),
             ),
             const SizedBox(height: 6),
             Text(
-              cat['name'],
+              _getLocalizedCategory(cat['name'], context),
               style: GoogleFonts.outfit(
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
@@ -608,7 +616,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: AppColors.darkSlate.withValues(alpha: 0.2),
+                          color: AppColors.darkSlate.withOpacity(0.2),
                           blurRadius: 12,
                           offset: const Offset(0, 6),
                         ),
@@ -617,7 +625,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
               ),
               child: Center(
                 child: Text(
-                  "$t min",
+                  "$t ${AppLocalizations.of(context)?.minLabel ?? 'min'}",
                   style: GoogleFonts.outfit(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -639,7 +647,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -649,7 +657,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
         controller: _searchController,
         onChanged: _searchPlaces,
         decoration: InputDecoration(
-          hintText: "Where are we going?",
+          hintText: AppLocalizations.of(context)?.whereAreWeGoing ?? "Where are we going?",
           hintStyle: GoogleFonts.inter(
             color: Colors.grey.shade400,
             fontSize: 15,
@@ -702,7 +710,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 30,
             offset: const Offset(0, 10),
           ),
@@ -749,7 +757,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: AppColors.teal.withValues(alpha: 0.1),
+                        color: AppColors.teal.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: ClipRRect(
@@ -897,7 +905,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.teal.withValues(alpha: 0.4),
+            color: AppColors.teal.withOpacity(0.4),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -929,7 +937,11 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    _isDirectMode ? "Start Journey" : "Launch Outing Session",
+                    _isDirectMode
+                        ? (AppLocalizations.of(context)?.startJourney ??
+                            "Start Journey")
+                        : (AppLocalizations.of(context)?.launchOutingSession ??
+                            "Launch Outing Session"),
                     style: GoogleFonts.outfit(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -949,12 +961,12 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: _isScheduled ? AppColors.teal.withValues(alpha: 0.4) : Colors.grey.shade200,
+          color: _isScheduled ? AppColors.teal.withOpacity(0.4) : Colors.grey.shade200,
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withOpacity(0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -970,7 +982,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: (_isScheduled ? AppColors.teal : Colors.grey).withValues(alpha: 0.1),
+                      color: (_isScheduled ? AppColors.teal : Colors.grey).withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -984,7 +996,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Schedule for Later",
+                        AppLocalizations.of(context)?.scheduleForLater ?? "Schedule for Later",
                         style: GoogleFonts.outfit(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -993,8 +1005,8 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                       ),
                       Text(
                         _isScheduled
-                            ? "Outing set for a future time"
-                            : "Off - Start the session now",
+                            ? (AppLocalizations.of(context)?.outingSetForFuture ?? "Outing set for a future time")
+                            : (AppLocalizations.of(context)?.offStartNow ?? "Off - Start the session now"),
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           color: Colors.grey.shade500,
@@ -1081,7 +1093,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                     Text(
                       _scheduledDateTime != null
                           ? "${_scheduledDateTime!.day}/${_scheduledDateTime!.month}/${_scheduledDateTime!.year}  at  ${_scheduledDateTime!.hour}:${_scheduledDateTime!.minute.toString().padLeft(2, '0')}"
-                          : "Tap to pick Date & Time",
+                          : (AppLocalizations.of(context)?.tapToPickDateTime ?? "Tap to pick Date & Time"),
                       style: GoogleFonts.outfit(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -1101,6 +1113,26 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
         ],
       ),
     );
+  }
+
+  String _getLocalizedCategory(String name, BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    switch (name) {
+      case 'Restaurant':
+        return l10n?.restaurant ?? name;
+      case 'Cafe':
+        return l10n?.cafe ?? name;
+      case 'Park':
+        return l10n?.park ?? name;
+      case 'Mall':
+        return l10n?.mall ?? name;
+      case 'Sporty':
+        return l10n?.sporty ?? name;
+      case 'Cinema':
+        return l10n?.cinema ?? name;
+      default:
+        return name;
+    }
   }
 }
 

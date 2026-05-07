@@ -141,158 +141,208 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
   }
 
   Widget _buildStepContent() {
-    switch (_step) {
-      case 0:
-        return UniversalOtpStep(
-          key: _otpKey,
-          destination: widget.email,
-          onVerified: _goToNextStep,
-          isLight: true,
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 400),
+      switchInCurve: Curves.easeOutBack,
+      switchOutCurve: Curves.easeIn,
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.0, 0.1),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          ),
         );
-      case 1:
-        return UniversalOtpStep(
-          key: _otpKey,
-          destination: widget.phone,
-          onVerified: _goToNextStep,
-          isLight: true,
-        );
-      case 2:
-        return const FinishVerificationStep();
-      default:
-        return const SizedBox.shrink();
-    }
+      },
+      child: Container(
+        key: ValueKey<int>(_step),
+        child: _step == 0
+            ? UniversalOtpStep(
+                key: _otpKey,
+                destination: widget.email,
+                onVerified: _goToNextStep,
+                isLight: true,
+              )
+            : _step == 1
+                ? UniversalOtpStep(
+                    key: _otpKey,
+                    destination: widget.phone,
+                    onVerified: _goToNextStep,
+                    isLight: true,
+                  )
+                : const FinishVerificationStep(),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    
     return PopScope(
-      canPop: !isLoading, // Prevent pop if we are currently cleaning up
+      canPop: !isLoading,
       onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return; // If already popped by something else
-
-        // 👻 Cleanup if system back or swipe exits the wizard
+        if (didPop) return;
         await _authService.cleanupGhostAccount();
-
-        if (context.mounted) {
-          Navigator.pop(context, false);
-        }
+        if (context.mounted) Navigator.pop(context, false);
       },
       child: Material(
         type: MaterialType.transparency,
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
           child: AnimatedPadding(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOut,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic,
             padding: EdgeInsets.only(bottom: bottomInset),
             child: Center(
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 24),
-                padding: const EdgeInsets.all(20),
-                constraints: BoxConstraints(
-                  maxHeight:
-                      MediaQuery.of(context).size.height * 0.85 - bottomInset,
-                ),
+                constraints: const BoxConstraints(maxWidth: 400),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(32),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 40,
+                      offset: const Offset(0, 20),
                     ),
                   ],
                 ),
-                child: SizedBox(
-                  width: 360,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Stack(
-                          children: [
-                            Align(
-                              alignment: AlignmentDirectional.topEnd,
-                              child: IconButton(
-                                icon: const Icon(
-                                  Icons.close,
-                                  color: Colors.black54,
-                                ),
-                                onPressed: _handleCancel,
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (currentStepIndex <= totalStepsCount)
-                          Text(
-                            l10n.stepOf(currentStepIndex, totalStepsCount),
-                            style: TextStyle(
-                              color: Colors.black.withValues(alpha: 0.4),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Header with Progress
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                        decoration: BoxDecoration(
+                          color: AppColors.teal.withOpacity(0.03),
+                          border: Border(
+                            bottom: BorderSide(
+                              color: Colors.black.withOpacity(0.05),
+                              width: 1,
                             ),
                           ),
-                        const SizedBox(height: 10),
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 350),
-                          child: Container(
-                            key: ValueKey<int>(_step),
-                            child: _buildStepContent(),
-                          ),
                         ),
-                        const SizedBox(height: 24),
-                        Row(
+                        child: Column(
                           children: [
-                            const Spacer(),
-                            if (_step == 2)
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.accentGold,
-                                  foregroundColor: Colors.black,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                onPressed: isLoading
-                                    ? null
-                                    : _handlePrimaryAction,
-                                child: isLoading
-                                    ? Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          SizedBox(
-                                            height: 20,
-                                            width: 20,
-                                            child: CircularProgressIndicator(
-                                              color: Colors.black,
-                                              strokeWidth: 2,
-                                            ),
-                                          ),
-                                          SizedBox(width: 10),
-                                          Text(
-                                            l10n.finalizing,
-                                            style: const TextStyle(
-                                              color: Colors.black,
-                                              fontSize: 13,
-                                            ),
-                                          ),
-                                        ],
-                                      )
-                                    : Text(
-                                        l10n.finishAndRegister,
-                                        style: const TextStyle(
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _step == 2 ? l10n.allDone : l10n.verifyIdentity,
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.teal,
                                       ),
-                              ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      l10n.stepOf(currentStepIndex, totalStepsCount),
+                                      style: TextStyle(
+                                        color: Colors.black.withOpacity(0.4),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                IconButton(
+                                  icon: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withOpacity(0.05),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(Icons.close, size: 18, color: Colors.black54),
+                                  ),
+                                  onPressed: _handleCancel,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            // Progress bar
+                            Row(
+                              children: List.generate(totalStepsCount, (index) {
+                                final bool isCompleted = index < _step;
+                                final bool isActive = index == _step;
+                                return Expanded(
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 300),
+                                    margin: EdgeInsets.only(
+                                      right: index < totalStepsCount - 1 ? 8 : 0,
+                                    ),
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      color: isCompleted
+                                          ? AppColors.teal
+                                          : isActive
+                                              ? AppColors.teal.withOpacity(0.3)
+                                              : Colors.black.withOpacity(0.05),
+                                      borderRadius: BorderRadius.circular(3),
+                                    ),
+                                  ),
+                                );
+                              }),
+                            ),
                           ],
                         ),
-                      ],
-                    ),
+                      ),
+                      
+                      // Content
+                      Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: _buildStepContent(),
+                      ),
+                      
+                      // Footer (only for final step)
+                      if (_step == 2)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.teal,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              onPressed: isLoading ? null : _handlePrimaryAction,
+                              child: isLoading
+                                  ? const SizedBox(
+                                      height: 24,
+                                      width: 24,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Text(
+                                      l10n.finishAndRegister,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 8),
+                    ],
                   ),
                 ),
               ),

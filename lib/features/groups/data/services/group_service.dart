@@ -27,13 +27,13 @@ class GroupService {
     }
   }
 
-  Future<String?> createGroup({
+  Future<Map<String, dynamic>?> createGroup({
     required String name,
     required List<String> memberPhoneNumbers,
     File? imageFile,
   }) async {
     final user = _auth.currentUser;
-    if (user == null) return "User not authenticated";
+    if (user == null) return {"error": "User not authenticated"};
 
     try {
       final groupId = _firestore.collection('groups').doc().id;
@@ -97,14 +97,15 @@ class GroupService {
         creatorId: user.uid,
         memberIds: resolvedMemberIds.toSet().toList(), // Ensure uniqueness
         createdAt: DateTime.now(),
+        lastMessageTime: DateTime.now(), // 🚀 Set this so it appears at the top
         groupCode: groupCode,
         pendingPhoneNumbers: pendingPhoneNumbers,
       );
 
       await _firestore.collection('groups').doc(groupId).set(group.toMap());
-      return null;
+      return {"groupCode": groupCode, "groupId": groupId};
     } catch (e) {
-      return e.toString();
+      return {"error": e.toString()};
     }
   }
 
@@ -146,6 +147,7 @@ class GroupService {
     await activityDoc.set({'failedJoinAttempts': 0}, SetOptions(merge: true));
     await _firestore.collection('groups').doc(groupDoc.id).update({
       'memberIds': FieldValue.arrayUnion([userId]),
+      'lastMessageTime': FieldValue.serverTimestamp(), // 🚀 Bring to top on join
     });
 
     // Fetch the updated group model to return

@@ -144,7 +144,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
             icon: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.darkSlate.withValues(alpha: 0.7),
+                color: AppColors.darkSlate.withOpacity(0.7),
                 shape: BoxShape.circle,
               ),
               child: const Icon(

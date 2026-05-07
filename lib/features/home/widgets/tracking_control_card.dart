@@ -30,15 +30,15 @@ class TrackingControlCard extends StatelessWidget {
         return Container(
           margin: const EdgeInsets.only(bottom: 24),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
+            color: Colors.white.withOpacity(0.05),
             borderRadius: BorderRadius.circular(28),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.1),
+              color: Colors.white.withOpacity(0.1),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
+                color: Colors.black.withOpacity(0.2),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -58,7 +58,7 @@ class TrackingControlCard extends StatelessWidget {
                                 (isTrackingActive
                                         ? const Color(0xFF10B981)
                                         : Colors.grey)
-                                    .withValues(alpha: 0.1),
+                                    .withOpacity(0.1),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -130,13 +130,13 @@ class TrackingControlCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isGhostMode
-              ? const Color(0xFF6366F1).withValues(alpha: 0.2)
-              : Colors.white.withValues(alpha: 0.05),
+              ? const Color(0xFF6366F1).withOpacity(0.2)
+              : Colors.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isGhostMode
-                ? const Color(0xFF6366F1).withValues(alpha: 0.3)
-                : Colors.white.withValues(alpha: 0.1),
+                ? const Color(0xFF6366F1).withOpacity(0.3)
+                : Colors.white.withOpacity(0.1),
           ),
         ),
         child: Row(
@@ -187,13 +187,13 @@ class TrackingControlCard extends StatelessWidget {
               : LinearGradient(
                   colors: [
                     AppColors.teal,
-                    AppColors.teal.withValues(alpha: 0.7),
+                    AppColors.teal.withOpacity(0.7),
                   ],
                 ),
           boxShadow: [
             BoxShadow(
               color: (isActive ? const Color(0xFFEF4444) : AppColors.teal)
-                  .withValues(alpha: 0.3),
+                  .withOpacity(0.3),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),

@@ -71,7 +71,7 @@ class LanguagePage extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.teal.withValues(alpha: 0.05)
+              ? AppColors.teal.withOpacity(0.05)
               : Colors.grey.shade50,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(

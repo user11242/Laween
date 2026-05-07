@@ -8,8 +8,10 @@ class AppLocalizations {
   AppLocalizations(this.languageCode);
 
   bool get isAr => languageCode == 'ar';
+  String get google => isAr ? "جوجل" : "Google";
+  String get cancel => isAr ? "إلغاء" : "Cancel";
 
-  static AppLocalizations? of(BuildContext context, {bool listen = false}) {
+  static AppLocalizations? of(BuildContext context, {bool listen = true}) {
     try {
       final locale = Provider.of<LocaleProvider>(
         context,
@@ -96,11 +98,24 @@ class AppLocalizations {
       isAr ? "رابط المحفظة غير صالح" : "Invalid portfolio link";
   String get finalizing => isAr ? "وضع اللمسات النهائية..." : "Finalizing...";
   String get finishAndRegister => isAr ? "إنهاء وتسجيل" : "Finish and Register";
+
+  // Chat
+  String get sayHello => isAr ? "قل مرحباً لبدء المحادثة!" : "Say hello to start the conversation!";
+
+  // Group Settings
+  String get leaveGroup => isAr ? "مغادرة المجموعة" : "Leave Group";
+  String get leaveGroupConfirm => isAr ? "هل أنت متأكد أنك تريد مغادرة هذه المجموعة؟" : "Are you sure you want to leave this group?";
+  String get leave => isAr ? "مغادرة" : "Leave";
+  String get deleteGroup => isAr ? "حذف المجموعة" : "Delete Group";
+  String get deleteGroupConfirm => isAr ? "هل أنت متأكد أنك تريد حذف هذه المجموعة نهائياً؟ لا يمكن التراجع عن هذا الإجراء." : "Are you sure you want to permanently delete this group? This action cannot be undone.";
+  String get delete => isAr ? "حذف" : "Delete";
   String get allVerified =>
       isAr ? "تم التحقق من جميع الخطوات" : "All steps verified";
+  String get allDone => isAr ? "تم الانتهاء" : "All Done";
+  String get verifyEmail => isAr ? "التحقق من البريد" : "Verify Email";
+  String get verifyPhone => isAr ? "التحقق من الهاتف" : "Verify Phone";
   String get password => isAr ? "كلمة المرور" : "Password";
   String get linkAccountButton => isAr ? "ربط الحساب" : "Link Account";
-  String get cancel => isAr ? "إلغاء" : "Cancel";
   String get deleteAccountConfirmMessage =>
       isAr ? "تأكيد الحذف" : "Confirm deletion";
   String get deleteMyAccount => isAr ? "حذف حسابي" : "Delete Account";
@@ -344,5 +359,237 @@ class AppLocalizations {
   String get restoreDefaultWallpaperDesc => isAr ? "استعادة الخلفية الرمادية الفاتحة الافتراضية" : "Restore the default light grey background";
   String get premiumGradients => isAr ? "تدرجات ألوان مميزة" : "Premium Gradients";
   String get solidColors => isAr ? "ألوان سادة" : "Solid Colors";
+
+  // Activity & Favorites
+  String get noRecentActivity => isAr ? "لا يوجد نشاط مؤخراً" : "No recent activity";
+  String get favoritesComingSoon => isAr ? "المفضلة قريباً" : "My Favorites coming soon";
+  String get quickActions => isAr ? "الإجراءات السريعة" : "Quick Actions";
+  String get recentActivity => isAr ? "النشاط مؤخراً" : "Recent Activity";
+  String get viewAll => isAr ? "عرض الكل" : "View All";
+  String get publicSearch => isAr ? "البحث العام" : "Public Search";
+
+  // About Laween Overhaul
+  String get aboutHeroTitle => isAr ? "التقوا في المنتصف، بكل سهولة." : "Meet in the middle, effortlessly.";
+  String get aboutHeroSubtitle => isAr 
+    ? "لوين يزيل عناء البحث عن مكان لقاء يبدو منصفاً للجميع. سواء كنت تخطط للقاء قهوة، أو تجمع عائلي، لوين يجعل اللقاء بسيطاً ومبهجاً."
+    : "Laween takes the stress out of finding a meeting spot that feels fair for everyone. Whether it's coffee or family, we make it simple.";
+  
+  String get whyChooseLaween => isAr ? "لماذا تختار لوين؟" : "Why choose Laween?";
+  String get fairForAllTitle => isAr ? "منصف للجميع" : "Fair for all";
+  String get fairForAllDesc => isAr ? "لا مزيد من الجدالات. نحسب نقطة لقاء تناسب الجميع بشكل عادل." : "No more debates. We calculate a meeting point that works fairly for everyone.";
+  
+  String get easyToUseTitle => isAr ? "سهل الاستخدام" : "Easy to use";
+  String get easyToUseDesc => isAr ? "أدخل مواقعكم، واختر نوع الخرجة، واحصل على اقتراحات فورية." : "Enter locations, choose your vibe, and get instant suggestions.";
+  
+  String get discoverPlacesTitle => isAr ? "اكتشف أماكن جديدة" : "Discover new places";
+  String get discoverPlacesDesc => isAr ? "استكشف المطاعم والمقاهي المختارة بعناية بالقرب من نقطة المنتصف." : "Explore curated restaurants and cafes near your midpoint.";
+  
+  String get perfectForGroupsTitle => isAr ? "مثالي للمجموعات" : "Perfect for groups";
+  String get perfectForGroupsDesc => isAr ? "شارك الرابط واجعل الجميع يشاركون بإضافة نقطة انطلاقهم." : "Share the link and let everyone join in by adding their own starting point.";
+
+  String get howItWorks => isAr ? "كيف يعمل لوين" : "How Laween works";
+  String get step1Title => isAr ? "١. أدخل المواقع" : "1. Input locations";
+  String get step1Desc => isAr ? "أضف نقاط انطلاقك أو شارك رابطاً للمجموعات الكبيرة." : "Add your starting points or share a link for larger groups.";
+  String get step2Title => isAr ? "٢. جد نقطة المنتصف" : "2. Find your midpoint";
+  String get step2Desc => isAr ? "نحسب نقطة لقاء عملية وعادلة بناءً على مواقع الجميع." : "We calculate an equitable meeting point based on the group.";
+  String get step3Title => isAr ? "٣. اكتشف الأماكن" : "3. Discover places";
+  String get step3Desc => isAr ? "تصفح أفضل الأماكن والأنشطة القريبة حول نقطة المنتصف." : "Browse the best places and activities around your midpoint.";
+  String get step4Title => isAr ? "٤. قرر والتقِ" : "4. Decide and meet";
+  String get step4Desc => isAr ? "اختر المكان المفضل وانتقل من التخطيط إلى اللقاء الفعلي." : "Pick the best spot and move from planning to actually meeting.";
+
+  String get ourMissionTitle => isAr ? "مهمتنا" : "Our mission";
+  String get ourMissionDesc => isAr 
+    ? "مهمتنا هي جعل اللقاء بسيطاً ومبهجاً وعادلاً. نؤمن بأن التكنولوجيا يجب أن تسهل التواصل الحقيقي."
+    : "Our mission is to make meeting up simple, joyful, and fair. We believe tech should make real-world connection easier.";
+  
+  String get readyToMeet => isAr ? "جاهز للالتقاء في المنتصف؟" : "Ready to meet in the middle?";
+  String get startPlanning => isAr ? "ابدأ التخطيط الآن" : "Start Planning Now";
+
+  // Outing Creation Strings
+  String get createOuting => isAr ? "إنشاء خروجة" : "Create Outing";
+  String get directOuting => isAr ? "خروج مباشر" : "Direct Outing";
+  String get findPerfectMidpoint => isAr ? "البحث عن نقطة المنتصف المثالية" : "Find the perfect mid-point";
+  String get pickDestinationAndGo => isAr ? "اختر وجهة ودعنا نذهب!" : "Pick a destination and let's go!";
+  String get calculationMode => isAr ? "وضع الحساب" : "Calculation Mode";
+  String get selectCategory => isAr ? "اختر الفئة" : "Select Category";
+  String get joinTimeLimit => isAr ? "مهلة الانضمام" : "Join Time Limit";
+  String get scheduleSession => isAr ? "جدولة الجلسة" : "Schedule Session";
+  String get scheduleForLater => isAr ? "جدولة لوقت لاحق" : "Schedule for Later";
+  String get offStartNow => isAr ? "إيقاف - ابدأ الجلسة الآن" : "Off - Start the session now";
+  String get startJourney => isAr ? "ابدأ الرحلة" : "Start Journey";
+  String get launchOutingSession => isAr ? "إطلاق جلسة خروج" : "Launch Outing Session";
+  String get whereAreWeGoing => isAr ? "إلى أين نحن ذاهبون؟" : "Where are we going?";
+  String get restaurant => isAr ? "مطعم" : "Restaurant";
+  String get cafe => isAr ? "مقهى" : "Cafe";
+  String get park => isAr ? "حديقة" : "Park";
+  String get mall => isAr ? "مول" : "Mall";
+  String get sporty => isAr ? "رياضي" : "Sporty";
+  String get cinema => isAr ? "سينما" : "Cinema";
+  String get minLabel => isAr ? "دقيقة" : "min";
+  String get kmLabel => isAr ? "كم" : "KM";
+  String get timeLabel => isAr ? "وقت" : "Time";
+  String get outingSetForFuture => isAr ? "تم تحديد موعد الخروج في وقت لاحق" : "Outing set for a future time";
+  String get tapToPickDateTime => isAr ? "اضغط لاختيار التاريخ والوقت" : "Tap to pick Date & Time";
+  String get selectSpecificLocation => isAr ? "يرجى اختيار موقع محدد من الاقتراحات" : "Please select a specific location from the suggestions";
+
+  // Waiting Room Strings
+  String get outingWaitingRoom => isAr ? "غرفة انتظار الخروجة" : "Outing Waiting Room";
+  String get live => isAr ? "مباشر" : "LIVE";
+  String get sessionNumber => isAr ? "جلسة رقم" : "Session #";
+  String get membersJoined => isAr ? "أعضاء انضموا" : "Members Joined";
+  String get targetDestination => isAr ? "الوجهة المستهدفة" : "TARGET DESTINATION";
+  String get outingMode => isAr ? "وضع الخروج" : "Outing Mode";
+  String get discovering => isAr ? "اكتشاف" : "Discovering";
+  String get participantsLabel => isAr ? "المشاركون" : "PARTICIPANTS";
+  String get youLabel => isAr ? "أنت" : "You";
+  String get leaveSession => isAr ? "مغادرة الجلسة" : "Leave Session";
+  String get startJourneyNow => isAr ? "ابدأ الرحلة الآن" : "Start Journey Now";
+  String get needAtLeast2People => isAr ? "تحتاج إلى شخصين على الأقل لبدء الخروجة!" : "You need at least 2 people to start an outing!";
+  String get sessionCancelledNoParticipants => isAr ? "تم إلغاء الجلسة: لم ينضم عدد كافٍ من المشاركين." : "Session cancelled: Not enough participants joined.";
+
+  // Outing Map Screen Strings
+  String get placesTab => isAr ? "📍 الأماكن" : "📍 Places";
+  String get chatTab => isAr ? "💬 الدردشة" : "💬 Chat";
+  String get noMessagesYet => isAr ? "لا توجد رسائل بعد.\nكن أول من يقول مرحبًا! 👋" : "No messages yet.\nBe the first to say hi! 👋";
+  String get saySomething => isAr ? "قل شيئًا..." : "Say something...";
+  String get voiceMessage => isAr ? "🎤 رسالة صوتية" : "🎤 Voice message";
+  String get voteNow => isAr ? "صوّت الآن" : "Vote Now";
+  String get unvote => isAr ? "إلغاء التصويت" : "Unvote";
+  String get votesLabel => isAr ? "أصوات" : "Votes";
+  String get routeUnavailable => isAr ? "المسار غير متوفر" : "Route unavailable";
+  String get winnerDecided => isAr ? "تم تحديد الفائز" : "WINNER DECIDED";
+  String get friendsOnTheWay => isAr ? "الأصدقاء في الطريق" : "Friends on the way";
+  String get calculating => isAr ? "جاري الحساب..." : "Calculating...";
+  String get arrived => isAr ? "وصل" : "Arrived";
+  String get navigateToVenue => isAr ? "انتقل إلى الوجهة" : "Navigate to Venue";
+  String get liveTrackGroup => isAr ? "تتبع المجموعة مباشرة" : "Live Track Group";
+  String get outingToolsSafety => isAr ? "أدوات الخروجة والأمان" : "Outing Tools & Safety";
+  String get sosEmergency => isAr ? "طوارئ SOS" : "SOS Emergency";
+  String get cancelSosEmergency => isAr ? "إلغاء طوارئ SOS" : "Cancel SOS Emergency";
+  String get sosAlertEveryone => isAr ? "تنبيه الجميع في حالة الطوارئ" : "Alert everyone in case of emergency";
+  String get sosClickToClear => isAr ? "اضغط لمسح تنبيه SOS الخاص بك" : "Click to clear your SOS alert";
+  String get sosCleared => isAr ? "تم مسح SOS" : "SOS Cleared";
+  String get triggerSosTitle => isAr ? "🚨 تفعيل SOS؟" : "🚨 Trigger SOS?";
+  String get triggerSosContent => isAr ? "سيؤدي هذا إلى تنبيه الجميع في الجلسة وإرسال موقعك إلى دردشة المجموعة. هل تريد الاستمرار؟" : "This will alert everyone in the session and send your location to the group chat. Continue?";
+  String get yesSos => isAr ? "نعم، SOS" : "YES, SOS";
+  String get sosActivated => isAr ? "🚨 تم تفعيل SOS. ابقَ في مكانك!" : "🚨 SOS ACTIVATED. Stay where you are!";
+  String get arFriendCompass => isAr ? "بوصلة الأصدقاء AR" : "AR Friend Compass";
+  String get visual3DPointer => isAr ? "مؤشر بصري ثلاثي الأبعاد للعثور على الأصدقاء" : "Visual 3D pointer to find friends";
+  String get noOtherParticipants => isAr ? "لا يوجد مشاركون آخرون في هذه الخروجة" : "No other participants in this outing";
+  String get selectParticipantToFind => isAr ? "اختر مشاركًا للعثور عليه باستخدام مؤشر AR البصري" : "Select a participant to find with the visual AR pointer";
+  String get noLocationAvailableFriend => isAr ? "لا يتوفر موقع لهذا الصديق" : "No location available for this friend";
+  String get splitBillAI => isAr ? "تقسيم الفاتورة (AI)" : "Split Bill (AI)";
+  String get autoExtractItems => isAr ? "استخراج العناصر تلقائيًا وتحليل الأسعار" : "Auto extract items and parse prices";
+  String get finishOuting => isAr ? "إنهاء الخروجة" : "Finish Outing";
+  String get finishOutingTitle => isAr ? "إنهاء الخروجة؟" : "Finish Outing?";
+  String get finishOutingContent => isAr ? "سيؤدي هذا إلى إغلاق الجلسة للجميع. هل أنت متأكد أنك انتهيت؟" : "This will close the session for everyone. Are you sure you're done?";
+  String get notYet => isAr ? "ليس بعد" : "Not yet";
+  String get yesFinish => isAr ? "نعم، أنهِ!" : "Yes, finish!";
+
+  // Receipt Splitter Strings
+  String get receiptSplitter => isAr ? "مقسم الفاتورة" : "Receipt Splitter";
+  String get addCustomItem => isAr ? "إضافة عنصر مخصص" : "Add Custom Item";
+  String get itemName => isAr ? "اسم العنصر" : "Item Name";
+  String get price => isAr ? "السعر" : "Price";
+  String get add => isAr ? "إضافة" : "Add";
+  String get assignLabel => isAr ? "تعيين" : "Assign";
+  String get selectWhoShared => isAr ? "اختر من شارك هذا العنصر" : "Select who shared this item";
+  String get scanReceipt => isAr ? "مسح الفاتورة" : "Scan Receipt";
+  String get addCustom => isAr ? "إضافة مخصص" : "Add Custom";
+  String get scanningWithAI => isAr ? "جاري المسح باستخدام Apple Vision AI..." : "Scanning with Apple Vision AI...";
+  String get extraAdjustments => isAr ? "تعديلات إضافية" : "Extra Adjustments";
+  String get taxPercent => isAr ? "الضريبة %" : "Tax %";
+  String get tipPercent => isAr ? "البقشيش %" : "Tip %";
+  String get selectedLabel => isAr ? "تم اختيارهم" : "Selected";
+  String get itemNumber => isAr ? "عنصر رقم" : "Item #";
+
+  // Outing Tracking Strings
+  String get liveTracking => isAr ? "تتبع مباشر" : "LIVE TRACKING";
+  String get destination => isAr ? "الوجهة" : "Destination";
+  String get following => isAr ? "متابعة" : "FOLLOWING";
+  String get friendsArrivalTimes => isAr ? "أوقات وصول الأصدقاء" : "Friends Arrival Times";
+  String get liveLocationSafety => isAr ? "تم مشاركة الموقع المباشر من أجل الأمان" : "Live location shared for safety";
+  String get meLabel => isAr ? "أنا" : "ME";
+  String get joinedMasterpiece => isAr ? "انضم إلى التحفة الفنية" : "Joined the masterpiece";
+  String get kmLeft => isAr ? "كم متبقي" : "km left";
+  String get arrivedStatus => isAr ? "وصل" : "ARRIVED";
+  String get privateGhost => isAr ? "خاص (شبح)" : "PRIVATE (GHOST)";
+  String get sharingLocation => isAr ? "مشاركة الموقع" : "SHARING LOCATION";
+
+  // AR Friend Compass Strings
+  String get initializingArCompass => isAr ? "جاري تشغيل بوصلة الأصدقاء AR..." : "Initializing AR Friend Compass...";
+  String get arFriendCompassTitle => isAr ? "بوصلة الأصدقاء AR" : "AR FRIEND COMPASS";
+  String get awayFrom => isAr ? "بعيد عن" : "away from";
+  String get waitingForUpdate => isAr ? "في انتظار تحديث موقع الصديق." : "Waiting for updated friend location.";
+  String get locationOutdated => isAr ? "قد يكون موقع الصديق قديماً." : "Friend location may be outdated.";
+  String get calibrateCompass => isAr ? "حرك الهاتف بحركة رقم 8 لمعايرة البوصلة." : "Move phone in a figure-8 to calibrate compass.";
+  String get weakAccuracyIndoors => isAr ? "دقة الموقع ضعيفة في الداخل." : "Location accuracy is weak indoors.";
+  String get nearbyGpsInaccurate => isAr ? "قريب جداً — قد يكون نظام تحديد المواقع غير دقيق في الداخل." : "Nearby — GPS may be inaccurate indoors.";
+  String get pointAtFriend => isAr ? "✨ وجه الهاتف مباشرة نحو" : "✨ Point directly at";
+  String get friendBehindYou => isAr ? "🔄 الصديق خلفك. التفت للخلف." : "🔄 Friend is behind you. Turn around.";
+  String get turnRightToFind => isAr ? "🔄 اتجه يميناً للعثور على" : "🔄 Turn right to find";
+  String get turnLeftToFind => isAr ? "🔄 اتجه يساراً للعثور على" : "🔄 Turn left to find";
+
+  // History Page Strings
+  String get groupLabel => isAr ? "مجموعة" : "Group";
+  String get noRecapRecorded => isAr ? "لم يتم تسجيل ملخص." : "No recap recorded.";
+  String outingAt(String venue) => isAr ? "خروجة في $venue" : "Outing at $venue";
+
+  // Dashboard Strings
+  String get viewDetails => isAr ? "عرض التفاصيل" : "View Details";
+  String arrivedStatusLabel(int arrived, int total) => isAr ? "وصل $arrived/$total" : "arrived $arrived/$total";
+  String get everyoneArrived => isAr ? "وصل الجميع! 🎉" : "Everyone has arrived! 🎉";
+  String get allLabel => isAr ? "الكل" : "ALL";
+  String get favoritesLabel => isAr ? "المفضلة" : "FAVORITES";
+  String get aiRecapLabel => isAr ? "ملخص AI" : "AI RECAP";
+  String get squadMemoriesLabel => isAr ? "ذكريات الفريق" : "SQUAD MEMORIES";
+  String get epicOutingLabel => isAr ? "خروجة ملحمية" : "Epic Outing";
+  String get squadHistory => isAr ? "سجل الفريق" : "Squad History";
+  String photosLabel(int count) => isAr ? "$count صور" : "$count Photos";
+  String get noFavoritesYet => isAr ? "لا توجد مفضلات بعد" : "No favorites yet";
+  String get noMemoriesYetLabel => isAr ? "لا توجد ذكريات بعد" : "No memories yet";
+  String get tapHeartToSave => isAr ? "اضغط على القلب في أي ذكرى لحفظها هنا!" : "Tap the heart on any memory to save it here!";
+  String get finishOutingToSaveMemories => isAr ? "أنهِ الخروجة لحفظ الذكريات هنا!" : "Finish an outing to save it here!";
+
+  // Chat Page Strings
+  String get editMessage => isAr ? "تعديل الرسالة" : "Edit Message";
+  String get messageInfo => isAr ? "معلومات الرسالة" : "Message Info";
+  String get deleteForEveryone => isAr ? "الحذف لدى الجميع" : "Delete for everyone";
+  String get permanentRemoval => isAr ? "إزالة نهائية" : "Permanent removal";
+  String get deleteForMe => isAr ? "حذف بالنسبة لي" : "Delete for me";
+  String get readBy => isAr ? "قرأها" : "Read by";
+  String get membersLabel => isAr ? "أعضاء" : "members";
+  String get noOneReadYet => isAr ? "لم يقرأها أحد بعد" : "No one has read this yet";
+  String get reactionsLabel => isAr ? "التفاعلات" : "Reactions";
+
+  // Outing Card Strings
+  String get outingSession => isAr ? "جلسة خروجة" : "Outing Session";
+  String get liveLabel => isAr ? "مباشر" : "Live";
+  String minRemaining(int min) => isAr ? "متبقي $min دقائق" : "$min min remaining";
+  String get destinationLocked => isAr ? "تم تحديد الوجهة" : "Destination Locked";
+  String get collectingMemories => isAr ? "جمع الذكريات" : "Collecting Memories";
+  String get savedInHistory => isAr ? "محفوظ في السجل" : "Saved in History";
+  String get expired => isAr ? "منتهي الصلاحية" : "Expired";
+  String get joinLabel => isAr ? "انضمام" : "Join";
+  String get celebrateLabel => isAr ? "احتفل!" : "Celebrate!";
+  String get winnerLabel => isAr ? "الفائز" : "Winner";
+  String get memoriesLabel => isAr ? "الذكريات" : "Memories";
+  String get recapLabel => isAr ? "ملخص" : "Recap";
+  String get onlyParticipantsDetails => isAr ? "المشاركون فقط يمكنهم عرض التفاصيل." : "Only participants can view details.";
+  String sosNeedsHelp(String name) => isAr ? "نجدة! $name يحتاج للمساعدة!" : "SOS! $name needs help!";
+  String get emergencyLabel => isAr ? "طوارئ 🚨" : "🚨 EMERGENCY";
+  String get sharedLocationLabel => isAr ? "موقع مشترك 📍" : "📍 Shared Location";
+  String get openInGoogleMaps => isAr ? "فتح في خرائط جوجل" : "Open in Google Maps";
+  String get sosActiveLabel => isAr ? "نجدة نشطة" : "SOS ACTIVE";
+  String get needsHelpSuffix => isAr ? " يحتاج للمساعدة!" : " NEEDS HELP!";
+  String get stopAlarm => isAr ? "إيقاف التنبيه" : "STOP ALARM";
+  String get seeOnMap => isAr ? "عرض على الخريطة" : "SEE ON MAP";
+  String get deleteForEveryoneTitle => isAr ? "الحذف لدى الجميع؟" : "Delete for everyone?";
+  String get deleteForEveryoneContent => isAr ? "هل أنت متأكد أنك تريد حذف هذه الرسالة لدى الجميع؟" : "Are you sure you want to delete this message for everyone?";
+  String get deleteAction => isAr ? "حذف" : "Delete";
+  String participantCount(int joined, int total) => isAr ? "$joined / $total انضموا" : "$joined / $total joined";
+  String get sessionMemories => isAr ? "ذكريات هذه الجلسة" : "Memories of this session";
+  String get bestMomentLabel => isAr ? "أفضل لحظة (AI)" : "Best Moment (AI)";
+  String membersCount(int count) => isAr ? "$count أعضاء" : "$count members";
 }
 

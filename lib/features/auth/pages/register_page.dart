@@ -63,8 +63,8 @@ class RegisterPage extends StatelessWidget {
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [
-                              AppColors.teal.withValues(alpha: 0.9),
-                              AppColors.teal.withValues(alpha: 0.5),
+                              AppColors.teal.withOpacity(0.9),
+                              AppColors.teal.withOpacity(0.5),
                             ],
                           ),
                         ),
@@ -136,7 +136,7 @@ class RegisterPage extends StatelessWidget {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.teal.withValues(alpha: 0.2),
+                                color: AppColors.teal.withOpacity(0.2),
                                 blurRadius: 20,
                                 offset: const Offset(0, 8),
                               ),
@@ -155,7 +155,7 @@ class RegisterPage extends StatelessWidget {
                             child: Icon(
                               Icons.add_a_photo_outlined,
                               size: 38,
-                              color: AppColors.teal.withValues(alpha: 0.6),
+                              color: AppColors.teal.withOpacity(0.6),
                             ),
                           ),
                         ),
@@ -169,7 +169,7 @@ class RegisterPage extends StatelessWidget {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
+                                  color: Colors.black.withOpacity(0.1),
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
                                 ),

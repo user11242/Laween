@@ -30,7 +30,7 @@ class OutingThinkingView extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: AppColors.teal.withValues(alpha: 0.1),
+                      color: AppColors.teal.withOpacity(0.1),
                       width: 1,
                     ),
                   ),
@@ -51,7 +51,7 @@ class OutingThinkingView extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: AppColors.teal.withValues(alpha: 0.2),
+                      color: AppColors.teal.withOpacity(0.2),
                       width: 1,
                     ),
                   ),
@@ -69,11 +69,11 @@ class OutingThinkingView extends StatelessWidget {
             Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: AppColors.teal.withValues(alpha: 0.1),
+                    color: AppColors.teal.withOpacity(0.1),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.teal.withValues(alpha: 0.2),
+                        color: AppColors.teal.withOpacity(0.2),
                         blurRadius: 20,
                         spreadRadius: 5,
                       ),

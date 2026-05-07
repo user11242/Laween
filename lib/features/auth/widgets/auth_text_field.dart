@@ -134,7 +134,7 @@ class AuthTextField extends StatelessWidget {
                         if (onPaste != null)
                           IconButton(
                             icon: const Icon(Icons.content_paste, size: 20),
-                            color: AppColors.textColor.withValues(alpha: 0.7),
+                            color: AppColors.textColor.withOpacity(0.7),
                             onPressed: onPaste,
                             tooltip: AppLocalizations.of(context)!.paste,
                           ),

@@ -225,5 +225,53 @@ class GoogleMapsService {
     }
     return poly;
   }
+
+  /// Generate a Google Places New Photo URL from a photo reference (resource name)
+  String? getPlacePhotoUrl(String? photoReference, {int maxWidth = 400}) {
+    if (_apiKey == null || photoReference == null) return null;
+    // photoReference is expected to be in the format "places/PLACE_ID/photos/PHOTO_ID"
+    return "https://places.googleapis.com/v1/$photoReference/media?key=$_apiKey&maxWidthPx=$maxWidth";
+  }
+
+  /// Search for places nearby using text query and location bias
+  Future<List<Map<String, dynamic>>> searchPlacesNearby({
+    required double latitude,
+    required double longitude,
+    required String query,
+    double radius = 3000.0,
+    int maxResults = 20,
+  }) async {
+    if (_apiKey == null) return [];
+
+    final url = Uri.parse('https://places.googleapis.com/v1/places:searchText');
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': _apiKey!,
+          'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.photos,places.location,places.id,places.businessStatus',
+        },
+        body: jsonEncode({
+          'textQuery': query,
+          'locationBias': {
+            'circle': {
+              'center': {'latitude': latitude, 'longitude': longitude},
+              'radius': radius,
+            },
+          },
+          'maxResultCount': maxResults,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return List<Map<String, dynamic>>.from(data['places'] ?? []);
+      }
+    } catch (e) {
+      debugPrint('[PlacesSearch] Error: $e');
+    }
+    return [];
+  }
 }
 

@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/colors.dart';
 import '../../../features/auth/widgets/link_account_dialog.dart';
 import '../../../features/auth/data/services/auth_service.dart';
@@ -83,7 +84,7 @@ class _LoginFormState extends State<LoginForm> {
                       width: 80,
                       height: 80,
                       decoration: BoxDecoration(
-                        color: Colors.red.withValues(alpha: 0.05),
+                        color: Colors.red.withOpacity(0.05),
                         shape: BoxShape.circle,
                       ),
                       child: const Center(
@@ -232,7 +233,7 @@ class _LoginFormState extends State<LoginForm> {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: AppColors.teal.withValues(alpha: 0.05),
+                  color: AppColors.teal.withOpacity(0.05),
                   shape: BoxShape.circle,
                 ),
                 child: const Center(child: Icon(Icons.fingerprint, color: AppColors.teal, size: 40)),
@@ -352,14 +353,14 @@ class _LoginFormState extends State<LoginForm> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isFocused
-              ? AppColors.teal.withValues(alpha: 0.4)
+              ? AppColors.teal.withOpacity(0.4)
               : const Color(0xFFE8ECF0),
           width: isFocused ? 1.5 : 1.0,
         ),
         boxShadow: isFocused
             ? [
                 BoxShadow(
-                  color: AppColors.teal.withValues(alpha: 0.06),
+                  color: AppColors.teal.withOpacity(0.06),
                   blurRadius: 16,
                   spreadRadius: 0,
                   offset: const Offset(0, 4),
@@ -416,9 +417,9 @@ class _LoginFormState extends State<LoginForm> {
           icon: Icons.email_outlined,
           keyboardType: TextInputType.emailAddress,
           isFocused: _emailFocused,
-        ),
-        const SizedBox(height: 14),
-
+        ).animate().fadeIn(delay: 400.ms).slideX(begin: -0.1),
+        const SizedBox(height: 16),
+ 
         // ── 2. Password ──
         _buildModernInput(
           controller: _passwordController,
@@ -430,14 +431,14 @@ class _LoginFormState extends State<LoginForm> {
           suffixIcon: IconButton(
             icon: Icon(
               _obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-              color: _passwordFocused ? AppColors.teal.withValues(alpha: 0.6) : const Color(0xFFBFC5D2),
+              color: _passwordFocused ? AppColors.teal : const Color(0xFFBFC5D2),
               size: 20,
             ),
             onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
           ),
-        ),
-        const SizedBox(height: 4),
-
+        ).animate().fadeIn(delay: 500.ms).slideX(begin: -0.1),
+        const SizedBox(height: 8),
+ 
         // ── 3. Forgot Password ──
         Align(
           alignment: l10n.isAr ? Alignment.centerLeft : Alignment.centerRight,
@@ -455,89 +456,86 @@ class _LoginFormState extends State<LoginForm> {
               ),
             ),
           ),
-        ),
-        const SizedBox(height: 20),
-
+        ).animate().fadeIn(delay: 600.ms),
+        const SizedBox(height: 24),
+ 
         // ── 4. Continue Button ──
-        Container(
-          height: 56,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: const LinearGradient(
-              colors: [Color(0xFF00BFA5), AppColors.teal],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.teal.withValues(alpha: 0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-                spreadRadius: -4,
-              ),
-            ],
-          ),
-          child: ElevatedButton(
-            onPressed: _isLoading ? null : _handleContinue,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              shadowColor: Colors.transparent,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            ),
-            child: _isLoading
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        l10n.continueText,
-                        style: GoogleFonts.outfit(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_forward_rounded,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                      ),
-                    ],
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: _isLoading ? null : _handleContinue,
+            borderRadius: BorderRadius.circular(18),
+            child: Ink(
+              height: 58,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF00BFA5), AppColors.teal],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.teal.withOpacity(0.35),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                    spreadRadius: -4,
                   ),
+                ],
+              ),
+              child: Center(
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            l10n.continueText,
+                            style: GoogleFonts.outfit(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          const Icon(
+                            Icons.arrow_forward_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ).animate(onPlay: (c) => c.repeat())
+                           .moveX(begin: 0, end: 4, duration: 800.ms, curve: Curves.easeInOut)
+                           .then()
+                           .moveX(begin: 4, end: 0, duration: 800.ms, curve: Curves.easeInOut),
+                        ],
+                      ),
+              ),
+            ),
           ),
-        ),
-        const SizedBox(height: 28),
-
+        ).animate().fadeIn(delay: 700.ms).scale(begin: const Offset(0.9, 0.9)),
+        const SizedBox(height: 32),
+ 
         // ── 5. Divider ──
         Row(
           children: [
-            Expanded(child: Divider(color: const Color(0xFFE8ECF0), thickness: 1, endIndent: 16)),
+            Expanded(child: Divider(color: const Color(0xFFE8ECF0), thickness: 1.2, endIndent: 16)),
             Text(
               l10n.isAr ? "أو عبر" : "or",
               style: GoogleFonts.outfit(
                 color: const Color(0xFFADB5C2),
                 fontSize: 13,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            Expanded(child: Divider(color: const Color(0xFFE8ECF0), thickness: 1, indent: 16)),
+            Expanded(child: Divider(color: const Color(0xFFE8ECF0), thickness: 1.2, indent: 16)),
           ],
-        ),
-        const SizedBox(height: 24),
-
+        ).animate().fadeIn(delay: 800.ms),
+        const SizedBox(height: 28),
+ 
         // ── 6. Social Login Row ──
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -545,7 +543,7 @@ class _LoginFormState extends State<LoginForm> {
             // Biometric
             _SocialLoginButton(
               onPressed: _handleBiometricLogin,
-              child: Platform.isIOS
+              icon: Platform.isIOS
                   ? CustomPaint(
                       size: const Size(22, 22),
                       painter: FaceIdPainter(
@@ -564,23 +562,20 @@ class _LoginFormState extends State<LoginForm> {
               label: l10n.isAr ? "البصمة" : "Face ID",
             ),
             const SizedBox(width: 16),
-
+ 
             // Google
             _SocialLoginButton(
               onPressed: _handleGoogleLogin,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.asset(
-                  'assets/google_logo.jpg',
-                  height: 24,
-                  width: 24,
-                  fit: BoxFit.cover,
-                ),
+              icon: Image.asset(
+                'assets/google_logo.jpg',
+                height: 22,
+                width: 22,
+                fit: BoxFit.contain,
               ),
-              label: "Google",
+              label: l10n.google,
             ),
           ],
-        ),
+        ).animate().fadeIn(delay: 900.ms).slideY(begin: 0.1),
       ],
     );
   }
@@ -589,42 +584,50 @@ class _LoginFormState extends State<LoginForm> {
 /// Reusable social login button with label
 class _SocialLoginButton extends StatelessWidget {
   final VoidCallback onPressed;
-  final Widget child;
+  final Widget icon;
   final String label;
 
   const _SocialLoginButton({
     required this.onPressed,
-    required this.child,
+    required this.icon,
     required this.label,
   });
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(14),
-          splashColor: AppColors.teal.withValues(alpha: 0.08),
-          child: Container(
-            height: 54,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF5F6F8),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFE8ECF0)),
+      child: Container(
+        height: 56,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE8ECF0)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(16),
+            splashColor: AppColors.teal.withOpacity(0.05),
+            highlightColor: AppColors.teal.withOpacity(0.02),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                child,
-                const SizedBox(width: 10),
+                icon,
+                const SizedBox(width: 12),
                 Text(
                   label,
                   style: GoogleFonts.outfit(
-                    fontSize: 14,
+                    fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF3A3F50),
+                    color: const Color(0xFF1A1D2E),
                   ),
                 ),
               ],
