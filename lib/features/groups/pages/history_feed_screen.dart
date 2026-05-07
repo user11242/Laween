@@ -44,16 +44,16 @@ class _HistoryFeedScreenState extends State<HistoryFeedScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.getBackground(context),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.getSurfaceElevated(context),
         elevation: 0,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: AppColors.darkSlate),
+        iconTheme: IconThemeData(color: AppColors.getTextPrimary(context)),
         title: Text(
           l10n.squadHistory,
           style: GoogleFonts.outfit(
-            color: AppColors.darkSlate,
+            color: AppColors.getTextPrimary(context),
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
@@ -128,7 +128,9 @@ class _HistoryFeedScreenState extends State<HistoryFeedScreen> {
         duration: const Duration(milliseconds: 250),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? AppColors.darkSlate : Colors.grey.shade100,
+          color: active
+              ? AppColors.getTextPrimary(context)
+              : AppColors.getInputBackground(context),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
@@ -136,7 +138,9 @@ class _HistoryFeedScreenState extends State<HistoryFeedScreen> {
           style: GoogleFonts.inter(
             fontSize: 10,
             fontWeight: FontWeight.w900,
-            color: active ? Colors.white : Colors.grey.shade500,
+            color: active
+                ? AppColors.getBackground(context)
+                : AppColors.getTextSecondary(context),
             letterSpacing: 1,
           ),
         ),
@@ -156,11 +160,11 @@ class _HistoryFeedScreenState extends State<HistoryFeedScreen> {
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.getSurfaceElevated(context),
           borderRadius: BorderRadius.circular(32),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: AppColors.getShadow(context).withValues(alpha: 0.05),
               blurRadius: 30,
               offset: const Offset(0, 10),
             )
@@ -177,13 +181,17 @@ class _HistoryFeedScreenState extends State<HistoryFeedScreen> {
                   child: Container(
                     height: 220,
                     width: double.infinity,
-                    color: Colors.grey.shade100,
+                    color: AppColors.getInputBackground(context),
                     child: session.coverPhotoUrl != null
                         ? CachedNetworkImage(
                             imageUrl: session.coverPhotoUrl!,
                             fit: BoxFit.cover,
                           )
-                        : const Icon(Icons.photo_library_rounded, size: 48, color: Colors.grey),
+                        : Icon(
+                            Icons.photo_library_rounded,
+                            size: 48,
+                            color: AppColors.getTextMuted(context),
+                          ),
                   ),
                 ),
                 // Favorite Button
@@ -195,18 +203,20 @@ class _HistoryFeedScreenState extends State<HistoryFeedScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
+                        color: AppColors.getSurfaceElevated(context).withValues(alpha: 0.9),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: AppColors.getShadow(context).withValues(alpha: 0.1),
                             blurRadius: 10,
                           )
                         ]
                       ),
                       child: Icon(
                         isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                        color: isFavorite ? Colors.redAccent : Colors.grey.shade400,
+                        color: isFavorite
+                            ? Colors.redAccent
+                            : AppColors.getTextMuted(context),
                         size: 22,
                       ),
                     ),
@@ -258,7 +268,7 @@ class _HistoryFeedScreenState extends State<HistoryFeedScreen> {
                     style: GoogleFonts.outfit(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.darkSlate,
+                      color: AppColors.getTextPrimary(context),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -269,7 +279,7 @@ class _HistoryFeedScreenState extends State<HistoryFeedScreen> {
                       session.memoryRecap!,
                       style: GoogleFonts.inter(
                         fontSize: 14,
-                        color: Colors.grey.shade600,
+                        color: AppColors.getTextSecondary(context),
                         height: 1.5,
                       ),
                       maxLines: 2,
@@ -290,14 +300,18 @@ class _HistoryFeedScreenState extends State<HistoryFeedScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.history_rounded, size: 64, color: Colors.grey.shade200),
+          Icon(
+            Icons.history_rounded,
+            size: 64,
+            color: AppColors.getInputBackground(context),
+          ),
           const SizedBox(height: 16),
           Text(
             _showOnlyFavorites ? l10n.noFavoritesYet : l10n.noMemoriesYetLabel,
             style: GoogleFonts.outfit(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppColors.darkSlate,
+              color: AppColors.getTextPrimary(context),
             ),
           ),
           const SizedBox(height: 8),
@@ -305,7 +319,7 @@ class _HistoryFeedScreenState extends State<HistoryFeedScreen> {
             _showOnlyFavorites ? l10n.tapHeartToSave : l10n.finishOutingToSaveMemories,
             style: GoogleFonts.inter(
               fontSize: 14,
-              color: Colors.grey.shade400,
+              color: AppColors.getTextMuted(context),
             ),
           ),
         ],

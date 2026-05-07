@@ -173,7 +173,7 @@ class UniversalOtpStepState extends State<UniversalOtpStep> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: widget.isLight ? AppColors.teal.withOpacity(0.05) : Colors.white.withOpacity(0.05),
+            color: AppColors.getSurfaceElevated(context),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
@@ -198,7 +198,7 @@ class UniversalOtpStepState extends State<UniversalOtpStep> {
                     Text(
                       _isEmail ? l10n.verifyEmail : l10n.verifyPhone,
                       style: TextStyle(
-                        color: widget.isLight ? Colors.black54 : Colors.white60,
+                        color: AppColors.getTextSecondary(context),
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1,
@@ -208,7 +208,7 @@ class UniversalOtpStepState extends State<UniversalOtpStep> {
                     Text(
                       NumericUtils.normalize(widget.destination),
                       style: TextStyle(
-                        color: widget.isLight ? Colors.black87 : Colors.white,
+                        color: AppColors.getTextPrimary(context),
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                       ),
@@ -252,18 +252,18 @@ class UniversalOtpStepState extends State<UniversalOtpStep> {
                 ? Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.03),
+                      color: AppColors.getSurface(context),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.timer_outlined, size: 14, color: widget.isLight ? Colors.black45 : Colors.white38),
+                        Icon(Icons.timer_outlined, size: 14, color: AppColors.getTextSecondary(context)),
                         const SizedBox(width: 8),
                         Text(
                           l10n.resendIn(_resendCooldown),
                           style: TextStyle(
-                            color: widget.isLight ? Colors.black54 : Colors.white54,
+                            color: AppColors.getTextSecondary(context),
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),

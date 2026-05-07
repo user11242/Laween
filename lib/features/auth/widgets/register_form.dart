@@ -504,13 +504,13 @@ class _RegisterFormState extends State<RegisterForm>
       effects: [ShakeEffect(duration: 400.ms, hz: 6)],
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.getSurfaceElevated(context),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
               color: errorText != null
-                  ? Colors.red.withOpacity(0.08)
-                  : Colors.black.withOpacity(0.03),
+                  ? Colors.red.withValues(alpha: 0.08)
+                  : AppColors.getShadow(context).withValues(alpha: 0.03),
               blurRadius: 16,
               spreadRadius: 0,
               offset: const Offset(0, 6),
@@ -526,11 +526,15 @@ class _RegisterFormState extends State<RegisterForm>
           style: isAr
               ? GoogleFonts.cairo(
                   fontSize: 16,
-                  color: errorText != null ? Colors.red : Colors.black87,
+                  color: errorText != null
+                      ? Colors.red
+                      : AppColors.getTextPrimary(context),
                 )
               : GoogleFonts.nunito(
                   fontSize: 16,
-                  color: errorText != null ? Colors.red : Colors.black87,
+                  color: errorText != null
+                      ? Colors.red
+                      : AppColors.getTextPrimary(context),
                 ),
           decoration: InputDecoration(
             labelText: label,
@@ -538,18 +542,24 @@ class _RegisterFormState extends State<RegisterForm>
                 ? GoogleFonts.cairo(
                     color: errorText != null
                         ? Colors.red
-                        : Colors.grey.shade500,
+                        : AppColors.getTextMuted(context),
                     fontSize: 14,
                   )
                 : GoogleFonts.nunito(
                     color: errorText != null
                         ? Colors.red
-                        : Colors.grey.shade500,
+                        : AppColors.getTextMuted(context),
                     fontSize: 14,
                   ),
             hintStyle: isAr
-                ? GoogleFonts.cairo(color: Colors.grey.shade400, fontSize: 14)
-                : GoogleFonts.nunito(color: Colors.grey.shade400, fontSize: 14),
+                ? GoogleFonts.cairo(
+                    color: AppColors.getTextMuted(context),
+                    fontSize: 14,
+                  )
+                : GoogleFonts.nunito(
+                    color: AppColors.getTextMuted(context),
+                    fontSize: 14,
+                  ),
             prefixIcon: Icon(
               icon,
               color: errorText != null ? Colors.red : AppColors.teal,
@@ -584,7 +594,7 @@ class _RegisterFormState extends State<RegisterForm>
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(
                 color: errorText != null
-                    ? Colors.red.withOpacity(0.5)
+                    ? Colors.red.withValues(alpha: 0.5)
                     : Colors.transparent,
               ),
             ),
@@ -593,7 +603,7 @@ class _RegisterFormState extends State<RegisterForm>
               borderSide: BorderSide(
                 color: errorText != null
                     ? Colors.red
-                    : AppColors.teal.withOpacity(0.4),
+                    : AppColors.teal.withValues(alpha: 0.4),
                 width: 1.5,
               ),
             ),
@@ -662,13 +672,15 @@ class _RegisterFormState extends State<RegisterForm>
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.getSurfaceElevated(context),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
                       color: _phoneError != null
-                          ? Colors.red.withOpacity(0.08)
-                          : Colors.black.withOpacity(0.03),
+                          ? Colors.red.withValues(alpha: 0.08)
+                          : AppColors.getShadow(
+                              context,
+                            ).withValues(alpha: 0.03),
                       blurRadius: 16,
                       spreadRadius: 0,
                       offset: const Offset(0, 6),
@@ -694,13 +706,13 @@ class _RegisterFormState extends State<RegisterForm>
                         ? GoogleFonts.cairo(
                             color: _phoneError != null
                                 ? Colors.red
-                                : Colors.grey.shade500,
+                                : AppColors.getTextMuted(context),
                             fontSize: 14,
                           )
                         : GoogleFonts.nunito(
                             color: _phoneError != null
                                 ? Colors.red
-                                : Colors.grey.shade500,
+                                : AppColors.getTextMuted(context),
                             fontSize: 14,
                           ),
                     prefixIcon: Icon(
@@ -737,7 +749,7 @@ class _RegisterFormState extends State<RegisterForm>
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide(
                         color: _phoneError != null
-                            ? Colors.red.withOpacity(0.5)
+                            ? Colors.red.withValues(alpha: 0.5)
                             : Colors.transparent,
                       ),
                     ),
@@ -746,7 +758,7 @@ class _RegisterFormState extends State<RegisterForm>
                       borderSide: BorderSide(
                         color: _phoneError != null
                             ? Colors.red
-                            : AppColors.teal.withOpacity(0.4),
+                            : AppColors.teal.withValues(alpha: 0.4),
                         width: 1.5,
                       ),
                     ),
@@ -774,13 +786,13 @@ class _RegisterFormState extends State<RegisterForm>
                           fontSize: 16,
                           color: _phoneError != null
                               ? Colors.red
-                              : Colors.black87,
+                              : AppColors.getTextPrimary(context),
                         )
                       : GoogleFonts.nunito(
                           fontSize: 16,
                           color: _phoneError != null
                               ? Colors.red
-                              : Colors.black87,
+                              : AppColors.getTextPrimary(context),
                         ),
                 ),
               ),
@@ -942,7 +954,7 @@ class _RegisterFormState extends State<RegisterForm>
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.teal.withOpacity(0.4),
+                color: AppColors.teal.withValues(alpha: 0.4),
                 blurRadius: 16,
                 spreadRadius: 2,
                 offset: const Offset(0, 8),

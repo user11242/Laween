@@ -120,21 +120,24 @@ class _GlobalOutingsHistoryPageState extends State<GlobalOutingsHistoryPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.getBackground(context),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.getSurfaceElevated(context),
         elevation: 0,
         centerTitle: true,
         leading: Navigator.canPop(context)
             ? IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.darkSlate),
+                icon: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: AppColors.getTextPrimary(context),
+                ),
                 onPressed: () => Navigator.pop(context),
               )
             : null,
         title: Text(
           l10n.outingsHistory,
           style: GoogleFonts.outfit(
-            color: AppColors.darkSlate,
+            color: AppColors.getTextPrimary(context),
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
@@ -188,7 +191,9 @@ class _GlobalOutingsHistoryPageState extends State<GlobalOutingsHistoryPage> {
         duration: const Duration(milliseconds: 250),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? AppColors.darkSlate : Colors.grey.shade100,
+          color: active
+              ? AppColors.getTextPrimary(context)
+              : AppColors.getInputBackground(context),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
@@ -196,7 +201,9 @@ class _GlobalOutingsHistoryPageState extends State<GlobalOutingsHistoryPage> {
           style: GoogleFonts.inter(
             fontSize: 10,
             fontWeight: FontWeight.w900,
-            color: active ? Colors.white : Colors.grey.shade500,
+            color: active
+                ? AppColors.getBackground(context)
+                : AppColors.getTextSecondary(context),
             letterSpacing: 1,
           ),
         ),
@@ -226,11 +233,11 @@ class _GlobalOutingsHistoryPageState extends State<GlobalOutingsHistoryPage> {
         height: 120,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.getSurfaceElevated(context),
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: AppColors.getShadow(context).withValues(alpha: 0.04),
               blurRadius: 20,
               offset: const Offset(0, 8),
             )
@@ -244,7 +251,7 @@ class _GlobalOutingsHistoryPageState extends State<GlobalOutingsHistoryPage> {
               child: Container(
                 width: 96,
                 height: 96,
-                color: Colors.grey.shade100,
+                color: AppColors.getInputBackground(context),
                 child: venuePhotoUrl != null
                     ? CachedNetworkImage(
                         imageUrl: venuePhotoUrl,
@@ -258,7 +265,10 @@ class _GlobalOutingsHistoryPageState extends State<GlobalOutingsHistoryPage> {
                             imageUrl: session.coverPhotoUrl!,
                             fit: BoxFit.cover,
                           )
-                        : const Icon(Icons.location_on_rounded, color: Colors.grey),
+                        : Icon(
+                            Icons.location_on_rounded,
+                            color: AppColors.getTextMuted(context),
+                          ),
               ),
             ),
             const SizedBox(width: 16),
@@ -283,7 +293,7 @@ class _GlobalOutingsHistoryPageState extends State<GlobalOutingsHistoryPage> {
                     style: GoogleFonts.outfit(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.darkSlate,
+                      color: AppColors.getTextPrimary(context),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -294,7 +304,7 @@ class _GlobalOutingsHistoryPageState extends State<GlobalOutingsHistoryPage> {
                       Icon(
                         Icons.people_alt_rounded,
                         size: 14,
-                        color: Colors.grey.shade400,
+                        color: AppColors.getTextMuted(context),
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -302,7 +312,7 @@ class _GlobalOutingsHistoryPageState extends State<GlobalOutingsHistoryPage> {
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: Colors.grey.shade600,
+                          color: AppColors.getTextSecondary(context),
                         ),
                       ),
                     ],
@@ -323,7 +333,9 @@ class _GlobalOutingsHistoryPageState extends State<GlobalOutingsHistoryPage> {
                     isFavorite
                         ? Icons.favorite_rounded
                         : Icons.favorite_border_rounded,
-                    color: isFavorite ? Colors.redAccent : Colors.grey.shade300,
+                    color: isFavorite
+                        ? Colors.redAccent
+                        : AppColors.getShadow(context),
                     size: 22,
                   ),
                 ),
@@ -331,7 +343,7 @@ class _GlobalOutingsHistoryPageState extends State<GlobalOutingsHistoryPage> {
                   "${session.createdAt.day}/${session.createdAt.month}/${session.createdAt.year}",
                   style: GoogleFonts.inter(
                     fontSize: 10,
-                    color: Colors.grey.shade400,
+                    color: AppColors.getTextMuted(context),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -352,14 +364,18 @@ class _GlobalOutingsHistoryPageState extends State<GlobalOutingsHistoryPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.history_rounded, size: 64, color: Colors.grey.shade200),
+          Icon(
+            Icons.history_rounded,
+            size: 64,
+            color: AppColors.getInputBackground(context),
+          ),
           const SizedBox(height: 16),
           Text(
             _showOnlyFavorites ? l10n.noFavoritesYet : l10n.noMemoriesYetLabel,
             style: GoogleFonts.outfit(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppColors.darkSlate,
+              color: AppColors.getTextPrimary(context),
             ),
           ),
           const SizedBox(height: 8),
@@ -367,7 +383,7 @@ class _GlobalOutingsHistoryPageState extends State<GlobalOutingsHistoryPage> {
             _showOnlyFavorites ? l10n.tapHeartToSave : l10n.finishOutingToSaveMemories,
             style: GoogleFonts.inter(
               fontSize: 14,
-              color: Colors.grey.shade400,
+              color: AppColors.getTextMuted(context),
             ),
           ),
         ],

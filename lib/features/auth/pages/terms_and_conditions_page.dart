@@ -9,22 +9,22 @@ class TermsAndConditionsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppColors.getBackground(context),
       appBar: AppBar(
         title: Text(
           l10n.termsAndConditions,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: AppColors.getTextPrimary(context)),
         ),
-        backgroundColor: AppColors.primary,
-        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: AppColors.getSurface(context),
+        iconTheme: IconThemeData(color: AppColors.getTextPrimary(context)),
         elevation: 0,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Text(
-          l10n.termsAndConditionsContent, // Make sure this key exists in your arb files
-          style: const TextStyle(
-            color: Colors.white,
+          l10n.termsAndConditionsContent,
+          style: TextStyle(
+            color: AppColors.getTextPrimary(context),
             fontSize: 14,
             height: 1.5,
           ),

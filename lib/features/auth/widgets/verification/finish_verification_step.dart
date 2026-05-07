@@ -18,7 +18,7 @@ class FinishVerificationStep extends StatelessWidget {
           width: 80,
           height: 80,
           decoration: BoxDecoration(
-            color: Colors.green.withOpacity(0.1),
+            color: Colors.green.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Center(
@@ -38,8 +38,8 @@ class FinishVerificationStep extends StatelessWidget {
         Text(
           l10n.allVerified,
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.black87,
+          style: TextStyle(
+            color: AppColors.getTextPrimary(context),
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
@@ -51,7 +51,7 @@ class FinishVerificationStep extends StatelessWidget {
           "Your identity has been confirmed. Tap the button below to complete your registration.",
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: Colors.black.withOpacity(0.5),
+            color: AppColors.getTextSecondary(context),
             fontSize: 15,
             height: 1.5,
           ),

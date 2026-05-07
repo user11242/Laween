@@ -321,7 +321,7 @@ Laween لا يزال في مرحلة الاختبار والتطوير، واس�
 class TermsOfServicePage extends StatelessWidget {
   const TermsOfServicePage({super.key});
 
-  List<Widget> _parseContent(String text, bool isAr) {
+  List<Widget> _parseContent(BuildContext context, String text, bool isAr) {
     final paragraphs = text.split('\n\n');
     return paragraphs.map((p) {
       p = p.trim();
@@ -339,12 +339,12 @@ class TermsOfServicePage extends StatelessWidget {
           ? GoogleFonts.cairo(
               fontSize: 15,
               height: 1.8,
-              color: Colors.grey.shade800,
+              color: AppColors.getTextPrimary(context),
             )
           : GoogleFonts.nunito(
               fontSize: 15,
               height: 1.6,
-              color: Colors.grey.shade800,
+              color: AppColors.getTextPrimary(context),
             );
 
       if (isMainTitle) {
@@ -378,12 +378,12 @@ class TermsOfServicePage extends StatelessWidget {
                 ? GoogleFonts.cairo(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: Colors.black87,
+                    color: AppColors.getTextPrimary(context),
                   )
                 : GoogleFonts.nunito(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: Colors.black87,
+                    color: AppColors.getTextPrimary(context),
                   ),
             textAlign: isAr ? TextAlign.right : TextAlign.left,
             textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
@@ -438,26 +438,26 @@ class TermsOfServicePage extends StatelessWidget {
     final bool isAr = AppLocalizations.of(context)?.isAr ?? false;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: AppColors.getBackground(context),
       appBar: AppBar(
         title: Text(
           isAr ? 'الشروط والأحكام' : 'Terms of Service',
           style: isAr
               ? GoogleFonts.cairo(
-                  color: Colors.black87,
+                  color: AppColors.getTextPrimary(context),
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
                 )
               : GoogleFonts.nunito(
-                  color: Colors.black87,
+                  color: AppColors.getTextPrimary(context),
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
                 ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.grey.shade50,
+        backgroundColor: AppColors.getBackground(context),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: IconThemeData(color: AppColors.getTextPrimary(context)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 20),
           onPressed: () => Navigator.of(context).pop(),
@@ -498,12 +498,12 @@ class TermsOfServicePage extends StatelessWidget {
                         ? GoogleFonts.cairo(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                            color: AppColors.getTextPrimary(context),
                           )
                         : GoogleFonts.nunito(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                            color: AppColors.getTextPrimary(context),
                           ),
                   ),
                   const SizedBox(height: 8),
@@ -515,11 +515,11 @@ class TermsOfServicePage extends StatelessWidget {
                     style: isAr
                         ? GoogleFonts.cairo(
                             fontSize: 14,
-                            color: Colors.grey.shade600,
+                            color: AppColors.getTextSecondary(context),
                           )
                         : GoogleFonts.nunito(
                             fontSize: 14,
-                            color: Colors.grey.shade600,
+                            color: AppColors.getTextSecondary(context),
                           ),
                   ),
                 ],
@@ -531,17 +531,17 @@ class TermsOfServicePage extends StatelessWidget {
               margin: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 32.0),
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.getSurface(context),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
+                    color: AppColors.getShadow(context),
                     blurRadius: 16,
                     spreadRadius: 2,
                     offset: const Offset(0, 8),
                   ),
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.02),
+                    color: AppColors.getShadow(context).withValues(alpha: 0.02),
                     blurRadius: 4,
                     spreadRadius: 0,
                     offset: const Offset(0, 2),
@@ -552,7 +552,7 @@ class TermsOfServicePage extends StatelessWidget {
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: _parseContent(isAr ? _arTerms : _enTerms, isAr),
+                  children: _parseContent(context, isAr ? _arTerms : _enTerms, isAr),
                 ),
               ),
             ),

@@ -163,7 +163,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: AppColors.getBackground(context),
       // Prevent the keyboard from resizing the layout above
       resizeToAvoidBottomInset: true,
       body: Column(
@@ -300,7 +300,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                       style: GoogleFonts.outfit(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.darkSlate,
+                        color: AppColors.getTextPrimary(context),
                       ),
                     ),
                   ),
@@ -311,7 +311,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                           : "Set a photo and name for your group",
                       style: GoogleFonts.inter(
                         fontSize: 13,
-                        color: Colors.grey.shade500,
+                        color: AppColors.getTextSecondary(context),
                       ),
                     ),
                   ),
@@ -324,19 +324,21 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade600,
+                      color: AppColors.getTextSecondary(context),
                       letterSpacing: 0.3,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.getSurfaceElevated(context),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.grey.shade200),
+                      border: Border.all(color: AppColors.getBorder(context)),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.03),
+                          color: AppColors.getShadow(
+                            context,
+                          ).withValues(alpha: 0.03),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -346,14 +348,14 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                       controller: _nameController,
                       style: GoogleFonts.inter(
                         fontSize: 15,
-                        color: AppColors.darkSlate,
+                        color: AppColors.getTextPrimary(context),
                       ),
                       decoration: InputDecoration(
                         hintText: l10n.isAr
                             ? "مثال: فريق التطوير"
                             : "e.g. Design Team",
                         hintStyle: GoogleFonts.inter(
-                          color: Colors.grey.shade400,
+                          color: AppColors.getTextMuted(context),
                           fontSize: 14,
                         ),
                         prefixIcon: const Icon(
@@ -381,7 +383,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade600,
+                          color: AppColors.getTextSecondary(context),
                           letterSpacing: 0.3,
                         ),
                       ),
@@ -405,7 +407,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 15),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.getSurfaceElevated(context),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: AppColors.teal.withOpacity(0.4),
@@ -413,7 +415,9 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.02),
+                            color: AppColors.getShadow(
+                              context,
+                            ).withValues(alpha: 0.02),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -491,7 +495,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                                 contact.displayName,
                                 style: GoogleFonts.inter(
                                   fontSize: 13,
-                                  color: AppColors.darkSlate,
+                                  color: AppColors.getTextPrimary(context),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -503,7 +507,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                                 child: Icon(
                                   Icons.close_rounded,
                                   size: 15,
-                                  color: Colors.grey.shade500,
+                                  color: AppColors.getTextMuted(context),
                                 ),
                               ),
                             ],
@@ -678,10 +682,15 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: AppColors.getSurfaceElevated(context),
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-        boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 20)],
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.getShadow(context).withValues(alpha: 0.2),
+            blurRadius: 20,
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -706,7 +715,7 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                         AppLocalizations.of(context)!.isAr ? "جاري البحث عن أصدقاء..." : "Finding friends...",
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          color: Colors.grey,
+                          color: AppColors.getTextMuted(context),
                         ),
                       )
                     else
@@ -749,7 +758,7 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
             padding: const EdgeInsets.all(20),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
+                color: AppColors.getSurface(context),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: TextField(
@@ -757,10 +766,13 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                 decoration: InputDecoration(
                   hintText: AppLocalizations.of(context)!.isAr ? "ابحث بالاسم أو الرقم..." : "Search name or phone...",
                   hintStyle: GoogleFonts.inter(
-                    color: Colors.grey,
+                    color: AppColors.getTextMuted(context),
                     fontSize: 14,
                   ),
-                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: AppColors.getTextMuted(context),
+                  ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 15),
                 ),
@@ -805,8 +817,13 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                             CircleAvatar(
                               radius: 24,
                               backgroundColor: isOnApp
+<<<<<<< HEAD
                                   ? AppColors.teal.withOpacity(0.1)
                                   : Colors.grey.shade100,
+=======
+                                  ? AppColors.teal.withValues(alpha: 0.1)
+                                  : AppColors.getSurface(context),
+>>>>>>> user-work
                               child: Text(
                                 contact.displayName.isNotEmpty
                                     ? contact.displayName[0].toUpperCase()
@@ -814,7 +831,7 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                                 style: GoogleFonts.outfit(
                                   color: isOnApp
                                       ? AppColors.teal
-                                      : Colors.grey.shade600,
+                                      : AppColors.getTextMuted(context),
                                   fontWeight: FontWeight.bold,
                                   fontSize: 18,
                                 ),
@@ -845,7 +862,7 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                                 style: GoogleFonts.inter(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 15,
-                                  color: AppColors.darkSlate,
+                                  color: AppColors.getTextPrimary(context),
                                 ),
                               ),
                               Text(

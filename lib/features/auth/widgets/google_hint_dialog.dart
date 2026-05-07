@@ -13,7 +13,7 @@ class GoogleHintDialog extends StatelessWidget {
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
       child: Dialog(
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.getSurfaceElevated(context),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
         child: Padding(
@@ -21,7 +21,7 @@ class GoogleHintDialog extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.login, color: AppColors.white, size: 48),
+              Icon(Icons.login, color: AppColors.teal, size: 48),
               const SizedBox(height: 16),
               Text(
                 AppLocalizations.of(context)!.continueRegistrationWithGoogle,
@@ -29,15 +29,15 @@ class GoogleHintDialog extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.white,
+                  color: AppColors.getTextPrimary(context),
                 ),
               ),
               const SizedBox(height: 24),
 
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.white,
-                  foregroundColor: AppColors.black87,
+                  backgroundColor: AppColors.getBackground(context),
+                  foregroundColor: AppColors.getTextPrimary(context),
                   minimumSize: const Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),

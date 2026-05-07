@@ -35,9 +35,11 @@ class _LoginFormState extends State<LoginForm> {
     super.initState();
     _checkBiometrics();
     _emailFocusNode.addListener(
-        () => setState(() => _emailFocused = _emailFocusNode.hasFocus));
+      () => setState(() => _emailFocused = _emailFocusNode.hasFocus),
+    );
     _passwordFocusNode.addListener(
-        () => setState(() => _passwordFocused = _passwordFocusNode.hasFocus));
+      () => setState(() => _passwordFocused = _passwordFocusNode.hasFocus),
+    );
   }
 
   @override
@@ -63,7 +65,7 @@ class _LoginFormState extends State<LoginForm> {
         child: Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.getSurfaceElevated(context),
             borderRadius: BorderRadius.circular(24),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -76,7 +78,11 @@ class _LoginFormState extends State<LoginForm> {
                     alignment: Alignment.topRight,
                     child: GestureDetector(
                       onTap: () => Navigator.pop(context),
-                      child: const Icon(Icons.close, color: Colors.grey, size: 24),
+                      child: Icon(
+                        Icons.close,
+                        color: AppColors.getTextSecondary(context),
+                        size: 24,
+                      ),
                     ),
                   ),
                   Center(
@@ -88,7 +94,11 @@ class _LoginFormState extends State<LoginForm> {
                         shape: BoxShape.circle,
                       ),
                       child: const Center(
-                        child: Icon(Icons.error_outline, color: Colors.red, size: 40),
+                        child: Icon(
+                          Icons.error_outline,
+                          color: Colors.red,
+                          size: 40,
+                        ),
                       ),
                     ),
                   ),
@@ -101,14 +111,18 @@ class _LoginFormState extends State<LoginForm> {
                 style: GoogleFonts.inter(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
+                  color: AppColors.getTextPrimary(context),
                 ),
               ),
               const SizedBox(height: 16),
               Text(
                 l10n.faceIdUnavailableMessage,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(fontSize: 14, color: Colors.grey.shade600, height: 1.5),
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: AppColors.getTextSecondary(context),
+                  height: 1.5,
+                ),
               ),
               const SizedBox(height: 32),
               SizedBox(
@@ -121,12 +135,18 @@ class _LoginFormState extends State<LoginForm> {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.teal,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
                     elevation: 0,
                   ),
                   child: Text(
                     l10n.useEmailAndPassword,
-                    style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -163,15 +183,30 @@ class _LoginFormState extends State<LoginForm> {
             builder: (context) => LinkAccountDialog(email: email),
           );
           if (linked == true && mounted) {
-            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/home',
+              (route) => false,
+            );
           }
         }
       } else if (result != "NEEDS_PROFILE") {
         if (result == "CANCELED") return;
-        AppMessenger.showSnackBar(context, title: l10n.error, message: result, type: MessengerType.error);
+        AppMessenger.showSnackBar(
+          context,
+          title: l10n.error,
+          message: result,
+          type: MessengerType.error,
+        );
       }
     } catch (e) {
-      if (mounted) AppMessenger.showSnackBar(context, title: l10n.error, message: e.toString(), type: MessengerType.error);
+      if (mounted)
+        AppMessenger.showSnackBar(
+          context,
+          title: l10n.error,
+          message: e.toString(),
+          type: MessengerType.error,
+        );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -186,7 +221,9 @@ class _LoginFormState extends State<LoginForm> {
       return;
     }
     final authenticated = await _biometricService.authenticate(
-      reason: l10n.isAr ? "قم بتسجيل الدخول باستخدام البصمة" : "Authenticate to log in to Laween",
+      reason: l10n.isAr
+          ? "قم بتسجيل الدخول باستخدام البصمة"
+          : "Authenticate to log in to Laween",
     );
     if (!authenticated) return;
     setState(() => _isLoading = true);
@@ -194,7 +231,8 @@ class _LoginFormState extends State<LoginForm> {
       final result = await _authService.loginWithBiometrics();
       if (!mounted) return;
       if (result == null) {
-        if (mounted) Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+        if (mounted)
+          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
       } else if (result == "SOCIAL_LOGIN_REQUIRED") {
         await _performGoogleLogin(silent: true);
       } else if (result == "NO_SAVED_CREDENTIALS") {
@@ -207,10 +245,21 @@ class _LoginFormState extends State<LoginForm> {
           type: MessengerType.error,
         );
       } else {
-        AppMessenger.showSnackBar(context, title: l10n.error, message: result, type: MessengerType.error);
+        AppMessenger.showSnackBar(
+          context,
+          title: l10n.error,
+          message: result,
+          type: MessengerType.error,
+        );
       }
     } catch (e) {
-      if (mounted) AppMessenger.showSnackBar(context, title: l10n.error, message: e.toString(), type: MessengerType.error);
+      if (mounted)
+        AppMessenger.showSnackBar(
+          context,
+          title: l10n.error,
+          message: e.toString(),
+          type: MessengerType.error,
+        );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -224,7 +273,10 @@ class _LoginFormState extends State<LoginForm> {
         backgroundColor: Colors.transparent,
         child: Container(
           width: double.infinity,
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
+          decoration: BoxDecoration(
+            color: AppColors.getSurfaceElevated(context),
+            borderRadius: BorderRadius.circular(24),
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -236,13 +288,25 @@ class _LoginFormState extends State<LoginForm> {
                   color: AppColors.teal.withOpacity(0.05),
                   shape: BoxShape.circle,
                 ),
-                child: const Center(child: Icon(Icons.fingerprint, color: AppColors.teal, size: 40)),
+                child: const Center(
+                  child: Icon(
+                    Icons.fingerprint,
+                    color: AppColors.teal,
+                    size: 40,
+                  ),
+                ),
               ),
               const SizedBox(height: 24),
               Text(
-                l10n.isAr ? "تفعيل تسجيل الدخول بالبصمة؟" : "Enable Biometric Login?",
+                l10n.isAr
+                    ? "تفعيل تسجيل الدخول بالبصمة؟"
+                    : "Enable Biometric Login?",
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.primary),
+                style: GoogleFonts.inter(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.getTextPrimary(context),
+                ),
               ),
               const SizedBox(height: 16),
               Text(
@@ -250,7 +314,11 @@ class _LoginFormState extends State<LoginForm> {
                     ? "هل تريد استخدام بصمة الإصبع أو الوجه لتسجيل الدخول في المرات القادمة؟"
                     : "Would you like to use Face ID or Fingerprint for faster login next time?",
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(fontSize: 14, color: Colors.grey.shade600, height: 1.5),
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: AppColors.getTextSecondary(context),
+                  height: 1.5,
+                ),
               ),
               const SizedBox(height: 32),
               Row(
@@ -260,7 +328,10 @@ class _LoginFormState extends State<LoginForm> {
                       onPressed: () => Navigator.pop(context),
                       child: Text(
                         l10n.isAr ? "ليس الآن" : "Not now",
-                        style: GoogleFonts.inter(color: Colors.grey, fontWeight: FontWeight.w600),
+                        style: GoogleFonts.inter(
+                          color: AppColors.getTextSecondary(context),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
@@ -270,24 +341,35 @@ class _LoginFormState extends State<LoginForm> {
                       height: 52,
                       child: ElevatedButton(
                         onPressed: () async {
-                          await _biometricService.saveCredentials(email, password);
+                          await _biometricService.saveCredentials(
+                            email,
+                            password,
+                          );
                           if (!context.mounted) return;
                           Navigator.pop(context);
                           AppMessenger.showSnackBar(
                             context,
                             title: l10n.isAr ? "تم التفعيل" : "Enabled",
-                            message: l10n.isAr ? "تم تفعيل تسجيل الدخول بالبصمة بنجاح" : "Biometric login enabled successfully",
+                            message: l10n.isAr
+                                ? "تم تفعيل تسجيل الدخول بالبصمة بنجاح"
+                                : "Biometric login enabled successfully",
                             type: MessengerType.success,
                           );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.teal,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
                           elevation: 0,
                         ),
                         child: Text(
                           l10n.isAr ? "تفعيل" : "Enable",
-                          style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
+                          style: GoogleFonts.inter(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -299,7 +381,8 @@ class _LoginFormState extends State<LoginForm> {
         ),
       ),
     ).then((_) {
-      if (mounted) Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+      if (mounted)
+        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
     });
   }
 
@@ -309,7 +392,12 @@ class _LoginFormState extends State<LoginForm> {
     final l10n = AppLocalizations.of(context, listen: false)!;
 
     if (email.isEmpty || password.isEmpty) {
-      AppMessenger.showSnackBar(context, title: l10n.error, message: l10n.pleaseEnterEmailAndPassword, type: MessengerType.error);
+      AppMessenger.showSnackBar(
+        context,
+        title: l10n.error,
+        message: l10n.pleaseEnterEmailAndPassword,
+        type: MessengerType.error,
+      );
       return;
     }
     setState(() => _isLoading = true);
@@ -325,10 +413,21 @@ class _LoginFormState extends State<LoginForm> {
           Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
         }
       } else {
-        AppMessenger.showSnackBar(context, title: l10n.error, message: result, type: MessengerType.error);
+        AppMessenger.showSnackBar(
+          context,
+          title: l10n.error,
+          message: result,
+          type: MessengerType.error,
+        );
       }
     } catch (e) {
-      if (mounted) AppMessenger.showSnackBar(context, title: l10n.error, message: e.toString(), type: MessengerType.error);
+      if (mounted)
+        AppMessenger.showSnackBar(
+          context,
+          title: l10n.error,
+          message: e.toString(),
+          type: MessengerType.error,
+        );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -349,12 +448,12 @@ class _LoginFormState extends State<LoginForm> {
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeOut,
       decoration: BoxDecoration(
-        color: isFocused ? const Color(0xFFF0FAFA) : const Color(0xFFF5F6F8),
+        color: AppColors.getInputBackground(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isFocused
-              ? AppColors.teal.withOpacity(0.4)
-              : const Color(0xFFE8ECF0),
+              ? AppColors.teal.withValues(alpha: 0.4)
+              : AppColors.getBorder(context),
           width: isFocused ? 1.5 : 1.0,
         ),
         boxShadow: isFocused
@@ -375,13 +474,13 @@ class _LoginFormState extends State<LoginForm> {
         keyboardType: keyboardType,
         style: GoogleFonts.outfit(
           fontSize: 15,
-          color: const Color(0xFF1A1D2E),
+          color: AppColors.getTextPrimary(context),
           fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(
           hintText: label,
           hintStyle: GoogleFonts.outfit(
-            color: const Color(0xFFADB5C2),
+            color: AppColors.getTextMuted(context),
             fontSize: 14,
             fontWeight: FontWeight.w400,
           ),
@@ -389,14 +488,19 @@ class _LoginFormState extends State<LoginForm> {
             padding: const EdgeInsets.only(left: 14, right: 10),
             child: Icon(
               icon,
-              color: isFocused ? AppColors.teal : const Color(0xFFADB5C2),
+              color: isFocused
+                  ? AppColors.teal
+                  : AppColors.getTextMuted(context),
               size: 20,
             ),
           ),
           prefixIconConstraints: const BoxConstraints(minWidth: 44),
           suffixIcon: suffixIcon,
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 0),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 16,
+            horizontal: 0,
+          ),
         ),
       ),
     );
@@ -430,11 +534,16 @@ class _LoginFormState extends State<LoginForm> {
           isFocused: _passwordFocused,
           suffixIcon: IconButton(
             icon: Icon(
-              _obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-              color: _passwordFocused ? AppColors.teal : const Color(0xFFBFC5D2),
+              _obscurePassword
+                  ? Icons.visibility_off_rounded
+                  : Icons.visibility_rounded,
+              color: _passwordFocused
+                  ? AppColors.teal.withValues(alpha: 0.6)
+                  : AppColors.getTextMuted(context),
               size: 20,
             ),
-            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+            onPressed: () =>
+                setState(() => _obscurePassword = !_obscurePassword),
           ),
         ).animate().fadeIn(delay: 500.ms).slideX(begin: -0.1),
         const SizedBox(height: 8),
@@ -476,7 +585,7 @@ class _LoginFormState extends State<LoginForm> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.teal.withOpacity(0.35),
+                    color: AppColors.teal.withValues(alpha: 0.35),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                     spreadRadius: -4,
@@ -522,16 +631,28 @@ class _LoginFormState extends State<LoginForm> {
         // ── 5. Divider ──
         Row(
           children: [
-            Expanded(child: Divider(color: const Color(0xFFE8ECF0), thickness: 1.2, endIndent: 16)),
+            Expanded(
+              child: Divider(
+                color: AppColors.getDivider(context),
+                thickness: 1.2,
+                endIndent: 16,
+              ),
+            ),
             Text(
               l10n.isAr ? "أو عبر" : "or",
               style: GoogleFonts.outfit(
-                color: const Color(0xFFADB5C2),
+                color: AppColors.getTextMuted(context),
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
             ),
-            Expanded(child: Divider(color: const Color(0xFFE8ECF0), thickness: 1.2, indent: 16)),
+            Expanded(
+              child: Divider(
+                color: AppColors.getDivider(context),
+                thickness: 1.2,
+                indent: 16,
+              ),
+            ),
           ],
         ).animate().fadeIn(delay: 800.ms),
         const SizedBox(height: 28),
@@ -548,16 +669,16 @@ class _LoginFormState extends State<LoginForm> {
                       size: const Size(22, 22),
                       painter: FaceIdPainter(
                         color: _isBiometricAvailable
-                            ? const Color(0xFF1A1D2E)
-                            : const Color(0xFFD0D4DC),
+                            ? AppColors.getTextPrimary(context)
+                            : AppColors.getDivider(context),
                       ),
                     )
                   : Icon(
                       Icons.fingerprint_rounded,
                       size: 24,
                       color: _isBiometricAvailable
-                          ? const Color(0xFF1A1D2E)
-                          : const Color(0xFFD0D4DC),
+                          ? AppColors.getTextPrimary(context)
+                          : AppColors.getDivider(context),
                     ),
               label: l10n.isAr ? "البصمة" : "Face ID",
             ),
@@ -599,12 +720,12 @@ class _SocialLoginButton extends StatelessWidget {
       child: Container(
         height: 56,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.getInputBackground(context),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE8ECF0)),
+          border: Border.all(color: AppColors.getBorder(context)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: AppColors.getShadow(context).withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -615,8 +736,8 @@ class _SocialLoginButton extends StatelessWidget {
           child: InkWell(
             onTap: onPressed,
             borderRadius: BorderRadius.circular(16),
-            splashColor: AppColors.teal.withOpacity(0.05),
-            highlightColor: AppColors.teal.withOpacity(0.02),
+            splashColor: AppColors.teal.withValues(alpha: 0.05),
+            highlightColor: AppColors.teal.withValues(alpha: 0.02),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -627,7 +748,7 @@ class _SocialLoginButton extends StatelessWidget {
                   style: GoogleFonts.outfit(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF1A1D2E),
+                    color: AppColors.getTextPrimary(context),
                   ),
                 ),
               ],
@@ -684,8 +805,16 @@ class FaceIdPainter extends CustomPainter {
       paint,
     );
 
-    canvas.drawCircle(Offset(w * 0.35, h * 0.4), 1.5, paint..style = PaintingStyle.fill);
-    canvas.drawCircle(Offset(w * 0.65, h * 0.4), 1.5, paint..style = PaintingStyle.fill);
+    canvas.drawCircle(
+      Offset(w * 0.35, h * 0.4),
+      1.5,
+      paint..style = PaintingStyle.fill,
+    );
+    canvas.drawCircle(
+      Offset(w * 0.65, h * 0.4),
+      1.5,
+      paint..style = PaintingStyle.fill,
+    );
 
     paint.style = PaintingStyle.stroke;
     canvas.drawPath(

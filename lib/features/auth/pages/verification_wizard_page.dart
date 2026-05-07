@@ -126,10 +126,10 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
         content: SingleChildScrollView(
           child: Text(
             message,
-            style: const TextStyle(color: Colors.white, fontSize: 12),
+            style: TextStyle(color: AppColors.getTextPrimary(ctx), fontSize: 12),
           ),
         ),
-        backgroundColor: const Color(0xFF1E1E1E),
+        backgroundColor: AppColors.getSurfaceElevated(ctx),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -203,11 +203,11 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
                 margin: const EdgeInsets.symmetric(horizontal: 24),
                 constraints: const BoxConstraints(maxWidth: 400),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.getSurfaceElevated(context),
                   borderRadius: BorderRadius.circular(32),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
+                      color: AppColors.getShadow(context).withValues(alpha: 0.15),
                       blurRadius: 40,
                       offset: const Offset(0, 20),
                     ),
@@ -222,10 +222,10 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
                       Container(
                         padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
                         decoration: BoxDecoration(
-                          color: AppColors.teal.withOpacity(0.03),
+                          color: AppColors.teal.withValues(alpha: 0.03),
                           border: Border(
                             bottom: BorderSide(
-                              color: Colors.black.withOpacity(0.05),
+                              color: AppColors.getBorder(context),
                               width: 1,
                             ),
                           ),
@@ -250,7 +250,7 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
                                     Text(
                                       l10n.stepOf(currentStepIndex, totalStepsCount),
                                       style: TextStyle(
-                                        color: Colors.black.withOpacity(0.4),
+                                        color: AppColors.getTextMuted(context),
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -261,10 +261,10 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
                                   icon: Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: Colors.black.withOpacity(0.05),
+                                      color: AppColors.getSurface(context),
                                       shape: BoxShape.circle,
                                     ),
-                                    child: const Icon(Icons.close, size: 18, color: Colors.black54),
+                                    child: Icon(Icons.close, size: 18, color: AppColors.getTextSecondary(context)),
                                   ),
                                   onPressed: _handleCancel,
                                 ),
@@ -287,8 +287,8 @@ class _VerificationWizardPageState extends State<VerificationWizardPage> {
                                       color: isCompleted
                                           ? AppColors.teal
                                           : isActive
-                                              ? AppColors.teal.withOpacity(0.3)
-                                              : Colors.black.withOpacity(0.05),
+                                              ? AppColors.teal.withValues(alpha: 0.3)
+                                              : AppColors.getBorder(context),
                                       borderRadius: BorderRadius.circular(3),
                                     ),
                                   ),

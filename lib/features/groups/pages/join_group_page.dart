@@ -111,7 +111,7 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: AppColors.getBackground(context),
       resizeToAvoidBottomInset: true,
       body: Column(
         children: [
@@ -183,12 +183,14 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.getSurfaceElevated(context),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.grey.shade200),
+                      border: Border.all(color: AppColors.getBorder(context)),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.03),
+                          color: AppColors.getShadow(
+                            context,
+                          ).withValues(alpha: 0.03),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -278,14 +280,16 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
           children: [
             Icon(
               icon,
-              color: isActive ? Colors.white : Colors.grey.shade400,
+              color: isActive ? Colors.white : AppColors.getTextMuted(context),
               size: 20,
             ),
             const SizedBox(width: 10),
             Text(
               label,
               style: GoogleFonts.outfit(
-                color: isActive ? Colors.white : Colors.grey.shade400,
+                color: isActive
+                    ? Colors.white
+                    : AppColors.getTextMuted(context),
                 fontWeight: FontWeight.bold,
                 fontSize: 15,
               ),
@@ -375,7 +379,7 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
           style: GoogleFonts.outfit(
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: AppColors.darkSlate,
+            color: AppColors.getTextPrimary(context),
           ),
         ),
         const SizedBox(height: 8),
@@ -384,7 +388,7 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
           textAlign: TextAlign.center,
           style: GoogleFonts.inter(
             fontSize: 14,
-            color: Colors.grey.shade500,
+            color: AppColors.getTextSecondary(context),
             height: 1.5,
           ),
         ),
@@ -396,8 +400,8 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
           height: 60,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.grey.shade200),
-            color: Colors.white,
+            border: Border.all(color: AppColors.getBorder(context)),
+            color: AppColors.getSurfaceElevated(context),
           ),
           child: Material(
             color: Colors.transparent,
@@ -491,7 +495,7 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
           style: GoogleFonts.outfit(
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: AppColors.darkSlate,
+            color: AppColors.getTextPrimary(context),
           ),
         ),
         const SizedBox(height: 8),
@@ -500,7 +504,7 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
           textAlign: TextAlign.center,
           style: GoogleFonts.inter(
             fontSize: 14,
-            color: Colors.grey.shade500,
+            color: AppColors.getTextSecondary(context),
             height: 1.5,
           ),
         ),
@@ -596,11 +600,11 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
       width: 48,
       height: 64,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.getSurfaceElevated(context),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: AppColors.getShadow(context).withValues(alpha: 0.06),
             blurRadius: 15,
             spreadRadius: 1,
             offset: const Offset(0, 8),
@@ -636,19 +640,22 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
           style: GoogleFonts.outfit(
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: AppColors.darkSlate,
+            color: AppColors.getTextPrimary(context),
           ),
           decoration: InputDecoration(
             counterText: "",
             filled: true,
-            fillColor: Colors.white,
+            fillColor: AppColors.getSurfaceElevated(context),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: Colors.grey.shade200),
+              borderSide: BorderSide(color: AppColors.getBorder(context)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: Colors.grey.shade300, width: 1.2),
+              borderSide: BorderSide(
+                color: AppColors.getBorder(context),
+                width: 1.2,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -657,6 +664,7 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
           ),
           onChanged: (value) => _onPinChanged(value, index),
         ),
+      ),
       ),
     );
   }

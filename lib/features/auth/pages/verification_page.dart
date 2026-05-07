@@ -96,7 +96,7 @@ class _VerificationPageState extends State<VerificationPage> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.getBackground(context),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -206,6 +206,7 @@ class _VerificationPageState extends State<VerificationPage> {
                     style: GoogleFonts.inter(
                       fontSize: 40,
                       fontWeight: FontWeight.w400,
+                      color: AppColors.getTextPrimary(context),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -213,7 +214,7 @@ class _VerificationPageState extends State<VerificationPage> {
                     "${l10n.weSentCodeTo} $maskedPhone",
                     style: GoogleFonts.inter(
                       fontSize: 14,
-                      color: Colors.grey.shade500,
+                      color: AppColors.getTextSecondary(context),
                     ),
                   ),
 
@@ -227,10 +228,10 @@ class _VerificationPageState extends State<VerificationPage> {
                       shape: MaterialPinShape.outlined,
                       borderRadius: BorderRadius.circular(12),
                       cellSize: const Size(50, 56),
-                      fillColor: Colors.grey.shade50,
-                      focusedFillColor: Colors.white,
-                      filledFillColor: Colors.white,
-                      borderColor: Colors.grey.shade300,
+                      fillColor: AppColors.getSurface(context),
+                      focusedFillColor: AppColors.getInputBackground(context),
+                      filledFillColor: AppColors.getInputBackground(context),
+                      borderColor: AppColors.getBorder(context),
                       focusedBorderColor: AppColors.teal,
                       filledBorderColor: AppColors.teal,
                       textStyle: GoogleFonts.inter(
@@ -247,7 +248,7 @@ class _VerificationPageState extends State<VerificationPage> {
                   Text(
                     l10n.resendCodeIn(_getFormattedTime()),
                     style: GoogleFonts.inter(
-                      color: Colors.grey.shade600,
+                      color: AppColors.getTextSecondary(context),
                       fontSize: 14,
                       decoration: TextDecoration.underline,
                     ),

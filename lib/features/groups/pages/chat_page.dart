@@ -122,7 +122,10 @@ class _ChatPageState extends State<ChatPage> {
     super.initState();
     _initialUnreadCount = widget.group.unreadCounts[currentUser?.uid] ?? 0;
     _scrollController.addListener(_scrollListener);
-    _messagesStream = _chatService.getMessagesStream(widget.group.id, limit: _messageLimit);
+    _messagesStream = _chatService.getMessagesStream(
+      widget.group.id,
+      limit: _messageLimit,
+    );
     _groupStream = FirebaseFirestore.instance
         .collection('groups')
         .doc(widget.group.id)
@@ -199,13 +202,15 @@ class _ChatPageState extends State<ChatPage> {
 
   void _throttledMarkAsRead(List<String> messageIds) {
     if (currentUser == null) return;
-    
+
     // Filter out IDs that are already being processed
-    final newIds = messageIds.where((id) => !_markingReadIds.contains(id)).toList();
+    final newIds = messageIds
+        .where((id) => !_markingReadIds.contains(id))
+        .toList();
     if (newIds.isEmpty) return;
 
     _markingReadIds.addAll(newIds);
-    
+
     Future.microtask(() async {
       try {
         await _chatService.markMessagesAsRead(
@@ -525,11 +530,7 @@ class _ChatPageState extends State<ChatPage> {
       }
 
       if (_editingMessage != null) {
-        _chatService.editMessage(
-          widget.group.id,
-          _editingMessage!.id,
-          text,
-        );
+        _chatService.editMessage(widget.group.id, _editingMessage!.id, text);
         setState(() {
           _editingMessage = null;
           _messageController.clear();
@@ -538,7 +539,8 @@ class _ChatPageState extends State<ChatPage> {
       } else {
         final displayName =
             _currentUserDisplayName ?? currentUser?.displayName ?? 'Me';
-        final photoUrl = _memberPhotos[currentUser?.uid] ?? currentUser?.photoURL;
+        final photoUrl =
+            _memberPhotos[currentUser?.uid] ?? currentUser?.photoURL;
 
         if (text.isNotEmpty || imageUrls.isNotEmpty) {
           await _chatService.sendMessage(
@@ -546,7 +548,9 @@ class _ChatPageState extends State<ChatPage> {
             senderId: currentUser?.uid ?? '',
             senderName: displayName,
             senderPhotoUrl: photoUrl,
-            text: text.isNotEmpty ? text : (imageUrls.isNotEmpty ? imageUrls.first : ''),
+            text: text.isNotEmpty
+                ? text
+                : (imageUrls.isNotEmpty ? imageUrls.first : ''),
             mediaUrls: imageUrls,
             type: imageUrls.isNotEmpty ? 'image' : 'text',
             replyToId: _replyingTo?.id,
@@ -571,9 +575,9 @@ class _ChatPageState extends State<ChatPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to send: $e')));
       }
     } finally {
       if (mounted) setState(() => _isUploading = false);
@@ -684,9 +688,9 @@ class _ChatPageState extends State<ChatPage> {
 
         return Container(
           height: MediaQuery.of(context).size.height * 0.5,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          decoration: BoxDecoration(
+            color: AppColors.getSurfaceElevated(context),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
             children: [
@@ -697,7 +701,7 @@ class _ChatPageState extends State<ChatPage> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: AppColors.getBorder(context),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -712,7 +716,7 @@ class _ChatPageState extends State<ChatPage> {
                   style: GoogleFonts.outfit(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.darkSlate,
+                    color: AppColors.getTextPrimary(context),
                   ),
                 ),
               ),
@@ -748,7 +752,7 @@ class _ChatPageState extends State<ChatPage> {
                         name,
                         style: GoogleFonts.inter(
                           fontWeight: FontWeight.w600,
-                          color: AppColors.darkSlate,
+                          color: AppColors.getTextPrimary(context),
                         ),
                       ),
                       trailing: Text(
@@ -832,12 +836,19 @@ class _ChatPageState extends State<ChatPage> {
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.getBackground(context),
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
+                          border: Border.all(
+                            color: AppColors.getBackground(context),
+                            width: 2,
+                          ),
                           boxShadow: [
                             BoxShadow(
+<<<<<<< HEAD
                               color: Colors.black.withOpacity(0.1),
+=======
+                              color: AppColors.getShadow(context),
+>>>>>>> user-work
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -849,6 +860,7 @@ class _ChatPageState extends State<ChatPage> {
                                   imageUrl: pUrl,
                                   fit: BoxFit.cover,
                                   placeholder: (context, url) => Container(
+<<<<<<< HEAD
                                     color: Colors.grey.shade200,
                                   ),
                                   errorWidget: (context, url, error) => Container(
@@ -857,8 +869,23 @@ class _ChatPageState extends State<ChatPage> {
                                       Icons.person,
                                       size: 20,
                                       color: AppColors.teal,
+=======
+                                    color: AppColors.getInputBackground(
+                                      context,
+>>>>>>> user-work
                                     ),
                                   ),
+                                  errorWidget: (context, url, error) =>
+                                      Container(
+                                        color: AppColors.teal.withValues(
+                                          alpha: 0.1,
+                                        ),
+                                        child: const Icon(
+                                          Icons.person,
+                                          size: 20,
+                                          color: AppColors.teal,
+                                        ),
+                                      ),
                                 )
                               : Container(
                                   color: AppColors.teal.withOpacity(0.1),
@@ -887,7 +914,7 @@ class _ChatPageState extends State<ChatPage> {
                       style: GoogleFonts.inter(
                         fontSize: 10,
                         fontWeight: FontWeight.w500,
-                        color: Colors.grey.shade600,
+                        color: AppColors.getTextSecondary(context),
                       ),
                     ),
                   ),
@@ -897,7 +924,7 @@ class _ChatPageState extends State<ChatPage> {
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.getChatBubbleOther(context),
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(16),
                         topRight: Radius.circular(16),
@@ -906,7 +933,11 @@ class _ChatPageState extends State<ChatPage> {
                       ),
                       boxShadow: [
                         BoxShadow(
+<<<<<<< HEAD
                           color: Colors.black.withOpacity(0.05),
+=======
+                          color: AppColors.getShadow(context),
+>>>>>>> user-work
                           blurRadius: 10,
                           offset: const Offset(0, 2),
                         ),
@@ -918,7 +949,9 @@ class _ChatPageState extends State<ChatPage> {
                         return Container(
                               width: 5,
                               height: 5,
-                              margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 2.5,
+                              ),
                               decoration: const BoxDecoration(
                                 color: AppColors.teal,
                                 shape: BoxShape.circle,
@@ -1032,19 +1065,21 @@ class _ChatPageState extends State<ChatPage> {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        decoration: BoxDecoration(
+          color: AppColors.getSurfaceElevated(context),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              AppLocalizations.of(context)?.isAr == true ? "بدء خرجة" : "Start Outing",
+              AppLocalizations.of(context)?.isAr == true
+                  ? "بدء خرجة"
+                  : "Start Outing",
               style: GoogleFonts.outfit(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: AppColors.darkSlate,
+                color: AppColors.getTextPrimary(context),
               ),
             ),
             const SizedBox(height: 8),
@@ -1052,7 +1087,10 @@ class _ChatPageState extends State<ChatPage> {
               AppLocalizations.of(context)?.isAr == true
                   ? "كيف ترغب في التخطيط لليوم؟"
                   : "How would you like to plan today?",
-              style: GoogleFonts.inter(color: Colors.grey, fontSize: 14),
+              style: GoogleFonts.inter(
+                color: AppColors.getTextSecondary(context),
+                fontSize: 14,
+              ),
             ),
             const SizedBox(height: 32),
             _buildSelectionOption(
@@ -1127,14 +1165,14 @@ class _ChatPageState extends State<ChatPage> {
                     style: GoogleFonts.outfit(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.darkSlate,
+                      color: AppColors.getTextPrimary(context),
                     ),
                   ),
                   Text(
                     subtitle,
                     style: GoogleFonts.inter(
                       fontSize: 13,
-                      color: Colors.grey.shade600,
+                      color: AppColors.getTextSecondary(context),
                     ),
                   ),
                 ],
@@ -1191,21 +1229,26 @@ class _ChatPageState extends State<ChatPage> {
                             filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                             child: Container(
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.85),
+                                color: AppColors.getSurfaceElevated(
+                                  context,
+                                ).withValues(alpha: 0.85),
                                 borderRadius: BorderRadius.circular(28),
                                 border: Border.all(
-                                  color: Colors.white.withOpacity(0.4),
+                                  color: AppColors.getBorder(
+                                    context,
+                                  ).withValues(alpha: 0.4),
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
+                                    color: AppColors.getShadow(context),
                                     blurRadius: 30,
                                     offset: const Offset(0, 15),
                                   ),
                                 ],
                               ),
                               child: Directionality(
-                                textDirection: AppLocalizations.of(context)?.isAr == true
+                                textDirection:
+                                    AppLocalizations.of(context)?.isAr == true
                                     ? TextDirection.rtl
                                     : TextDirection.ltr,
                                 child: Column(
@@ -1214,7 +1257,9 @@ class _ChatPageState extends State<ChatPage> {
                                     const SizedBox(height: 12),
                                     _buildMenuItem(
                                       icon: Icons.camera_alt_rounded,
-                                      label: AppLocalizations.of(context)?.isAr == true
+                                      label:
+                                          AppLocalizations.of(context)?.isAr ==
+                                              true
                                           ? "الكاميرا"
                                           : "Camera",
                                       color: Colors.teal,
@@ -1227,7 +1272,9 @@ class _ChatPageState extends State<ChatPage> {
                                     ),
                                     _buildMenuItem(
                                       icon: Icons.image_rounded,
-                                      label: AppLocalizations.of(context)?.isAr == true
+                                      label:
+                                          AppLocalizations.of(context)?.isAr ==
+                                              true
                                           ? "المعرض"
                                           : "Gallery",
                                       color: Colors.indigo,
@@ -1240,7 +1287,9 @@ class _ChatPageState extends State<ChatPage> {
                                     ),
                                     _buildMenuItem(
                                       icon: Icons.location_on_rounded,
-                                      label: AppLocalizations.of(context)?.isAr == true
+                                      label:
+                                          AppLocalizations.of(context)?.isAr ==
+                                              true
                                           ? "الموقع"
                                           : "Location",
                                       color: Colors.amber.shade700,
@@ -1288,7 +1337,10 @@ class _ChatPageState extends State<ChatPage> {
                                             color: Colors.white,
                                           ),
                                           label: Text(
-                                            AppLocalizations.of(context)?.isAr == true
+                                            AppLocalizations.of(
+                                                      context,
+                                                    )?.isAr ==
+                                                    true
                                                 ? "بدء جلسة خرجة"
                                                 : "Start Outing Session",
                                             style: const TextStyle(
@@ -1429,9 +1481,9 @@ class _ChatPageState extends State<ChatPage> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          decoration: BoxDecoration(
+            color: AppColors.getSurfaceElevated(context),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1444,7 +1496,7 @@ class _ChatPageState extends State<ChatPage> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: AppColors.getBorder(context),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -1457,7 +1509,7 @@ class _ChatPageState extends State<ChatPage> {
                   style: GoogleFonts.outfit(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.darkSlate,
+                    color: AppColors.getTextPrimary(context),
                   ),
                 ),
               ),
@@ -1494,13 +1546,16 @@ class _ChatPageState extends State<ChatPage> {
                       top: 10,
                       left: 12,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.getSurfaceElevated(context),
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: AppColors.getShadow(context),
                               blurRadius: 6,
                             ),
                           ],
@@ -1508,14 +1563,18 @@ class _ChatPageState extends State<ChatPage> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.my_location, color: AppColors.teal, size: 13),
+                            const Icon(
+                              Icons.my_location,
+                              color: AppColors.teal,
+                              size: 13,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               l10n.yourLocation,
                               style: GoogleFonts.outfit(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.darkSlate,
+                                color: AppColors.getTextPrimary(context),
                               ),
                             ),
                           ],
@@ -1537,7 +1596,10 @@ class _ChatPageState extends State<ChatPage> {
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          border: Border.all(color: AppColors.teal.withOpacity(0.3), width: 1.5),
+                          border: Border.all(
+                            color: AppColors.teal.withValues(alpha: 0.3),
+                            width: 1.5,
+                          ),
                           borderRadius: BorderRadius.circular(16),
                           color: AppColors.teal.withOpacity(0.04),
                         ),
@@ -1549,7 +1611,11 @@ class _ChatPageState extends State<ChatPage> {
                                 color: AppColors.teal.withOpacity(0.15),
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.my_location, color: AppColors.teal, size: 22),
+                              child: const Icon(
+                                Icons.my_location,
+                                color: AppColors.teal,
+                                size: 22,
+                              ),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
@@ -1561,7 +1627,7 @@ class _ChatPageState extends State<ChatPage> {
                                     style: GoogleFonts.outfit(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
-                                      color: AppColors.darkSlate,
+                                      color: AppColors.getTextPrimary(context),
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -1569,13 +1635,18 @@ class _ChatPageState extends State<ChatPage> {
                                     l10n.shareLiveDesc,
                                     style: GoogleFonts.inter(
                                       fontSize: 13,
-                                      color: Colors.grey.shade600,
+                                      color: AppColors.getTextSecondary(
+                                        context,
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const Icon(Icons.chevron_right, color: Colors.grey),
+                            Icon(
+                              Icons.chevron_right,
+                              color: AppColors.getTextMuted(context),
+                            ),
                           ],
                         ),
                       ),
@@ -1587,19 +1658,26 @@ class _ChatPageState extends State<ChatPage> {
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.withOpacity(0.2), width: 1.5),
+                          border: Border.all(
+                            color: AppColors.getBorder(context),
+                            width: 1.5,
+                          ),
                           borderRadius: BorderRadius.circular(16),
-                          color: Colors.grey.shade50,
+                          color: AppColors.getInputBackground(context),
                         ),
                         child: Row(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: Colors.grey.withOpacity(0.1),
+                                color: AppColors.getBorder(context),
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.map_outlined, color: Colors.grey, size: 22),
+                              child: Icon(
+                                Icons.map_outlined,
+                                color: AppColors.getTextMuted(context),
+                                size: 22,
+                              ),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
@@ -1611,7 +1689,7 @@ class _ChatPageState extends State<ChatPage> {
                                     style: GoogleFonts.outfit(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
-                                      color: AppColors.darkSlate,
+                                      color: AppColors.getTextPrimary(context),
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -1619,13 +1697,18 @@ class _ChatPageState extends State<ChatPage> {
                                     l10n.chooseOnMapDesc,
                                     style: GoogleFonts.inter(
                                       fontSize: 13,
-                                      color: Colors.grey.shade600,
+                                      color: AppColors.getTextSecondary(
+                                        context,
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const Icon(Icons.chevron_right, color: Colors.grey),
+                            Icon(
+                              Icons.chevron_right,
+                              color: AppColors.getTextMuted(context),
+                            ),
                           ],
                         ),
                       ),
@@ -1646,7 +1729,8 @@ class _ChatPageState extends State<ChatPage> {
       // Send current GPS position
       final lat = position.latitude;
       final lng = position.longitude;
-      final senderName = _currentUserDisplayName ?? currentUser?.displayName ?? "Me";
+      final senderName =
+          _currentUserDisplayName ?? currentUser?.displayName ?? "Me";
       await _chatService.sendMessage(
         groupId: widget.group.id,
         senderId: currentUser?.uid ?? '',
@@ -1665,7 +1749,8 @@ class _ChatPageState extends State<ChatPage> {
         ),
       );
       if (picked == null) return;
-      final senderName = _currentUserDisplayName ?? currentUser?.displayName ?? "Me";
+      final senderName =
+          _currentUserDisplayName ?? currentUser?.displayName ?? "Me";
       await _chatService.sendMessage(
         groupId: widget.group.id,
         senderId: currentUser?.uid ?? '',
@@ -1694,7 +1779,7 @@ class _ChatPageState extends State<ChatPage> {
                 height: 76,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                  border: Border.all(color: AppColors.getBorder(context)),
                   image: DecorationImage(
                     image: FileImage(_selectedImages[index]),
                     fit: BoxFit.cover,
@@ -1759,13 +1844,13 @@ class _ChatPageState extends State<ChatPage> {
               style: GoogleFonts.outfit(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: AppColors.darkSlate.withOpacity(0.9),
+                color: AppColors.getTextPrimary(context).withValues(alpha: 0.9),
               ),
             ),
             const Spacer(),
             Icon(
               Icons.chevron_right_rounded,
-              color: Colors.grey.withOpacity(0.4),
+              color: AppColors.getTextMuted(context),
               size: 20,
             ),
           ],
@@ -1779,7 +1864,7 @@ class _ChatPageState extends State<ChatPage> {
     final wallpaperProvider = Provider.of<WallpaperProvider>(context);
     final wallpaperStr = wallpaperProvider.getWallpaper(widget.group.id);
 
-    Color backgroundColor = const Color(0xFFF0F2F5);
+    Color backgroundColor = AppColors.getBackground(context);
     DecorationImage? bgImage;
     LinearGradient? bgGradient;
 
@@ -1843,7 +1928,7 @@ class _ChatPageState extends State<ChatPage> {
                                 Text(
                                   "Loading messages...",
                                   style: GoogleFonts.inter(
-                                    color: Colors.grey.shade600,
+                                    color: AppColors.getTextSecondary(context),
                                     fontSize: 14,
                                   ),
                                 ),
@@ -1943,17 +2028,20 @@ class _ChatPageState extends State<ChatPage> {
                             vertical: 20,
                           ),
                           reverse: true,
-                          itemCount: chatItems.length + (_isLoadingMore ? 1 : 0),
+                          itemCount:
+                              chatItems.length + (_isLoadingMore ? 1 : 0),
                           itemBuilder: (context, index) {
                             if (_isLoadingMore && index == chatItems.length) {
                               return const Padding(
                                 padding: EdgeInsets.symmetric(vertical: 20),
                                 child: Center(
-                                  child: CircularProgressIndicator(color: AppColors.teal),
+                                  child: CircularProgressIndicator(
+                                    color: AppColors.teal,
+                                  ),
                                 ),
                               );
                             }
-                            
+
                             final item = chatItems[index];
                             if (item is String) {
                               if (item == "UNREAD_DIVIDER")
@@ -2015,17 +2103,15 @@ class _ChatPageState extends State<ChatPage> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.getSurface(context),
                         border: Border(
-                          top: BorderSide(
-                            color: Colors.grey.withOpacity(0.1),
-                          ),
+                          top: BorderSide(color: AppColors.getBorder(context)),
                         ),
                       ),
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
+                          color: AppColors.getInputBackground(context),
                           borderRadius: BorderRadius.circular(12),
                           border: Border(
                             left: BorderSide(color: AppColors.teal, width: 4),
@@ -2056,17 +2142,19 @@ class _ChatPageState extends State<ChatPage> {
                                     overflow: TextOverflow.ellipsis,
                                     style: GoogleFonts.inter(
                                       fontSize: 12,
-                                      color: Colors.grey.shade600,
+                                      color: AppColors.getTextSecondary(
+                                        context,
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.close,
                                 size: 18,
-                                color: Colors.grey,
+                                color: AppColors.getTextMuted(context),
                               ),
                               onPressed: () =>
                                   setState(() => _replyingTo = null),
@@ -2104,7 +2192,7 @@ class _ChatPageState extends State<ChatPage> {
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
                   child: Container(
-                    color: Colors.white.withOpacity(0.3),
+                    color: AppColors.getSurface(context).withValues(alpha: 0.5),
                     child: const Center(
                       child: CircularProgressIndicator(color: AppColors.teal),
                     ),
@@ -2126,21 +2214,18 @@ class _ChatPageState extends State<ChatPage> {
         right: 8,
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.getSurface(context),
         border: Border(
-          bottom: BorderSide(
-            color: Colors.grey.withOpacity(0.1),
-            width: 1.5,
-          ),
+          bottom: BorderSide(color: AppColors.getDivider(context), width: 1.5),
         ),
       ),
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back_ios_new,
               size: 22,
-              color: AppColors.darkSlate,
+              color: AppColors.getTextPrimary(context),
             ),
             onPressed: () => Navigator.pop(context),
           ),
@@ -2151,7 +2236,7 @@ class _ChatPageState extends State<ChatPage> {
             decoration: BoxDecoration(
               color: AppColors.teal.withOpacity(0.08),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.grey.withOpacity(0.1)),
+              border: Border.all(color: AppColors.getBorder(context)),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(23),
@@ -2188,7 +2273,7 @@ class _ChatPageState extends State<ChatPage> {
                   style: GoogleFonts.outfit(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.darkSlate,
+                    color: AppColors.getTextPrimary(context),
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -2198,7 +2283,7 @@ class _ChatPageState extends State<ChatPage> {
                       : "${widget.group.memberIds.length} members",
                   style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: Colors.grey.shade500,
+                    color: AppColors.getTextSecondary(context),
                   ),
                 ),
               ],
@@ -2214,6 +2299,24 @@ class _ChatPageState extends State<ChatPage> {
             tooltip: AppLocalizations.of(context)?.isAr == true
                 ? "دعوة أعضاء"
                 : "Invite Members",
+          ),
+          const SizedBox(width: 4),
+          IconButton(
+            icon: const Icon(
+              Icons.photo_album_rounded,
+              color: AppColors.teal,
+              size: 22,
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      HistoryFeedScreen(groupId: widget.group.id),
+                ),
+              );
+            },
+            tooltip: "Memories",
           ),
           const SizedBox(width: 4),
           IconButton(
@@ -2241,8 +2344,10 @@ class _ChatPageState extends State<ChatPage> {
         }
 
         final doc = snapshot.data!.docs.first;
-        final session = OutingSessionModel.fromFirestore(doc as DocumentSnapshot<Map<String, dynamic>>);
-        
+        final session = OutingSessionModel.fromFirestore(
+          doc as DocumentSnapshot<Map<String, dynamic>>,
+        );
+
         if (session.finishedAt == null) return const SizedBox.shrink();
 
         final diff = DateTime.now().difference(session.finishedAt!);
@@ -2280,7 +2385,11 @@ class _ChatPageState extends State<ChatPage> {
                   color: Colors.white.withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 24),
+                child: const Icon(
+                  Icons.auto_awesome_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -2310,7 +2419,8 @@ class _ChatPageState extends State<ChatPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => OutingMemoryUploadScreen(session: session),
+                      builder: (context) =>
+                          OutingMemoryUploadScreen(session: session),
                     ),
                   );
                 },
@@ -2321,7 +2431,10 @@ class _ChatPageState extends State<ChatPage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                 ),
                 child: Text(
                   "Upload",
@@ -2350,11 +2463,15 @@ class _ChatPageState extends State<ChatPage> {
       margin: const EdgeInsets.symmetric(horizontal: 12),
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.getSurfaceElevated(context),
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
+<<<<<<< HEAD
             color: Colors.black.withOpacity(0.08),
+=======
+            color: AppColors.getShadow(context),
+>>>>>>> user-work
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -2370,7 +2487,7 @@ class _ChatPageState extends State<ChatPage> {
               if (_selectedImages.isNotEmpty) _buildSelectedImagesPreview(),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
+��            children: [
               if (!_isRecording) ...[
                 CompositedTransformTarget(
                   link: _attachmentMenuLink,
@@ -2379,7 +2496,7 @@ class _ChatPageState extends State<ChatPage> {
                     icon: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppColors.teal.withOpacity(0.1),
+                        color: AppColors.teal.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -2406,14 +2523,14 @@ class _ChatPageState extends State<ChatPage> {
                       onChanged: (val) => setState(() {}),
                       style: GoogleFonts.inter(
                         fontSize: 15,
-                        color: AppColors.darkSlate,
+                        color: AppColors.getTextPrimary(context),
                       ),
                       decoration: InputDecoration(
                         hintText: AppLocalizations.of(context)?.isAr == true
-                            ? "...اكتب رسالة"
+                            ? "'C*( 13'D)..."
                             : "Type a message...",
                         hintStyle: GoogleFonts.inter(
-                          color: Colors.grey.shade400,
+                          color: AppColors.getTextMuted(context),
                           fontSize: 15,
                         ),
                         border: InputBorder.none,
@@ -2482,14 +2599,14 @@ class _ChatPageState extends State<ChatPage> {
                                 ? "Release to cancel"
                                 : "Slide to cancel",
                             style: GoogleFonts.inter(
-                              color: Colors.grey,
+                              color: AppColors.getTextSecondary(context),
                               fontSize: 13,
                             ),
                           ).animate().fadeIn().shimmer(duration: 2.seconds),
                           const SizedBox(width: 4),
-                          const Icon(
+                          Icon(
                             Icons.chevron_left,
-                            color: Colors.grey,
+                            color: AppColors.getTextSecondary(context),
                             size: 16,
                           ),
                         ],
@@ -2548,12 +2665,13 @@ class _ChatPageState extends State<ChatPage> {
                             deltaX.abs() < 50) {
                           setState(() => _isLocked = true);
                           HapticFeedback.heavyImpact();
-                          debugPrint("🔒 Voice Recording Locked");
+                          debugPrint("=�� Voice Recording Locked");
                         }
                       }
                     },
                     onTap: () {
-                      if (_messageController.text.trim().isNotEmpty || _selectedImages.isNotEmpty) {
+                      if (_messageController.text.trim().isNotEmpty ||
+                          _selectedImages.isNotEmpty) {
                         _sendMessage();
                       } else if (_isLocked) {
                         HapticFeedback.mediumImpact();
@@ -2576,18 +2694,19 @@ class _ChatPageState extends State<ChatPage> {
                         boxShadow: [
                           BoxShadow(
                             color: (_isCanceling ? Colors.red : AppColors.teal)
-                                .withOpacity(0.3),
+                                .withValues(alpha: 0.3),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
                         ],
                       ),
                       child: Icon(
-                        (_messageController.text.trim().isNotEmpty || _selectedImages.isNotEmpty)
+                        (_messageController.text.trim().isNotEmpty ||
+                                _selectedImages.isNotEmpty)
                             ? Icons.send_rounded
                             : (_isLocked
-                                  ? Icons.send_rounded
-                                  : Icons.mic_rounded),
+                                ? Icons.send_rounded
+                                : Icons.mic_rounded),
                         color: Colors.white,
                         size: 24,
                       ),
@@ -2600,9 +2719,9 @@ class _ChatPageState extends State<ChatPage> {
                       bottom: 60,
                       child: Column(
                         children: [
-                          const Icon(
+                          Icon(
                                 Icons.lock_outline_rounded,
-                                color: Colors.grey,
+                                color: AppColors.getTextMuted(context),
                                 size: 20,
                               )
                               .animate(onPlay: (c) => c.repeat())
@@ -2616,9 +2735,9 @@ class _ChatPageState extends State<ChatPage> {
                               .then()
                               .fadeOut(duration: 500.ms),
                           const SizedBox(height: 4),
-                          const Icon(
+                          Icon(
                             Icons.keyboard_arrow_up_rounded,
-                            color: Colors.grey,
+                            color: AppColors.getTextMuted(context),
                             size: 16,
                           ),
                         ],
@@ -2627,12 +2746,150 @@ class _ChatPageState extends State<ChatPage> {
                 ],
               ),
             ],
+
+                      ),
+                    ),
+                  ],
+                  const SizedBox(width: 12),
+
+                  // Send / Record Button
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      GestureDetector(
+                        onLongPressDown: (details) {
+                          _recordingStartPos = details.globalPosition;
+                        },
+                        onLongPressStart: (_) {
+                          if (_messageController.text.trim().isEmpty) {
+                            _startRecording();
+                          }
+                        },
+                        onLongPressEnd: (_) {
+                          if (_isRecording && !_isLocked) {
+                            _stopRecording();
+                          }
+                        },
+                        onLongPressMoveUpdate: (details) {
+                          if (_isRecording &&
+                              !_isLocked &&
+                              _recordingStartPos != null) {
+                            final deltaX =
+                                details.globalPosition.dx -
+                                _recordingStartPos!.dx;
+                            final deltaY =
+                                details.globalPosition.dy -
+                                _recordingStartPos!.dy;
+
+                            // Slide to Cancel (Horizontal - Left)
+                            if (deltaX < -100) {
+                              if (!_isCanceling) {
+                                setState(() => _isCanceling = true);
+                                HapticFeedback.heavyImpact();
+                              }
+                            } else {
+                              if (_isCanceling) {
+                                setState(() => _isCanceling = false);
+                              }
+                            }
+
+                            // Slide to Lock (Vertical - Up)
+                            final duration = DateTime.now().difference(
+                              _recordStartTime ?? DateTime.now(),
+                            );
+                            if (duration.inMilliseconds > 600 &&
+                                deltaY < -100 &&
+                                deltaX.abs() < 50) {
+                              setState(() => _isLocked = true);
+                              HapticFeedback.heavyImpact();
+                              debugPrint("🔒 Voice Recording Locked");
+                            }
+                          }
+                        },
+                        onTap: () {
+                          if (_messageController.text.trim().isNotEmpty ||
+                              _selectedImages.isNotEmpty) {
+                            _sendMessage();
+                          } else if (_isLocked) {
+                            HapticFeedback.mediumImpact();
+                            _stopRecording();
+                          }
+                        },
+                        child: Container(
+                          width: 48,
+                          height: 48,
+                          margin: const EdgeInsets.only(bottom: 2),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: _isCanceling
+                                  ? [Colors.red.shade400, Colors.red.shade700]
+                                  : AppColors.tealGradient,
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color:
+                                    (_isCanceling ? Colors.red : AppColors.teal)
+                                        .withValues(alpha: 0.3),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            (_messageController.text.trim().isNotEmpty ||
+                                    _selectedImages.isNotEmpty)
+                                ? Icons.send_rounded
+                                : (_isLocked
+                                      ? Icons.send_rounded
+                                      : Icons.mic_rounded),
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                      if (_isRecording && !_isLocked && !_isCanceling)
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 60,
+                          child: Column(
+                            children: [
+                              Icon(
+                                    Icons.lock_outline_rounded,
+                                    color: AppColors.getTextMuted(context),
+                                    size: 20,
+                                  )
+                                  .animate(onPlay: (c) => c.repeat())
+                                  .moveY(
+                                    begin: 0,
+                                    end: -10,
+                                    duration: 1.seconds,
+                                    curve: Curves.easeInOut,
+                                  )
+                                  .fadeIn(duration: 500.ms)
+                                  .then()
+                                  .fadeOut(duration: 500.ms),
+                              const SizedBox(height: 4),
+                              Icon(
+                                Icons.keyboard_arrow_up_rounded,
+                                color: AppColors.getTextMuted(context),
+                                size: 16,
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-    ),
-  ),
-);
+    );
   }
 
   Widget _buildWaveform() {
@@ -2663,13 +2920,17 @@ class _ChatPageState extends State<ChatPage> {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.getSurfaceElevated(context),
               shape: BoxShape.circle,
               boxShadow: [
+<<<<<<< HEAD
                 BoxShadow(
                   color: Colors.black.withOpacity(0.03),
                   blurRadius: 20,
                 ),
+=======
+                BoxShadow(color: AppColors.getShadow(context), blurRadius: 20),
+>>>>>>> user-work
               ],
             ),
             child: const Icon(
@@ -2684,13 +2945,20 @@ class _ChatPageState extends State<ChatPage> {
             style: GoogleFonts.outfit(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppColors.darkSlate,
+              color: AppColors.getTextPrimary(context),
             ),
           ),
           const SizedBox(height: 8),
           Text(
+<<<<<<< HEAD
             l10n.sayHello,
             style: GoogleFonts.inter(color: Colors.grey.shade500),
+=======
+            "Say hello to start the conversation!",
+            style: GoogleFonts.inter(
+              color: AppColors.getTextSecondary(context),
+            ),
+>>>>>>> user-work
           ),
         ],
       ),
@@ -2789,7 +3057,9 @@ class _MessageBubble extends StatelessWidget {
                             decoration: message.type == 'outing'
                                 ? null
                                 : BoxDecoration(
-                                    color: isMe ? null : Colors.white,
+                                    color: isMe
+                                        ? null
+                                        : AppColors.getChatBubbleOther(context),
                                     gradient: isMe
                                         ? const LinearGradient(
                                             colors: AppColors.tealGradient,
@@ -2809,9 +3079,7 @@ class _MessageBubble extends StatelessWidget {
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.04,
-                                        ),
+                                        color: AppColors.getShadow(context),
                                         blurRadius: 10,
                                         offset: const Offset(0, 4),
                                       ),
@@ -2844,7 +3112,9 @@ class _MessageBubble extends StatelessWidget {
                                               ? Colors.white.withValues(
                                                   alpha: 0.1,
                                                 )
-                                              : Colors.grey.shade100,
+                                              : AppColors.getInputBackground(
+                                                  context,
+                                                ),
                                           borderRadius: BorderRadius.circular(
                                             8,
                                           ),
@@ -2882,7 +3152,9 @@ class _MessageBubble extends StatelessWidget {
                                                 fontSize: 11,
                                                 color: isMe
                                                     ? Colors.white70
-                                                    : Colors.grey.shade600,
+                                                    : AppColors.getTextSecondary(
+                                                        context,
+                                                      ),
                                               ),
                                             ),
                                           ],
@@ -2923,7 +3195,12 @@ class _MessageBubble extends StatelessWidget {
                                       onComplete: () =>
                                           onPlayNextVoice(message.id),
                                     ),
-                                  ] else if (message.text.contains("SOS!") || message.text.contains("Location: https://") || (message.senderName == "🚨 EMERGENCY")) ...[
+                                  ] else if (message.text.contains("SOS!") ||
+                                      message.text.contains(
+                                        "Location: https://",
+                                      ) ||
+                                      (message.senderName ==
+                                          "🚨 EMERGENCY")) ...[
                                     _buildSosLocationBubble(context, message),
                                   ] else ...[
                                     Text(
@@ -2932,7 +3209,7 @@ class _MessageBubble extends StatelessWidget {
                                         fontSize: 15,
                                         color: isMe
                                             ? Colors.white
-                                            : AppColors.darkSlate,
+                                            : AppColors.getTextPrimary(context),
                                         height: 1.4,
                                       ),
                                     ),
@@ -2956,19 +3233,26 @@ class _MessageBubble extends StatelessWidget {
                                                         message.type !=
                                                             'outing')
                                                     ? Colors.white70
-                                                    : Colors.grey.shade400,
+                                                    : AppColors.getTextMuted(
+                                                        context,
+                                                      ),
                                               ),
                                             ),
                                           ),
                                         Text(
-                                          _formatTime(context, message.timestamp),
+                                          _formatTime(
+                                            context,
+                                            message.timestamp,
+                                          ),
                                           style: GoogleFonts.inter(
                                             fontSize: 10,
                                             color:
                                                 (isMe &&
                                                     message.type != 'outing')
                                                 ? Colors.white70
-                                                : Colors.grey.shade400,
+                                                : AppColors.getTextMuted(
+                                                    context,
+                                                  ),
                                           ),
                                         ),
                                         if (isMe) ...[
@@ -3004,19 +3288,17 @@ class _MessageBubble extends StatelessWidget {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: const Color(
-                                      0xFFF0F2F5,
-                                    ), // Light gray background
+                                    color: AppColors.getInputBackground(
+                                      context,
+                                    ),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: Colors.white,
+                                      color: AppColors.getBackground(context),
                                       width: 2,
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.1,
-                                        ),
+                                        color: AppColors.getShadow(context),
                                         blurRadius: 4,
                                         offset: const Offset(0, 2),
                                       ),
@@ -3039,7 +3321,9 @@ class _MessageBubble extends StatelessWidget {
                                             style: GoogleFonts.inter(
                                               fontSize: 10,
                                               fontWeight: FontWeight.bold,
-                                              color: Colors.grey.shade700,
+                                              color: AppColors.getTextSecondary(
+                                                context,
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -3084,11 +3368,13 @@ class _MessageBubble extends StatelessWidget {
         ? message.mediaUrls
         : [message.text];
 
-    final bool hasCaption = message.text.isNotEmpty &&
+    final bool hasCaption =
+        message.text.isNotEmpty &&
         !message.text.startsWith('http') &&
         urls.contains(message.text) == false;
 
     return Container(
+<<<<<<< HEAD
       constraints: BoxConstraints(
         maxWidth: MediaQuery.of(context).size.width * 0.75,
       ),
@@ -3118,78 +3404,123 @@ class _MessageBubble extends StatelessWidget {
                           colors: [
                             Colors.transparent,
                             Colors.black.withOpacity(0.3),
+=======
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.75,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: Stack(
+                  children: [
+                    AspectRatio(
+                      aspectRatio: 1, // Constant square aspect ratio
+                      child: _buildMediaGrid(context, urls),
+                    ),
+                    if (!hasCaption) ...[
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          height: 40,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.3),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 8,
+                        right: 12,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _formatTime(context, message.timestamp),
+                              style: GoogleFonts.inter(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
+                              ),
+                            ),
+                            if (isMe) ...[
+                              const SizedBox(width: 4),
+                              _buildTicks(message, color: Colors.white),
+                            ],
+>>>>>>> user-work
                           ],
                         ),
                       ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 8,
-                    right: 12,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _formatTime(context, message.timestamp),
-                          style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
-                          ),
-                        ),
-                        if (isMe) ...[
-                          const SizedBox(width: 4),
-                          _buildTicks(message, color: Colors.white),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          if (hasCaption) ...[
-            Padding(
-              padding: const EdgeInsets.only(left: 12, right: 12, top: 8, bottom: 4),
-              child: Text(
-                message.text,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  color: isMe ? Colors.white : AppColors.darkSlate,
+                    ],
+                  ],
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(right: 12, bottom: 6),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    _formatTime(context, message.timestamp),
+              if (hasCaption) ...[
+                Padding(
+                  padding: const EdgeInsets.only(
+                    left: 12,
+                    right: 12,
+                    top: 8,
+                    bottom: 4,
+                  ),
+                  child: Text(
+                    message.text,
                     style: GoogleFonts.inter(
-                      fontSize: 10,
-                      color: isMe ? Colors.white70 : Colors.grey.shade600,
+                      fontSize: 14,
+                      color: isMe
+                          ? Colors.white
+                          : AppColors.getTextPrimary(context),
                     ),
                   ),
-                  if (isMe) ...[
-                    const SizedBox(width: 4),
-                    _buildTicks(message, color: isMe ? Colors.white70 : Colors.grey.shade600),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    )
-    .animate()
-    .scale(
-      begin: const Offset(0.8, 0.8),
-      end: const Offset(1.0, 1.0),
-      duration: 400.ms,
-      curve: Curves.easeOutBack,
-    )
-    .fadeIn(duration: 400.ms);
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 12, bottom: 6),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        _formatTime(context, message.timestamp),
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          color: isMe
+                              ? Colors.white70
+                              : AppColors.getTextMuted(context),
+                        ),
+                      ),
+                      if (isMe) ...[
+                        const SizedBox(width: 4),
+                        _buildTicks(
+                          message,
+                          color: isMe
+                              ? Colors.white70
+                              : AppColors.getTextMuted(context),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        )
+        .animate()
+        .scale(
+          begin: const Offset(0.8, 0.8),
+          end: const Offset(1.0, 1.0),
+          duration: 400.ms,
+          curve: Curves.easeOutBack,
+        )
+        .fadeIn(duration: 400.ms);
   }
 
   Widget _buildMediaGrid(BuildContext context, List<String> urls) {
@@ -3452,7 +3783,8 @@ class _MessageBubble extends StatelessWidget {
   Widget _buildSosLocationBubble(BuildContext context, MessageModel message) {
     final l10n = AppLocalizations.of(context)!;
     // 🚨 Intercept SOS / Google Maps links to create a gorgeous map/SOS card
-    final hasSos = message.text.contains("SOS!") || (message.senderName == "🚨 EMERGENCY");
+    final hasSos =
+        message.text.contains("SOS!") || (message.senderName == "🚨 EMERGENCY");
     final urlRegex = RegExp(r'(https?://[^\s]+)');
     final match = urlRegex.firstMatch(message.text);
     final link = match?.group(0);
@@ -3461,10 +3793,14 @@ class _MessageBubble extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 4),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: hasSos ? Colors.red.shade50 : Colors.blue.shade50,
+        color: hasSos
+            ? Colors.red.withValues(alpha: 0.1)
+            : Colors.blue.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: hasSos ? Colors.red.shade300 : Colors.blue.shade300,
+          color: hasSos
+              ? Colors.red.withValues(alpha: 0.5)
+              : Colors.blue.withValues(alpha: 0.5),
           width: 1.5,
         ),
       ),
@@ -3485,7 +3821,7 @@ class _MessageBubble extends StatelessWidget {
                   style: GoogleFonts.outfit(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: hasSos ? Colors.red.shade900 : Colors.blue.shade900,
+                    color: hasSos ? Colors.red : Colors.blue,
                   ),
                 ),
               ),
@@ -3496,7 +3832,7 @@ class _MessageBubble extends StatelessWidget {
             message.text.replaceAll(link ?? '', '').trim(),
             style: GoogleFonts.inter(
               fontSize: 14,
-              color: AppColors.darkSlate,
+              color: AppColors.getTextPrimary(context),
               height: 1.3,
             ),
           ),
@@ -3511,16 +3847,27 @@ class _MessageBubble extends StatelessWidget {
                     await launchUrl(uri, mode: LaunchMode.externalApplication);
                   }
                 },
-                icon: const Icon(Icons.map_rounded, color: Colors.white, size: 18),
+                icon: const Icon(
+                  Icons.map_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
                 label: Text(
                   l10n.openInGoogleMaps,
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: hasSos ? Colors.red.shade700 : Colors.blue.shade700,
+                  backgroundColor: hasSos
+                      ? Colors.red.shade700
+                      : Colors.blue.shade700,
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ),
@@ -3550,10 +3897,10 @@ class _MessageBubble extends StatelessWidget {
             width: 260,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
-              color: Colors.white,
+              color: AppColors.getSurface(context),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
+                  color: AppColors.getShadow(context),
                   blurRadius: 10,
                   offset: const Offset(0, 3),
                 ),
@@ -3592,14 +3939,14 @@ class _MessageBubble extends StatelessWidget {
                     ),
                   ),
                   // Divider line
-                  Container(
-                    height: 1,
-                    color: Colors.grey.shade200,
-                  ),
+                  Container(height: 1, color: AppColors.getDivider(context)),
                   // Address footer
                   Container(
-                    color: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    color: AppColors.getSurface(context),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                     child: Row(
                       children: [
                         const Icon(
@@ -3619,23 +3966,24 @@ class _MessageBubble extends StatelessWidget {
                                 style: GoogleFonts.outfit(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF202020),
+                                  color: AppColors.getTextPrimary(context),
                                 ),
                               ),
                               const SizedBox(height: 1),
                               Text(
-                                AppLocalizations.of(context)?.tapToOpenInMaps ?? 'Tap to open in Maps',
+                                AppLocalizations.of(context)?.tapToOpenInMaps ??
+                                    'Tap to open in Maps',
                                 style: GoogleFonts.inter(
                                   fontSize: 11,
-                                  color: Colors.grey.shade500,
+                                  color: AppColors.getTextSecondary(context),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const Icon(
+                        Icon(
                           Icons.chevron_right,
-                          color: Colors.grey,
+                          color: AppColors.getTextSecondary(context),
                           size: 18,
                         ),
                       ],
@@ -3649,8 +3997,6 @@ class _MessageBubble extends StatelessWidget {
       },
     );
   }
-
-
 
   Future<String> _getAddress(String lat, String long, String apiKey) async {
     try {
@@ -3683,14 +4029,18 @@ class _MessageBubble extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12, top: 4),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.grey.withOpacity(0.06),
+          color: AppColors.getSystemMessageBackground(context),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey.withOpacity(0.15)),
+          border: Border.all(color: AppColors.getBorder(context)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.block, size: 14, color: Colors.grey.shade400),
+            Icon(
+              Icons.block,
+              size: 14,
+              color: AppColors.getTextSecondary(context),
+            ),
             const SizedBox(width: 8),
             Text(
               AppLocalizations.of(context)?.isAr == true
@@ -3699,7 +4049,7 @@ class _MessageBubble extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontStyle: FontStyle.italic,
-                color: Colors.grey.shade500,
+                color: AppColors.getTextSecondary(context),
               ),
             ),
           ],
@@ -3763,12 +4113,12 @@ class _MessageOptionsSheet extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.8),
+            color: AppColors.getSurfaceElevated(context).withValues(alpha: 0.8),
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(30),
               topRight: Radius.circular(30),
             ),
-            border: Border.all(color: Colors.white.withOpacity(0.2)),
+            border: Border.all(color: AppColors.getBorder(context)),
           ),
           child: SafeArea(
             child: Column(
@@ -3780,7 +4130,7 @@ class _MessageOptionsSheet extends StatelessWidget {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 20),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.3),
+                    color: AppColors.getBorder(context),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -3813,8 +4163,10 @@ class _MessageOptionsSheet extends StatelessWidget {
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? AppColors.teal.withOpacity(0.15)
-                                : Colors.white.withOpacity(0.5),
+                                ? AppColors.teal.withValues(alpha: 0.15)
+                                : AppColors.getInputBackground(
+                                    context,
+                                  ).withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: isSelected
@@ -3847,23 +4199,26 @@ class _MessageOptionsSheet extends StatelessWidget {
                       [
                             if (isMe)
                               _buildActionItem(
+                                context,
                                 icon: Icons.edit_rounded,
                                 title: l10n.editMessage,
                                 onTap: onEdit,
                               ),
                             if (isMe)
                               _buildActionItem(
+                                context,
                                 icon: Icons.info_rounded,
                                 title: l10n.messageInfo,
                                 onTap: onInfo,
                               ),
                             if (isMe)
                               _buildActionItem(
+                                context,
                                 icon: Icons.delete_sweep_rounded,
                                 title: l10n.deleteForEveryone,
                                 color: canDeleteForEveryone
                                     ? Colors.redAccent
-                                    : Colors.grey,
+                                    : AppColors.getTextMuted(context),
                                 onTap: canDeleteForEveryone
                                     ? () async {
                                         final bool? confirm =
@@ -3925,6 +4280,7 @@ class _MessageOptionsSheet extends StatelessWidget {
                                     : (AppLocalizations.of(context)?.isAr == true ? "انتهى الوقت (ساعة واحدة)" : "Timed out (1h)"),
                               ),
                             _buildActionItem(
+                              context,
                               icon: Icons.delete_outline_rounded,
                               title: l10n.deleteForMe,
                               color: Colors.redAccent,
@@ -3943,7 +4299,8 @@ class _MessageOptionsSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildActionItem({
+  Widget _buildActionItem(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required VoidCallback? onTap,
@@ -3951,12 +4308,12 @@ class _MessageOptionsSheet extends StatelessWidget {
     String? subtitle,
   }) {
     return ListTile(
-      leading: Icon(icon, color: color ?? AppColors.darkSlate),
+      leading: Icon(icon, color: color ?? AppColors.getTextPrimary(context)),
       title: Text(
         title,
         style: GoogleFonts.inter(
           fontWeight: FontWeight.w500,
-          color: color ?? AppColors.darkSlate,
+          color: color ?? AppColors.getTextPrimary(context),
         ),
       ),
       subtitle: subtitle != null
@@ -3995,7 +4352,9 @@ class _MessageInfoSheet extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.85),
+            color: AppColors.getSurfaceElevated(
+              context,
+            ).withValues(alpha: 0.85),
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(30),
               topRight: Radius.circular(30),
@@ -4014,11 +4373,14 @@ class _MessageInfoSheet extends StatelessWidget {
                       style: GoogleFonts.outfit(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.darkSlate,
+                        color: AppColors.getTextPrimary(context),
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close_rounded, color: Colors.grey),
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color: AppColors.getTextMuted(context),
+                      ),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
@@ -4057,7 +4419,7 @@ class _MessageInfoSheet extends StatelessWidget {
                               "${message.readBy.length} ${l10n.membersLabel}",
                               style: GoogleFonts.inter(
                                 fontSize: 12,
-                                color: Colors.grey.shade600,
+                                color: AppColors.getTextSecondary(context),
                               ),
                             ),
                           ],
@@ -4074,7 +4436,7 @@ class _MessageInfoSheet extends StatelessWidget {
                       child: Text(
                         l10n.noOneReadYet,
                         style: GoogleFonts.inter(
-                          color: Colors.grey,
+                          color: AppColors.getTextMuted(context),
                           fontStyle: FontStyle.italic,
                         ),
                       ),
@@ -4102,7 +4464,7 @@ class _MessageInfoSheet extends StatelessWidget {
                                   height: 36,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: Colors.grey.withOpacity(0.1),
+                                    color: AppColors.getBorder(context),
                                   ),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(18),
@@ -4112,21 +4474,20 @@ class _MessageInfoSheet extends StatelessWidget {
                                         ? CachedNetworkImage(
                                             imageUrl: photoUrl,
                                             fit: BoxFit.cover,
-                                            placeholder: (context, url) =>
-                                                const Icon(
-                                                  Icons.person_outline_rounded,
-                                                  size: 20,
-                                                  color: Colors.grey,
-                                                ),
+                                            placeholder: (context, url) => Icon(
+                                              Icons.person_outline_rounded,
+                                              size: 20,
+                                              color: AppColors.getTextMuted(
+                                                context,
+                                              ),
+                                            ),
                                             errorWidget:
-                                                (
-                                                  context,
-                                                  url,
-                                                  error,
-                                                ) => const Icon(
+                                                (context, url, error) => Icon(
                                                   Icons.person_outline_rounded,
                                                   size: 20,
-                                                  color: Colors.grey,
+                                                  color: AppColors.getTextMuted(
+                                                    context,
+                                                  ),
                                                 ),
                                           )
                                         : Icon(
@@ -4136,7 +4497,9 @@ class _MessageInfoSheet extends StatelessWidget {
                                             size: 20,
                                             color: isMe
                                                 ? AppColors.teal
-                                                : Colors.grey,
+                                                : AppColors.getTextMuted(
+                                                    context,
+                                                  ),
                                           ),
                                   ),
                                 ),
@@ -4151,7 +4514,7 @@ class _MessageInfoSheet extends StatelessWidget {
                                       fontWeight: isMe
                                           ? FontWeight.bold
                                           : FontWeight.normal,
-                                      color: AppColors.darkSlate,
+                                      color: AppColors.getTextPrimary(context),
                                     ),
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -4191,11 +4554,11 @@ class _DateDivider extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 24),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.getSystemMessageBackground(context),
           borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: AppColors.getShadow(context),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -4206,7 +4569,7 @@ class _DateDivider extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: Colors.grey.shade700,
+            color: AppColors.getSystemMessageText(context),
           ),
         ),
       ),
@@ -4223,17 +4586,19 @@ class _UnreadDivider extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 20),
       child: Row(
         children: [
-          const Expanded(child: Divider(color: Colors.black12, thickness: 1)),
+          Expanded(
+            child: Divider(color: AppColors.getDivider(context), thickness: 1),
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.getSystemMessageBackground(context),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: AppColors.getShadow(context),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
@@ -4249,7 +4614,9 @@ class _UnreadDivider extends StatelessWidget {
               ),
             ),
           ),
-          const Expanded(child: Divider(color: Colors.black12, thickness: 1)),
+          Expanded(
+            child: Divider(color: AppColors.getDivider(context), thickness: 1),
+          ),
         ],
       ),
     );

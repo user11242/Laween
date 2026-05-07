@@ -32,7 +32,7 @@ class RegisterPage extends StatelessWidget {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: AppColors.getBackground(context),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -132,7 +132,7 @@ class RegisterPage extends StatelessWidget {
                           width: 88,
                           height: 88,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppColors.getSurfaceElevated(context),
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
@@ -145,10 +145,10 @@ class RegisterPage extends StatelessWidget {
                           child: Container(
                             margin: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
+                              color: AppColors.getSurface(context),
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: Colors.grey.shade200,
+                                color: AppColors.getBorder(context),
                                 width: 1,
                               ),
                             ),
@@ -165,11 +165,11 @@ class RegisterPage extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.all(2),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: AppColors.getSurfaceElevated(context),
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
+                                  color: AppColors.getShadow(context).withValues(alpha: 0.1),
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
                                 ),
@@ -214,12 +214,12 @@ class RegisterPage extends StatelessWidget {
               style: AppLocalizations.of(context)!.isAr
                   ? GoogleFonts.cairo(
                       fontSize: 16,
-                      color: Colors.grey.shade600,
+                      color: AppColors.getTextSecondary(context),
                       height: 1.5,
                     )
                   : GoogleFonts.nunito(
                       fontSize: 15,
-                      color: Colors.grey.shade600,
+                      color: AppColors.getTextSecondary(context),
                       height: 1.5,
                     ),
             ),

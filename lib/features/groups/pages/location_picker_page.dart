@@ -54,15 +54,23 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     final query = _searchController.text.trim();
     if (query.isEmpty) {
-      setState(() { _suggestions = []; _showSuggestions = false; });
+      setState(() {
+        _suggestions = [];
+        _showSuggestions = false;
+      });
       return;
     }
-    _debounce = Timer(const Duration(milliseconds: 400), () => _fetchSuggestions(query));
+    _debounce = Timer(
+      const Duration(milliseconds: 400),
+      () => _fetchSuggestions(query),
+    );
   }
 
   Future<void> _fetchSuggestions(String query) async {
     try {
-      final url = Uri.parse('https://places.googleapis.com/v1/places:searchText');
+      final url = Uri.parse(
+        'https://places.googleapis.com/v1/places:searchText',
+      );
       final Map<String, dynamic> body = {'textQuery': query};
 
       body['locationBias'] = {
@@ -80,7 +88,8 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
         headers: {
           'Content-Type': 'application/json',
           'X-Goog-Api-Key': _apiKey,
-          'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location',
+          'X-Goog-FieldMask':
+              'places.id,places.displayName,places.formattedAddress,places.location',
         },
         body: jsonEncode(body),
       );
@@ -109,7 +118,9 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
 
   Future<void> _selectPlace(_PlaceSuggestion place) async {
     _searchFocus.unfocus();
-    setState(() { _showSuggestions = false; });
+    setState(() {
+      _showSuggestions = false;
+    });
     if (place.lat != null && place.lng != null) {
       final target = gmaps.LatLng(place.lat!, place.lng!);
       _mapController?.animateCamera(
@@ -153,7 +164,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.getBackground(context),
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
@@ -180,7 +191,11 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
               children: [
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 150),
-                  transform: Matrix4.translationValues(0, _isMoving ? -10 : 0, 0),
+                  transform: Matrix4.translationValues(
+                    0,
+                    _isMoving ? -10 : 0,
+                    0,
+                  ),
                   child: Stack(
                     alignment: Alignment.bottomCenter,
                     children: [
@@ -198,7 +213,11 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                             ),
                           ],
                         ),
-                        child: const Icon(Icons.location_on, color: Colors.white, size: 22),
+                        child: const Icon(
+                          Icons.location_on,
+                          color: Colors.white,
+                          size: 22,
+                        ),
                       ),
                     ],
                   ),
@@ -226,13 +245,16 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
               children: [
                 // App bar row
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.getSurfaceElevated(context),
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: AppColors.getShadow(context),
                         blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),
@@ -241,35 +263,57 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                   child: Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.arrow_back, color: AppColors.darkSlate),
+                        icon: Icon(
+                          Icons.arrow_back,
+                          color: AppColors.getTextPrimary(context),
+                        ),
                         onPressed: () => Navigator.pop(context),
                       ),
                       Expanded(
                         child: TextField(
                           controller: _searchController,
                           focusNode: _searchFocus,
-                          style: GoogleFonts.inter(fontSize: 14, color: AppColors.darkSlate),
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: AppColors.getTextPrimary(context),
+                          ),
                           decoration: InputDecoration(
                             hintText: l10n.searchForAPlace,
-                            hintStyle: GoogleFonts.inter(fontSize: 14, color: Colors.grey.shade400),
+                            hintStyle: GoogleFonts.inter(
+                              fontSize: 14,
+                              color: AppColors.getTextSecondary(context),
+                            ),
                             border: InputBorder.none,
                             isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                            ),
                           ),
                         ),
                       ),
                       if (_searchController.text.isNotEmpty)
                         IconButton(
-                          icon: Icon(Icons.close, color: Colors.grey.shade400, size: 20),
+                          icon: Icon(
+                            Icons.close,
+                            color: AppColors.getTextSecondary(context),
+                            size: 20,
+                          ),
                           onPressed: () {
                             _searchController.clear();
-                            setState(() { _suggestions = []; _showSuggestions = false; });
+                            setState(() {
+                              _suggestions = [];
+                              _showSuggestions = false;
+                            });
                           },
                         )
                       else
-                        const Padding(
-                          padding: EdgeInsets.only(right: 12),
-                          child: Icon(Icons.search, color: Colors.grey, size: 22),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: Icon(
+                            Icons.search,
+                            color: AppColors.getTextSecondary(context),
+                            size: 22,
+                          ),
                         ),
                     ],
                   ),
@@ -280,11 +324,11 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.getSurfaceElevated(context),
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
+                          color: AppColors.getShadow(context),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -296,15 +340,39 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                         shrinkWrap: true,
                         padding: EdgeInsets.zero,
                         itemCount: _suggestions.length.clamp(0, 5),
-                        separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey.shade100),
+                        separatorBuilder: (_, __) => Divider(
+                          height: 1,
+                          color: AppColors.getDivider(context),
+                        ),
                         itemBuilder: (context, i) {
                           final s = _suggestions[i];
                           return ListTile(
                             dense: true,
-                            leading: const Icon(Icons.location_on_outlined, color: AppColors.teal, size: 20),
-                            title: Text(s.mainText, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.darkSlate)),
+                            leading: const Icon(
+                              Icons.location_on_outlined,
+                              color: AppColors.teal,
+                              size: 20,
+                            ),
+                            title: Text(
+                              s.mainText,
+                              style: GoogleFonts.outfit(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.getTextPrimary(context),
+                              ),
+                            ),
                             subtitle: s.secondaryText.isNotEmpty
-                                ? Text(s.secondaryText, style: GoogleFonts.inter(fontSize: 11, color: Colors.grey.shade500), maxLines: 1, overflow: TextOverflow.ellipsis)
+                                ? Text(
+                                    s.secondaryText,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11,
+                                      color: AppColors.getTextSecondary(
+                                        context,
+                                      ),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  )
                                 : null,
                             onTap: () => _selectPlace(s),
                           );
@@ -326,13 +394,20 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.getSurfaceElevated(context),
                   shape: BoxShape.circle,
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 8),
+                    BoxShadow(
+                      color: AppColors.getShadow(context),
+                      blurRadius: 8,
+                    ),
                   ],
                 ),
-                child: const Icon(Icons.my_location, color: AppColors.teal, size: 22),
+                child: const Icon(
+                  Icons.my_location,
+                  color: AppColors.teal,
+                  size: 22,
+                ),
               ),
             ),
           ),
@@ -345,11 +420,13 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
             child: Container(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 36),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                color: AppColors.getSurfaceElevated(context),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: AppColors.getShadow(context),
                     blurRadius: 16,
                     offset: const Offset(0, -4),
                   ),
@@ -366,7 +443,11 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                           color: AppColors.teal.withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.location_on, color: AppColors.teal, size: 18),
+                        child: const Icon(
+                          Icons.location_on,
+                          color: AppColors.teal,
+                          size: 18,
+                        ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
@@ -378,12 +459,15 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                               style: GoogleFonts.outfit(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.darkSlate,
+                                color: AppColors.getTextPrimary(context),
                               ),
                             ),
                             Text(
                               "${_centerPosition.latitude.toStringAsFixed(5)}, ${_centerPosition.longitude.toStringAsFixed(5)}",
-                              style: GoogleFonts.inter(fontSize: 12, color: Colors.grey.shade500),
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: AppColors.getTextSecondary(context),
+                              ),
                             ),
                           ],
                         ),
@@ -413,16 +497,26 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                       child: TextButton(
                         onPressed: _sendLocation,
                         style: TextButton.styleFrom(
-                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.send_rounded, color: Colors.white, size: 18),
+                            const Icon(
+                              Icons.send_rounded,
+                              color: Colors.white,
+                              size: 18,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               l10n.sendLocation,
-                              style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                              style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
                           ],
                         ),

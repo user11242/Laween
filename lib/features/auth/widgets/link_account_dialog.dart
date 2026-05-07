@@ -56,40 +56,47 @@ class _LinkAccountDialogState extends State<LinkAccountDialog> {
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
       child: Dialog(
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.getSurfaceElevated(context),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.link, color: AppColors.white, size: 48),
+              Icon(
+                Icons.link,
+                color: AppColors.getTextPrimary(context),
+                size: 48,
+              ),
               const SizedBox(height: 16),
               Text(
                 l10n.linkAccountTitle,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.white,
+                  color: AppColors.getTextPrimary(context),
                 ),
               ),
               const SizedBox(height: 12),
               Text(
                 l10n.linkAccountMessage,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 14, color: AppColors.white70),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.getTextSecondary(context),
+                ),
               ),
               const SizedBox(height: 24),
               TextField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
-                style: const TextStyle(color: AppColors.white),
+                style: TextStyle(color: AppColors.getTextPrimary(context)),
                 decoration: InputDecoration(
                   hintText: l10n.password,
-                  hintStyle: const TextStyle(color: AppColors.white54),
+                  hintStyle: TextStyle(color: AppColors.getTextMuted(context)),
                   filled: true,
-                  fillColor: AppColors.white.withOpacity(0.1),
+                  fillColor: AppColors.getInputBackground(context),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -101,7 +108,7 @@ class _LinkAccountDialogState extends State<LinkAccountDialog> {
                       _obscurePassword
                           ? Icons.visibility_off
                           : Icons.visibility,
-                      color: AppColors.white70,
+                      color: AppColors.getTextMuted(context),
                     ),
                     onPressed: () =>
                         setState(() => _obscurePassword = !_obscurePassword),
@@ -110,12 +117,12 @@ class _LinkAccountDialogState extends State<LinkAccountDialog> {
               ),
               const SizedBox(height: 24),
               if (_isLoading)
-                const CircularProgressIndicator(color: AppColors.white)
+                CircularProgressIndicator(color: AppColors.teal)
               else
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.white,
-                    foregroundColor: AppColors.primary,
+                    backgroundColor: AppColors.teal,
+                    foregroundColor: Colors.white,
                     minimumSize: const Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
@@ -135,7 +142,7 @@ class _LinkAccountDialogState extends State<LinkAccountDialog> {
                 onPressed: () => Navigator.pop(context),
                 child: Text(
                   l10n.cancel,
-                  style: const TextStyle(color: AppColors.white70),
+                  style: TextStyle(color: AppColors.getTextSecondary(context)),
                 ),
               ),
             ],
