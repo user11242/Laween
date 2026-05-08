@@ -184,7 +184,7 @@ class _GroupsPageState extends State<GroupsPage>
                       child: Container(
                         decoration: BoxDecoration(
                           color: AppColors.getSurfaceElevated(context),
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(28),
                           boxShadow: [
                             BoxShadow(
                               color: AppColors.getShadow(
@@ -224,10 +224,17 @@ class _GroupsPageState extends State<GroupsPage>
                                   )
                                 : null,
                             border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            filled: false,
                             contentPadding: const EdgeInsets.symmetric(
                               vertical: 16,
                               horizontal: 20,
                             ),
+                          ),
+                          style: GoogleFonts.inter(
+                            color: AppColors.getTextPrimary(context),
+                            fontSize: 15,
                           ),
                         ),
                       ),

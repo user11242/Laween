@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:laween/l10n/app_localizations.dart';
@@ -152,31 +153,38 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           opacity: _logoFade,
                           child: Hero(
                             tag: 'app_logo',
-                            child: Container(
-                              width: 90,
-                              height: 90,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(26),
-                                color: AppColors.getSurfaceElevated(context),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.teal.withValues(alpha: 0.15),
-                                    blurRadius: 40,
-                                    spreadRadius: 0,
-                                    offset: const Offset(0, 12),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(28),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                child: Container(
+                                  width: 100,
+                                  height: 100,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(28),
+                                    color: AppColors.getSurfaceElevated(context).withValues(alpha: 0.7),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(alpha: 0.15),
+                                      width: 1.5,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.teal.withValues(alpha: 0.15),
+                                        blurRadius: 40,
+                                        spreadRadius: 0,
+                                        offset: const Offset(0, 12),
+                                      ),
+                                    ],
                                   ),
-                                  BoxShadow(
-                                    color: AppColors.getShadow(context),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 5),
+                                  child: Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(18),
+                                      child: Image.asset(
+                                        'assets/logo/Laween_transparent_iphone.png',
+                                        fit: BoxFit.contain,
+                                      ),
+                                    ),
                                   ),
-                                ],
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(26),
-                                child: Image.asset(
-                                  'assets/logo/Laween_transparent_iphone.png',
-                                  fit: BoxFit.cover,
                                 ),
                               ),
                             ),

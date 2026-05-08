@@ -418,7 +418,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
           customBorder: const CircleBorder(),
           child: Padding(
             padding: const EdgeInsets.all(12),
-            child: Icon(icon, color: AppColors.darkSlate, size: 24),
+            child: Icon(icon, color: AppColors.getTextPrimary(context), size: 24),
           ),
         ),
       ),
@@ -965,7 +965,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                     fontSize: 13,
                                     color: isMe
                                         ? Colors.white
-                                        : AppColors.darkSlate,
+                                        : AppColors.getTextPrimary(context),
                                   ),
                                 ),
                               ],
@@ -985,9 +985,9 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
         Container(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.getSurface(context),
             border: Border(
-              top: BorderSide(color: Colors.grey.shade100, width: 1),
+              top: BorderSide(color: AppColors.getDivider(context), width: 1),
             ),
           ),
           child: Row(
@@ -997,19 +997,21 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                   controller: _chatController,
                   textInputAction: TextInputAction.send,
                   onSubmitted: (_) => _sendMessage(uid),
-                  style: GoogleFonts.inter(fontSize: 14),
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: AppColors.getTextPrimary(context),
+                  ),
                   decoration: InputDecoration(
                     hintText: AppLocalizations.of(context)?.saySomething ?? 'Say something...',
                     hintStyle: GoogleFonts.inter(
-                        fontSize: 13, color: Colors.grey.shade400),
+                        fontSize: 13, color: AppColors.getTextMuted(context)),
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 10),
-                    filled: true,
-                    fillColor: Colors.grey.shade50,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide.none,
-                    ),
+                    filled: false,
+                    fillColor: Colors.transparent,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
                   ),
                 ),
               ),
@@ -1215,7 +1217,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: isSelected ? AppColors.teal.withOpacity(0.1) : AppColors.darkSlate.withOpacity(0.05),
+                                  color: isSelected ? AppColors.teal.withOpacity(0.1) : AppColors.getTextPrimary(context).withValues(alpha: 0.05),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
@@ -1223,7 +1225,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                   style: GoogleFonts.outfit(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w900,
-                                    color: isSelected ? AppColors.teal : AppColors.darkSlate,
+                                    color: isSelected ? AppColors.teal : AppColors.getTextPrimary(context),
                                   ),
                                 ),
                               ),
@@ -1244,7 +1246,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                 style: GoogleFonts.inter(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.darkSlate,
+                                  color: AppColors.getTextPrimary(context),
                                 ),
                               ),
                             ],
@@ -1257,7 +1259,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                             style: GoogleFonts.outfit(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.darkSlate,
+                              color: AppColors.getTextPrimary(context),
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -1348,7 +1350,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                           style: GoogleFonts.inter(
                                             fontSize: 11,
                                             fontWeight: isMe ? FontWeight.w700 : FontWeight.w600,
-                                            color: routeOk ? AppColors.darkSlate : Colors.grey.shade400,
+                                            color: routeOk ? AppColors.getTextPrimary(context) : Colors.grey.shade400,
                                           ),
                                         ),
                                       ],
@@ -1485,11 +1487,11 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
     final isHost = session.creatorId == myUid;
 
     return Container(
-      color: Colors.white,
+      color: AppColors.getSurface(context),
       child: SafeArea(
         child: Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
+          decoration: BoxDecoration(
+            color: AppColors.getSurface(context),
           ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 10, 24, 40),
@@ -1504,12 +1506,12 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                     icon: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppColors.darkSlate.withOpacity(0.05),
+                        color: AppColors.getTextPrimary(context).withValues(alpha: 0.05),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.arrow_back_ios_new_rounded,
-                        color: AppColors.darkSlate,
+                        color: AppColors.getTextPrimary(context),
                         size: 18,
                       ),
                     ),
@@ -1571,7 +1573,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
               style: GoogleFonts.outfit(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: AppColors.darkSlate,
+                color: AppColors.getTextPrimary(context),
               ),
             ),
             const SizedBox(height: 8),
@@ -1588,7 +1590,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.darkSlate,
+                      color: AppColors.getTextPrimary(context),
                     ),
                   ),
                 ],
@@ -1612,7 +1614,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppColors.darkSlate.withOpacity(0.03),
+                color: AppColors.getTextPrimary(context).withValues(alpha: 0.03),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: Colors.grey.shade100),
               ),
@@ -1620,14 +1622,14 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.people_alt_rounded, color: AppColors.darkSlate, size: 18),
+                      Icon(Icons.people_alt_rounded, color: AppColors.getTextPrimary(context), size: 18),
                       const SizedBox(width: 10),
                       Text(
                         AppLocalizations.of(context)?.friendsOnTheWay ?? "Friends on the way",
                         style: GoogleFonts.outfit(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.darkSlate,
+                          color: AppColors.getTextPrimary(context),
                         ),
                       ),
                     ],
@@ -1686,7 +1688,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                               style: GoogleFonts.inter(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.darkSlate,
+                                color: AppColors.getTextPrimary(context),
                               ),
                             ),
                           ),
@@ -1759,7 +1761,14 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                   );
                 },
                 icon: const Icon(Icons.people_alt_rounded, color: AppColors.teal),
-                label: Text(AppLocalizations.of(context)?.liveTrackGroup ?? "Live Track Group", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.darkSlate)),
+                label: Text(
+                  AppLocalizations.of(context)?.liveTrackGroup ?? "Live Track Group",
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: AppColors.getTextPrimary(context),
+                  ),
+                ),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(
@@ -1778,7 +1787,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                 onPressed: () {
                   showModalBottomSheet(
                     context: context,
-                    backgroundColor: Colors.white,
+                    backgroundColor: AppColors.getSurfaceElevated(context),
                     shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                     ),
@@ -1810,7 +1819,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                   style: GoogleFonts.outfit(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
-                                    color: AppColors.darkSlate,
+                                    color: AppColors.getTextPrimary(context),
                                   ),
                                 ),
                                 const SizedBox(height: 16),
@@ -1898,7 +1907,13 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                     backgroundColor: AppColors.teal,
                                     child: Icon(Icons.explore_rounded, color: Colors.white),
                                   ),
-                                  title: Text(AppLocalizations.of(context)?.arFriendCompass ?? "AR Friend Compass", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                                  title: Text(
+                                    AppLocalizations.of(context)?.arFriendCompass ?? "AR Friend Compass",
+                                    style: GoogleFonts.outfit(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.getTextPrimary(context),
+                                    ),
+                                  ),
                                   subtitle: Text(AppLocalizations.of(context)?.visual3DPointer ?? "Visual 3D pointer to find friends"),
                                   onTap: () {
                                     Navigator.pop(context);
@@ -2026,7 +2041,13 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                                     backgroundColor: AppColors.teal,
                                     child: Icon(Icons.receipt_long_rounded, color: Colors.white),
                                   ),
-                                  title: Text(AppLocalizations.of(context)?.splitBillAI ?? "Split Bill (AI)", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                                  title: Text(
+                                    AppLocalizations.of(context)?.splitBillAI ?? "Split Bill (AI)",
+                                    style: GoogleFonts.outfit(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.getTextPrimary(context),
+                                    ),
+                                  ),
                                   subtitle: Text(AppLocalizations.of(context)?.autoExtractItems ?? "Auto extract items and parse prices"),
                                   onTap: () {
                                     Navigator.pop(context);
@@ -2134,7 +2155,11 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
             ),
           ],
         ),
-        child: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.darkSlate, size: 20),
+        child: Icon(
+          Icons.arrow_back_ios_new_rounded,
+          color: AppColors.getTextPrimary(context),
+          size: 20,
+        ),
       ),
     );
   }

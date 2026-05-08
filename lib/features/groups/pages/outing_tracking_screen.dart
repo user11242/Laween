@@ -44,6 +44,98 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
   String? _selectedParticipantUid;
   Set<Polyline> _polylines = {};
   final Map<String, List<LatLng>> _cachedRoutes = {};
+  
+  static const String _mapStyle = '''
+[
+  {
+    "elementType": "geometry",
+    "stylers": [{"color": "#1d2c4d"}]
+  },
+  {
+    "elementType": "labels.text.fill",
+    "stylers": [{"color": "#8ec3b9"}]
+  },
+  {
+    "elementType": "labels.text.stroke",
+    "stylers": [{"color": "#1a3646"}]
+  },
+  {
+    "featureType": "administrative.locality",
+    "elementType": "labels.text.fill",
+    "stylers": [{"color": "#d59563"}]
+  },
+  {
+    "featureType": "poi",
+    "elementType": "labels.text.fill",
+    "stylers": [{"color": "#d59563"}]
+  },
+  {
+    "featureType": "poi.park",
+    "elementType": "geometry",
+    "stylers": [{"color": "#263c3f"}]
+  },
+  {
+    "featureType": "poi.park",
+    "elementType": "labels.text.fill",
+    "stylers": [{"color": "#6b9a76"}]
+  },
+  {
+    "featureType": "road",
+    "elementType": "geometry",
+    "stylers": [{"color": "#304a7d"}]
+  },
+  {
+    "featureType": "road",
+    "elementType": "geometry.stroke",
+    "stylers": [{"color": "#283d6a"}]
+  },
+  {
+    "featureType": "road",
+    "elementType": "labels.text.fill",
+    "stylers": [{"color": "#9ca5b3"}]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry",
+    "stylers": [{"color": "#2c6675"}]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry.stroke",
+    "stylers": [{"color": "#255762"}]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "labels.text.fill",
+    "stylers": [{"color": "#b0d5ce"}]
+  },
+  {
+    "featureType": "transit",
+    "elementType": "geometry",
+    "stylers": [{"color": "#2f3948"}]
+  },
+  {
+    "featureType": "transit.station",
+    "elementType": "labels.text.fill",
+    "stylers": [{"color": "#d59563"}]
+  },
+  {
+    "featureType": "water",
+    "elementType": "geometry",
+    "stylers": [{"color": "#0e1626"}]
+  },
+  {
+    "featureType": "water",
+    "elementType": "labels.text.fill",
+    "stylers": [{"color": "#515c6d"}]
+  },
+  {
+    "featureType": "water",
+    "elementType": "labels.text.stroke",
+    "stylers": [{"color": "#17263c"}]
+  }
+]
+''';
 
 
   LatLng _getInitialTarget() {
@@ -452,6 +544,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                   target: _getInitialTarget(),
                   zoom: 12,
                 ),
+                style: _mapStyle,
                 myLocationEnabled: false,
                 compassEnabled: false,
                 zoomControlsEnabled: false,
@@ -667,13 +760,13 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
               bottom: 40,
             ),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.getSurface(context),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(32),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.15),
+                  color: AppColors.getShadow(context),
                   blurRadius: 30,
                   offset: const Offset(0, -10),
                 ),
@@ -688,7 +781,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                     width: 40,
                     height: 5,
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
+                      color: AppColors.getTextPrimary(context).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
@@ -696,9 +789,9 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                 const SizedBox(height: 20),
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.people_alt_rounded,
-                      color: AppColors.darkSlate,
+                      color: AppColors.getTextPrimary(context),
                       size: 20,
                     ),
                     const SizedBox(width: 8),
@@ -707,7 +800,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.darkSlate,
+                        color: AppColors.getTextPrimary(context),
                       ),
                     ),
                   ],
@@ -719,7 +812,7 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: sortedP.length,
                   separatorBuilder: (_, __) =>
-                      Divider(height: 1, color: Colors.grey.shade100),
+                      Divider(height: 1, color: AppColors.getTextPrimary(context).withValues(alpha: 0.05)),
                   itemBuilder: (context, i) {
                     final p = sortedP[i];
                     if (p.location == null) return const SizedBox.shrink();
@@ -837,8 +930,8 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
                   bottom: 0,
                   child: Container(
                     padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
+                    decoration: BoxDecoration(
+                      color: AppColors.getSurface(context),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -1088,10 +1181,10 @@ class _OutingTrackingScreenState extends State<OutingTrackingScreen> {
             child: Container(
               height: 380,
               padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-              ),
+            decoration: BoxDecoration(
+              color: AppColors.getSurface(context),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            ),
               child: Column(
                 children: List.generate(3, (i) => Padding(
                   padding: const EdgeInsets.symmetric(vertical: 12),

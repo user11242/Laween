@@ -275,7 +275,7 @@ class AppLocalizations {
   // Bottom Navigation Bar
   String get home => isAr ? "الرئيسية" : "Home";
   String get groups => isAr ? "المجموعات" : "Groups";
-  String get favorite => isAr ? "المفضلة" : "Favorite";
+  String get favorite => isAr ? "المفضلة" : "Favorites";
   String get profile => isAr ? "الملف الشخصي" : "Profile";
 
   // Groups
@@ -331,7 +331,8 @@ class AppLocalizations {
   String get enableBiometric => isAr ? "تفعيل" : "Enable";
 
   // New location and outings strings
-  String get outingsHistory => isAr ? "سجل الخرجات" : "Outings History";
+  String get savedPlaces => isAr ? "الأماكن المحفوظة" : "Saved Places";
+  String get outingsHistory => isAr ? "سجل الخرجات" : "Outing History";
   String get shareLocation => isAr ? "مشاركة الموقع" : "Share Location";
   String get shareLiveLocation => isAr ? "مشاركة الموقع المباشر" : "Share Live Location";
   String get shareLiveDesc => isAr ? "مشاركة إحداثياتك المباشرة" : "Share your real-time coordinates";
@@ -363,6 +364,8 @@ class AppLocalizations {
   // Activity & Favorites
   String get noRecentActivity => isAr ? "لا يوجد نشاط مؤخراً" : "No recent activity";
   String get favoritesComingSoon => isAr ? "المفضلة قريباً" : "My Favorites coming soon";
+  String get addedToFavorites => isAr ? "تمت الإضافة للمفضلة" : "Added to Favorites";
+  String get removedFromFavorites => isAr ? "تمت الإزالة من المفضلة" : "Removed from Favorites";
   String get quickActions => isAr ? "الإجراءات السريعة" : "Quick Actions";
   String get recentActivity => isAr ? "النشاط مؤخراً" : "Recent Activity";
   String get viewAll => isAr ? "عرض الكل" : "View All";

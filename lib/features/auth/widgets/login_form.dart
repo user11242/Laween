@@ -8,6 +8,7 @@ import '../../../features/auth/data/services/auth_service.dart';
 import '../../../core/message/app_messenger.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/services/biometric_service.dart';
+import 'package:local_auth/local_auth.dart';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
@@ -27,6 +28,8 @@ class _LoginFormState extends State<LoginForm> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _isBiometricAvailable = false;
+  BiometricType? _biometricType =
+      Platform.isIOS ? BiometricType.face : BiometricType.fingerprint;
   bool _emailFocused = false;
   bool _passwordFocused = false;
 
@@ -53,7 +56,13 @@ class _LoginFormState extends State<LoginForm> {
 
   Future<void> _checkBiometrics() async {
     final available = await _biometricService.isBiometricAvailable();
-    if (mounted) setState(() => _isBiometricAvailable = available);
+    final type = await _biometricService.getAvailableBiometricType();
+    if (mounted) {
+      setState(() {
+        _isBiometricAvailable = available;
+        _biometricType = type;
+      });
+    }
   }
 
   void _showFaceIdUnavailableDialog() {
@@ -669,7 +678,7 @@ class _LoginFormState extends State<LoginForm> {
             // Biometric
             _SocialLoginButton(
               onPressed: _handleBiometricLogin,
-              icon: Platform.isIOS
+              icon: _biometricType == BiometricType.face
                   ? CustomPaint(
                       size: const Size(22, 22),
                       painter: FaceIdPainter(
@@ -685,15 +694,19 @@ class _LoginFormState extends State<LoginForm> {
                           ? AppColors.getTextPrimary(context)
                           : AppColors.getDivider(context),
                     ),
-              label: l10n.isAr ? "البصمة" : "Face ID",
+              label: l10n.isAr
+                  ? "البصمة"
+                  : (_biometricType == BiometricType.face
+                      ? "Face ID"
+                      : (Platform.isIOS ? "Touch ID" : "Fingerprint")),
             ),
             const SizedBox(width: 16),
- 
+
             // Google
             _SocialLoginButton(
               onPressed: _handleGoogleLogin,
               icon: Image.asset(
-                'assets/google_logo.jpg',
+                'assets/google_logo_transparent.png',
                 height: 22,
                 width: 22,
                 fit: BoxFit.contain,

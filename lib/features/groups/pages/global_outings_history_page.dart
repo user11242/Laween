@@ -9,10 +9,16 @@ import '../data/models/outing_session_model.dart';
 import 'package:laween/l10n/app_localizations.dart';
 import 'history_detail_page.dart';
 import 'package:laween/core/services/google_maps_service.dart';
+import 'package:laween/core/services/favorite_service.dart';
 
 class GlobalOutingsHistoryPage extends StatefulWidget {
   final bool showFavoritesOnly;
-  const GlobalOutingsHistoryPage({super.key, this.showFavoritesOnly = false});
+  final bool isEmbedded;
+  const GlobalOutingsHistoryPage({
+    super.key, 
+    this.showFavoritesOnly = false,
+    this.isEmbedded = false,
+  });
 
   @override
   State<GlobalOutingsHistoryPage> createState() => _GlobalOutingsHistoryPageState();
@@ -106,11 +112,35 @@ class _GlobalOutingsHistoryPageState extends State<GlobalOutingsHistoryPage> {
         'favoritedBy': FieldValue.arrayRemove([myUid])
       });
       session.favoritedBy.remove(myUid);
+      
+      // Also remove from central favorites if it matches
+      if (session.winner != null && session.winner!['id'] != null) {
+        await FavoriteService().removeFavoritePlace(session.winner!['id'].toString());
+      }
     } else {
       await sessionRef.update({
         'favoritedBy': FieldValue.arrayUnion([myUid])
       });
       session.favoritedBy.add(myUid);
+      
+      // Also add to central favorites
+      if (session.winner != null && session.winner!['id'] != null) {
+        final winner = session.winner!;
+        await FavoriteService().addFavoritePlace(
+          place: {
+            'id': winner['id'].toString(),
+            'name': winner['name'],
+            'address': winner['address'],
+            'location': winner['location'],
+            'photoReference': winner['photoReference'],
+            'rating': winner['rating'],
+            'userRatingCount': winner['userRatingCount'],
+          },
+          source: "outing_history",
+          visited: true,
+          sourceOutingId: session.id,
+        );
+      }
     }
 
     _applyFilter();
@@ -119,6 +149,11 @@ class _GlobalOutingsHistoryPageState extends State<GlobalOutingsHistoryPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    
+    if (widget.isEmbedded) {
+      return _buildContent(l10n);
+    }
+
     return Scaffold(
       backgroundColor: AppColors.getBackground(context),
       appBar: AppBar(
@@ -143,40 +178,44 @@ class _GlobalOutingsHistoryPageState extends State<GlobalOutingsHistoryPage> {
           ),
         ),
       ),
-      body: Column(
-        children: [
-          // Filter Chips
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-            child: Row(
-              children: [
-                _buildFilterChip(l10n.allLabel, !_showOnlyFavorites),
-                const SizedBox(width: 12),
-                _buildFilterChip(l10n.favoritesLabel, _showOnlyFavorites),
-              ],
-            ),
+      body: _buildContent(l10n),
+    );
+  }
+
+  Widget _buildContent(AppLocalizations l10n) {
+    return Column(
+      children: [
+        // Filter Chips
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Row(
+            children: [
+              _buildFilterChip(l10n.allLabel, !_showOnlyFavorites),
+              const SizedBox(width: 12),
+              _buildFilterChip(l10n.favoritesLabel, _showOnlyFavorites),
+            ],
           ),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: AppColors.teal))
-                : _filteredOutings.isEmpty
-                    ? _buildEmptyState(l10n)
-                    : RefreshIndicator(
-                        onRefresh: _loadAllOutings,
-                        color: AppColors.teal,
-                        child: ListView.separated(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-                          itemCount: _filteredOutings.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 32),
-                          itemBuilder: (context, index) {
-                            final item = _filteredOutings[index];
-                            return _buildHistoryCard(item, index);
-                          },
-                        ),
+        ),
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator(color: AppColors.teal))
+              : _filteredOutings.isEmpty
+                  ? _buildEmptyState(l10n)
+                  : RefreshIndicator(
+                      onRefresh: _loadAllOutings,
+                      color: AppColors.teal,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                        itemCount: _filteredOutings.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 32),
+                        itemBuilder: (context, index) {
+                          final item = _filteredOutings[index];
+                          return _buildHistoryCard(item, index);
+                        },
                       ),
-          ),
-        ],
-      ),
+                    ),
+        ),
+      ],
     );
   }
 

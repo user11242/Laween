@@ -1044,9 +1044,9 @@ class _ChatPageState extends State<ChatPage> {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        decoration: BoxDecoration(
+          color: AppColors.getSurfaceElevated(context),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1058,7 +1058,7 @@ class _ChatPageState extends State<ChatPage> {
               style: GoogleFonts.outfit(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: AppColors.darkSlate,
+                color: AppColors.getTextPrimary(context),
               ),
             ),
             const SizedBox(height: 8),
@@ -1066,7 +1066,10 @@ class _ChatPageState extends State<ChatPage> {
               AppLocalizations.of(context)?.isAr == true
                   ? "كيف ترغب في التخطيط لليوم؟"
                   : "How would you like to plan today?",
-              style: GoogleFonts.inter(color: Colors.grey, fontSize: 14),
+              style: GoogleFonts.inter(
+                color: AppColors.getTextMuted(context),
+                fontSize: 14,
+              ),
             ),
             const SizedBox(height: 32),
             _buildSelectionOption(
@@ -1141,14 +1144,14 @@ class _ChatPageState extends State<ChatPage> {
                     style: GoogleFonts.outfit(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.darkSlate,
+                      color: AppColors.getTextPrimary(context),
                     ),
                   ),
                   Text(
                     subtitle,
                     style: GoogleFonts.inter(
                       fontSize: 13,
-                      color: Colors.grey.shade600,
+                      color: AppColors.getTextMuted(context),
                     ),
                   ),
                 ],
@@ -2467,7 +2470,7 @@ class _ChatPageState extends State<ChatPage> {
                           onChanged: (val) => setState(() {}),
                           style: GoogleFonts.inter(
                             fontSize: 15,
-                            color: AppColors.darkSlate,
+                            color: AppColors.getTextPrimary(context),
                           ),
                           decoration: InputDecoration(
                             hintText: AppLocalizations.of(context)?.isAr == true
@@ -2478,6 +2481,10 @@ class _ChatPageState extends State<ChatPage> {
                               fontSize: 15,
                             ),
                             border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            filled: false,
+                            fillColor: Colors.transparent,
                             contentPadding: const EdgeInsets.symmetric(
                               vertical: 10,
                               horizontal: 8,

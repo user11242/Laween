@@ -331,7 +331,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                   Container(
                     decoration: BoxDecoration(
                       color: AppColors.getSurfaceElevated(context),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(28),
                       border: Border.all(color: AppColors.getBorder(context)),
                       boxShadow: [
                         BoxShadow(
@@ -363,6 +363,9 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                           size: 22,
                         ),
                         border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        filled: false,
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: 16,
                           horizontal: 16,
@@ -758,7 +761,7 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
             child: Container(
               decoration: BoxDecoration(
                 color: AppColors.getSurface(context),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(28),
               ),
               child: TextField(
                 onChanged: (val) => setState(() => _searchQuery = val),
@@ -773,6 +776,9 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                     color: AppColors.getTextMuted(context),
                   ),
                   border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  filled: false,
                   contentPadding: const EdgeInsets.symmetric(vertical: 15),
                 ),
               ),

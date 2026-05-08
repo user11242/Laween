@@ -15,6 +15,17 @@ import '../../../../core/services/google_maps_service.dart';
 import '../models/outing_session_model.dart';
 import '../models/message_model.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../../core/services/favorite_service.dart';
+
+class FavoriteInsight {
+  final Set<String> favoritedByUids;
+  final bool isGroupHistoryFavorite;
+
+  FavoriteInsight({
+    required this.favoritedByUids,
+    required this.isGroupHistoryFavorite,
+  });
+}
 
 class OutingService {
   static final OutingService _instance = OutingService._internal();
@@ -26,29 +37,70 @@ class OutingService {
   String? _activityId;
   String? _lastParticipantsJson;
   
-  // Fetch IDs of places favorited by the current user in this group's history
-  Future<Set<String>> getGroupFavoritePlaceIds(String groupId, String userId) async {
+  /// Fetches favorite data for all current session participants and group history.
+  /// Used to classify venues into High/Medium/Normal priority buckets.
+  Future<Map<String, FavoriteInsight>> _getFavoriteInsights(
+    String groupId,
+    List<String> participantUids,
+  ) async {
+    final Map<String, FavoriteInsight> insights = {};
+
     try {
-      final snapshot = await _firestore
+      // 1. Participant Global Favorites
+      // We map placeId -> Set of UIDs who favorited it
+      final Map<String, Set<String>> placeToUsers = {};
+      
+      for (var uid in participantUids) {
+        final snapshot = await _firestore
+            .collection('users')
+            .doc(uid)
+            .collection('favoritePlaces')
+            .get();
+            
+        for (var doc in snapshot.docs) {
+          final pid = doc.id;
+          placeToUsers.putIfAbsent(pid, () => {}).add(uid);
+        }
+      }
+
+      // 2. Group History Favorites
+      // Only count favorites from the same group
+      final Set<String> historyFavIds = {};
+      final historySnapshot = await _firestore
           .collection('groups')
           .doc(groupId)
           .collection('outings')
-          .where('status', isEqualTo: OutingStatus.archived.name)
-          .where('favoritedBy', arrayContains: userId)
+          .where('status', whereIn: [
+            OutingStatus.archived.name,
+            OutingStatus.finished.name,
+            OutingStatus.completed.name
+          ])
           .get();
 
-      final Set<String> favoriteIds = {};
-      for (var doc in snapshot.docs) {
+      for (var doc in historySnapshot.docs) {
         final data = doc.data();
-        if (data['winner'] != null && data['winner']['id'] != null) {
-          favoriteIds.add(data['winner']['id'].toString());
+        final List favList = data['favoritedBy'] ?? [];
+        if (favList.isNotEmpty) {
+          final winner = data['winner'];
+          if (winner != null && winner['id'] != null) {
+            historyFavIds.add(winner['id'].toString());
+          }
         }
       }
-      return favoriteIds;
+
+      // Combine into insights
+      final allPlaceIds = {...placeToUsers.keys, ...historyFavIds};
+      for (var pid in allPlaceIds) {
+        insights[pid] = FavoriteInsight(
+          favoritedByUids: placeToUsers[pid] ?? {},
+          isGroupHistoryFavorite: historyFavIds.contains(pid),
+        );
+      }
     } catch (e) {
-      debugPrint("Error fetching group favorites: $e");
-      return {};
+      debugPrint("Error fetching favorite insights: $e");
     }
+
+    return insights;
   }
 
   // Create a direct outing session to a specific place
@@ -560,15 +612,15 @@ class OutingService {
       destinations: destinations,
     );
 
-    final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
-    final favoritePlaceIds = await getGroupFavoritePlaceIds(groupId, userId);
+    // 6. Fetch Favorite Insights for current participants only
+    final List<String> participantUids = participants.map((p) => p.uid).toList();
+    final favoriteInsights = await _getFavoriteInsights(groupId, participantUids);
 
     List<Map<String, dynamic>> processedVenues = [];
 
     for (int i = 0; i < limitedPlaces.length; i++) {
       final place = limitedPlaces[i];
       final String placeId = place['id'].toString();
-      final bool isFav = favoritePlaceIds.contains(placeId);
       
       final venueRoutes = routeMatrix.where((r) => r['destinationIndex'] == i).toList();
       
@@ -611,7 +663,7 @@ class OutingService {
         etaSpread = maxEta - minEta;
         distSpreadMeters = maxDistMeters - minDistMeters;
         
-        // Stricter time score with penalties
+        // Stricter time score with penalties (NO FAKE BOOSTS)
         timeFairnessScore = avgEta + (etaSpread * 1.0);
         if (etaSpread > 10) {
           timeFairnessScore += (etaSpread - 10) * 2.0;
@@ -620,7 +672,7 @@ class OutingService {
           timeFairnessScore += (maxEta - 30) * 1.5;
         }
         
-        // Distance score with penalties
+        // Distance score with penalties (NO FAKE BOOSTS)
         double avgDistKm = avgDistMeters / 1000.0;
         double maxDistKm = maxDistMeters / 1000.0;
         double distSpreadKm = distSpreadMeters / 1000.0;
@@ -632,23 +684,44 @@ class OutingService {
         if (maxDistKm > 20) {
           distanceFairnessScore += (maxDistKm - 20) * 1.2;
         }
-
-        // --- FAVORITE BOOST ---
-        // If this place is already a favorite, we give it a massive fairness bonus
-        // This effectively ranks it much higher in the sorted list
-        if (isFav) {
-          timeFairnessScore -= 10.0; // Boost by roughly 10 minutes advantage
-          distanceFairnessScore -= 5.0; // Boost by roughly 5km advantage
-        }
       }
 
-      // Add failure penalties to BOTH scores
+      // Add failure penalties to BOTH scores (High penalty for unreachable)
       timeFairnessScore += failedRoutes * 999.0;
       distanceFairnessScore += failedRoutes * 999.0;
 
       // Select primary score based on calculation mode preference
       double selectedFairnessScore = session.calculationMode == 'Time' ? timeFairnessScore : distanceFairnessScore;
       String selectedFairnessMode = session.calculationMode == 'Time' ? 'time' : 'distance';
+
+      // --- NEW FAVORITE PRIORITY BUCKETING ---
+      final insight = favoriteInsights[placeId];
+      final favoritedByCurrent = insight?.favoritedByUids ?? {};
+      final isGroupHistoryFav = insight?.isGroupHistoryFavorite ?? false;
+      
+      int priorityLevel = 0; // 0=Normal, 1=Medium, 2=High
+      String favoritePriority = "normal";
+      String? favoriteReason;
+
+      if (isGroupHistoryFav) {
+        priorityLevel = 2;
+        favoritePriority = "high";
+        favoriteReason = "Favorited from a previous group outing";
+      } else if (favoritedByCurrent.length > 1) {
+        priorityLevel = 2;
+        favoritePriority = "high";
+        favoriteReason = "Favorited by multiple members";
+      } else if (favoritedByCurrent.length == 1) {
+        if (participants.length <= 3) {
+          priorityLevel = 2;
+          favoritePriority = "high";
+          favoriteReason = "Favorited by one member";
+        } else {
+          priorityLevel = 1;
+          favoritePriority = "medium";
+          favoriteReason = "Favorited by one member";
+        }
+      }
 
       // Build per-member route map keyed by participant uid.
       final Map<String, dynamic> memberRoutes = {};
@@ -668,14 +741,14 @@ class OutingService {
         }
       }
 
-      processedVenues.add({
+      final venueMap = {
         'id': placeId,
         'name': place['displayName']['text'],
         'address': place['formattedAddress'],
-        'rating': place['rating'],
+        'rating': (place['rating'] as num?)?.toDouble() ?? 0.0,
         'userRatingCount': place['userRatingCount'],
         'location': place['location'],
-        'isFavorite': isFav, // Add favorite flag for UI
+        'isFavorite': favoritedByCurrent.isNotEmpty || isGroupHistoryFav,
         'photoReference': (place['photos'] != null && place['photos'].isNotEmpty)
             ? place['photos'][0]['name']
             : null,
@@ -695,7 +768,23 @@ class OutingService {
         'failedRouteCount': failedRoutes,
         'routeAvailable': failedRoutes == 0 && validRoutes > 0,
         'memberRoutes': memberRoutes,
-      });
+        // New Metadata
+        'favoritePriority': favoritePriority,
+        'favoritePriorityLevel': priorityLevel,
+        'favoriteReason': favoriteReason,
+        'favoriteUserCount': favoritedByCurrent.length,
+        'isGroupOutingFavorite': isGroupHistoryFav,
+        'favoriteUserIds': favoritedByCurrent.toList(),
+      };
+
+      processedVenues.add(venueMap);
+
+      // VERIFICATION LOG
+      debugPrint("📍 [Thinking] Scored: ${venueMap['name']} | "
+          "Score: ${selectedFairnessScore.toStringAsFixed(1)} | "
+          "Spread: $etaSpread | "
+          "Priority: $favoritePriority | "
+          "Reason: $favoriteReason");
     }
 
     if (processedVenues.isEmpty) {
@@ -703,15 +792,24 @@ class OutingService {
       return;
     }
 
-    // Sort by selected fairness mode
+    // 7. HIERARCHICAL SORTING
     processedVenues.sort((a, b) {
+      // 1. Full Availability / Route Success
       if (a['routeAvailable'] != b['routeAvailable']) {
         return (a['routeAvailable'] as bool) ? -1 : 1; 
       }
+
+      // 2. Favorite Priority Level (Descending: 2 -> 1 -> 0)
+      final int priorityA = a['favoritePriorityLevel'] as int;
+      final int priorityB = b['favoritePriorityLevel'] as int;
+      if (priorityA != priorityB) return priorityB.compareTo(priorityA);
+
+      // 3. Real Selected Fairness Score (Lowest First)
       final double scoreA = a['selectedFairnessScore'] as double;
       final double scoreB = b['selectedFairnessScore'] as double;
       if (scoreA != scoreB) return scoreA.compareTo(scoreB);
       
+      // 4. Spread Tie-breaker
       if (session.calculationMode == 'Time') {
         final int spreadA = a['etaSpreadMinutes'] as int;
         final int spreadB = b['etaSpreadMinutes'] as int;
@@ -730,12 +828,20 @@ class OutingService {
         if (maxA != maxB) return maxA.compareTo(maxB);
       }
       
+      // 5. Rating Tie-breaker (Especially for Normal bucket)
       final double ratingA = (a['rating'] as num?)?.toDouble() ?? 0;
       final double ratingB = (b['rating'] as num?)?.toDouble() ?? 0;
       return ratingB.compareTo(ratingA);
     });
 
-    // 6. Update session
+    // LOG FINAL SORTED ORDER
+    debugPrint("🏆 [Thinking] TOP SUGGESTIONS:");
+    for (int i = 0; i < math.min(processedVenues.length, 5); i++) {
+        final v = processedVenues[i];
+        debugPrint("  ${i+1}. ${v['name']} [${v['favoritePriority']}] - Score: ${v['selectedFairnessScore'].toStringAsFixed(1)}");
+    }
+
+    // 8. Update session
     await sessionRef.update({
       'finalLocation': {
         'center': {'lat': midLat, 'lng': midLng},

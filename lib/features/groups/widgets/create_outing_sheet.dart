@@ -319,7 +319,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: AppColors.getShadow(context).withValues(alpha: 0.1),
               blurRadius: 30,
               offset: const Offset(0, -10),
             ),
@@ -468,7 +468,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
       style: GoogleFonts.outfit(
         fontSize: 12,
         fontWeight: FontWeight.bold,
-        color: AppColors.darkSlate.withOpacity(0.4),
+        color: AppColors.getTextMuted(context),
         letterSpacing: 1.2,
       ),
     );
@@ -479,7 +479,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
       height: 60,
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: AppColors.getBackground(context),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -500,7 +500,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.getSurface(context) : Colors.transparent,
+            color: isSelected ? AppColors.getSurfaceElevated(context) : Colors.transparent,
             borderRadius: BorderRadius.circular(15),
             boxShadow: isSelected
                 ? [
@@ -616,7 +616,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: AppColors.darkSlate.withOpacity(0.2),
+                          color: AppColors.teal.withOpacity(0.15),
                           blurRadius: 12,
                           offset: const Offset(0, 6),
                         ),

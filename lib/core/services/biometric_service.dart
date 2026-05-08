@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -32,6 +33,34 @@ class BiometricService {
     } on PlatformException catch (_) {
       return <BiometricType>[];
     }
+  }
+
+  /// Helper to get the primary biometric type as a string for labels
+  Future<BiometricType?> getAvailableBiometricType() async {
+    final List<BiometricType> availableBiometrics =
+        await getAvailableBiometrics();
+    
+    if (availableBiometrics.contains(BiometricType.face)) {
+      return BiometricType.face;
+    } 
+    
+    if (availableBiometrics.contains(BiometricType.fingerprint)) {
+      return BiometricType.fingerprint;
+    }
+
+    // On some Android devices, biometrics are classified as strong/weak
+    if (availableBiometrics.contains(BiometricType.strong) || 
+        availableBiometrics.contains(BiometricType.weak)) {
+      // Usually these refer to fingerprint on Android if 'face' isn't explicitly listed
+      return BiometricType.fingerprint;
+    }
+
+    // Fallback for supported hardware that might not report specific types yet
+    if (await isBiometricAvailable()) {
+      return Platform.isIOS ? BiometricType.face : BiometricType.fingerprint;
+    }
+    
+    return null;
   }
 
   /// Perform biometric authentication

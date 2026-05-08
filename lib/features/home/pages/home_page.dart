@@ -14,6 +14,7 @@ import '../widgets/recent_group_card.dart';
 import '../../groups/pages/create_group_page.dart';
 import '../../groups/pages/join_group_page.dart';
 import '../../groups/pages/global_outings_history_page.dart';
+import '../../profile/pages/favorites_page.dart';
 import '../../groups/pages/explore_map_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -69,7 +70,7 @@ class _HomePageState extends State<HomePage> {
     final List<Widget> pages = [
       _buildHomeContent(user),
       const GroupsPage(),
-      const GlobalOutingsHistoryPage(showFavoritesOnly: true),
+      const FavoritesPage(),
       const ProfilePage(),
     ];
 
@@ -282,7 +283,7 @@ class _HomePageState extends State<HomePage> {
                   _getGreeting(l10n),
                   style: GoogleFonts.inter(
                     fontSize: 14,
-                    color: AppColors.slate,
+                    color: AppColors.getTextMuted(context),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -291,7 +292,7 @@ class _HomePageState extends State<HomePage> {
                   style: GoogleFonts.inter(
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.primary,
+                    color: AppColors.getTextPrimary(context),
                     letterSpacing: -0.5,
                   ),
                 ),
@@ -377,7 +378,7 @@ class _HomePageState extends State<HomePage> {
         "onTap": () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const GlobalOutingsHistoryPage()),
+            MaterialPageRoute(builder: (context) => const FavoritesPage(initialIndex: 1)),
           );
         },
       },
