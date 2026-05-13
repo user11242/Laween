@@ -24,6 +24,7 @@ import '../../../core/services/google_maps_service.dart';
 import 'ar_friend_compass_page.dart';
 import 'receipt_splitter_screen.dart';
 import 'package:laween/l10n/app_localizations.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class OutingMapScreen extends StatefulWidget {
   final String groupId;
@@ -42,6 +43,7 @@ class OutingMapScreen extends StatefulWidget {
 class _OutingMapScreenState extends State<OutingMapScreen> {
   final OutingService _outingService = OutingService();
   final Completer<GoogleMapController> _controller = Completer();
+  bool _hasInitialBoundsFit = false;
 
   Set<Marker> _markers = {};
   int _currentVenueIndex = 0;
@@ -552,11 +554,18 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
           _markers = newMarkers;
           _polylines = newPolylines;
         });
+
+        // 🚀 Auto-fit bounds on first valid markers arrival
+        if (!_hasInitialBoundsFit && _markers.isNotEmpty) {
+          _hasInitialBoundsFit = true;
+          // Focus ONLY on venues for the initial load so they are clear to the user
+          Future.delayed(const Duration(milliseconds: 800), () => _fitBounds(venuesOnly: true));
+        }
       }
     }
   }
 
-  Future<void> _fitBounds() async {
+  Future<void> _fitBounds({bool venuesOnly = false}) async {
     if (_isDisposed || !mounted || !_controller.isCompleted) return;
 
     final controller = await _controller.future;
@@ -566,11 +575,25 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
 
     double? minLat, maxLat, minLng, maxLng;
     for (var m in _markers) {
+      // If venuesOnly is requested, ignore participant markers (p_xxx)
+      if (venuesOnly && m.markerId.value.startsWith('p_')) continue;
+
       final pos = m.position;
       if (minLat == null || pos.latitude < minLat) minLat = pos.latitude;
       if (maxLat == null || pos.latitude > maxLat) maxLat = pos.latitude;
       if (minLng == null || pos.longitude < minLng) minLng = pos.longitude;
       if (maxLng == null || pos.longitude > maxLng) maxLng = pos.longitude;
+    }
+
+    // Fallback: If no venues found but markers exist, include all
+    if (minLat == null && _markers.isNotEmpty) {
+       for (var m in _markers) {
+          final pos = m.position;
+          if (minLat == null || pos.latitude < minLat) minLat = pos.latitude;
+          if (maxLat == null || pos.latitude > maxLat) maxLat = pos.latitude;
+          if (minLng == null || pos.longitude < minLng) minLng = pos.longitude;
+          if (maxLng == null || pos.longitude > maxLng) maxLng = pos.longitude;
+       }
     }
 
     if (minLat != null && maxLat != null && minLng != null && maxLng != null) {
@@ -677,11 +700,6 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                               ),
                               
                               // 🔭 CUSTOM PREMIUM ZOOM CONTROLS
-                              Positioned(
-                top: 50,
-                left: 20,
-                child: _buildBackButton(context),
-              ),
                               Positioned(
                                 right: 20,
                                 bottom: 20,
@@ -1667,24 +1685,44 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
 
                       return Row(
                         children: [
-                          Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: userColor, width: 2),
-                              image: p.photoUrl != null 
-                                ? DecorationImage(image: CachedNetworkImageProvider(p.photoUrl!), fit: BoxFit.cover)
-                                : null,
-                            ),
-                            child: p.photoUrl == null
-                              ? Center(child: Text(p.name[0], style: GoogleFonts.outfit(color: userColor, fontWeight: FontWeight.bold)))
-                              : null,
+                          Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: userColor, width: 2),
+                                  image: p.photoUrl != null 
+                                    ? DecorationImage(image: CachedNetworkImageProvider(p.photoUrl!), fit: BoxFit.cover)
+                                    : null,
+                                ),
+                                child: p.photoUrl == null
+                                  ? Center(child: Text(p.name[0], style: GoogleFonts.outfit(color: userColor, fontWeight: FontWeight.bold)))
+                                  : null,
+                              ),
+                              if (p.uid == session.creatorId)
+                                Positioned(
+                                  left: -2,
+                                  top: -2,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orangeAccent,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: AppColors.getSurface(context), width: 1.5),
+                                    ),
+                                    child: const Icon(Icons.workspace_premium_rounded, size: 10, color: Colors.white),
+                                  ),
+                                ),
+                            ],
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              p.name + (p.uid == myUid ? " (${AppLocalizations.of(context)?.youLabel ?? 'You'})" : ""),
+                              p.name + 
+                              (p.uid == myUid ? " (${AppLocalizations.of(context)?.youLabel ?? 'You'})" : ""),
                               style: GoogleFonts.inter(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -1727,9 +1765,20 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
                 ],
               ),
               child: ElevatedButton.icon(
-                onPressed: () {
+                onPressed: () async {
                   final loc = winner['location'];
-                  if (loc != null) _glideToVenue(loc['latitude'], loc['longitude']);
+                  if (loc != null) {
+                    final lat = loc['latitude'];
+                    final lng = loc['longitude'];
+                    final url = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url, mode: LaunchMode.externalApplication);
+                    } else {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not launch maps.')));
+                      }
+                    }
+                  }
                 },
                 icon: const Icon(Icons.navigation_rounded),
                 label: Text(AppLocalizations.of(context)?.navigateToVenue ?? "Navigate to Venue", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
@@ -2139,30 +2188,7 @@ class _OutingMapScreenState extends State<OutingMapScreen> {
 ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.2);
 }
 
-  Widget _buildBackButton(BuildContext context) {
-    return GestureDetector(
-      onTap: () => Navigator.pop(context),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Icon(
-          Icons.arrow_back_ios_new_rounded,
-          color: AppColors.getTextPrimary(context),
-          size: 20,
-        ),
-      ),
-    );
-  }
+
 
   bool _isVenueTrending(Map<String, dynamic> venue, OutingSessionModel session) {
     final venues = session.finalLocation?['topVenues'] ?? [];

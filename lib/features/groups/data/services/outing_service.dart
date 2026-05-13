@@ -32,6 +32,83 @@ class OutingService {
   factory OutingService() => _instance;
   OutingService._internal();
 
+  /// Checks if there is an active outing session in the group.
+  /// A session is considered active if its status is NOT cancelled or archived.
+  Future<bool> hasActiveSession(String groupId) async {
+    final snapshot = await _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('outings')
+        .where('status', whereNotIn: [
+          OutingStatus.archived.name,
+          OutingStatus.cancelled.name
+        ])
+        .get();
+
+    if (snapshot.docs.isEmpty) return false;
+
+    final now = DateTime.now();
+    bool anyNegotiationActive = false;
+
+    for (var doc in snapshot.docs) {
+      final data = doc.data();
+      final status = data['status'];
+      final expiresAt = (data['expiresAt'] as Timestamp?)?.toDate();
+
+      bool isExpired = expiresAt != null && expiresAt.isBefore(now);
+
+      if (isExpired) {
+        if (status == OutingStatus.waiting.name) {
+           // Root fix: If waiting and expired, either start or cancel
+           final List participants = data['participants'] ?? [];
+           final creatorId = data['creatorId'];
+           final myUid = FirebaseAuth.instance.currentUser?.uid;
+
+           if (myUid == creatorId) {
+              if (participants.length >= 2) {
+                updateStatus(groupId, doc.id, OutingStatus.thinking);
+                anyNegotiationActive = true;
+              } else {
+                updateStatus(groupId, doc.id, OutingStatus.cancelled);
+              }
+           }
+        } else {
+          // 💡 Auto-archive ANY other expired session when detected
+          archiveSession(groupId, doc.id).catchError((e) {
+            debugPrint("Error auto-archiving expired session ${doc.id}: $e");
+          });
+        }
+      } else {
+        // If not expired, check if it's in a "negotiation" state that blocks new ones
+        if (status == OutingStatus.waiting.name ||
+            status == OutingStatus.thinking.name ||
+            status == OutingStatus.voting.name) {
+          anyNegotiationActive = true;
+        }
+      }
+    }
+
+    return anyNegotiationActive;
+  }
+
+  /// Streams all active outing sessions (not archived/cancelled) for a group.
+  Stream<List<OutingSessionModel>> streamActiveSessions(String groupId) {
+    return _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('outings')
+        .where('status', whereNotIn: [
+          OutingStatus.archived.name,
+          OutingStatus.cancelled.name
+        ])
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .map((doc) => OutingSessionModel.fromFirestore(doc))
+              .toList();
+        });
+  }
+
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final LiveActivities _liveActivitiesPlugin = LiveActivities();
   String? _activityId;
@@ -114,6 +191,10 @@ class OutingService {
     GeoPoint? creatorLocation,
     DateTime? scheduledAt,
   }) async {
+    // 🛡️ Check for active session first to prevent multiple concurrent outings
+    if (await hasActiveSession(groupId)) {
+      throw Exception("An active outing is already in progress.");
+    }
     final sessionRef = _firestore
         .collection('groups')
         .doc(groupId)
@@ -217,6 +298,10 @@ class OutingService {
     GeoPoint? location,
     DateTime? scheduledAt,
   }) async {
+    // 🛡️ Check for active session first to prevent multiple concurrent outings
+    if (await hasActiveSession(groupId)) {
+      throw Exception("An active outing is already in progress.");
+    }
     final sessionRef = _firestore
         .collection('groups')
         .doc(groupId)
@@ -871,37 +956,43 @@ class OutingService {
       final data = snapshot.data()!;
       final List topVenues = List.from(data['finalLocation']['topVenues']);
 
-      // Update the vote count for the specific venue (Toggle logic)
+      // Update the vote count for the specific venue (Strict One-Vote-Per-User logic)
       for (var venue in topVenues) {
+        final List currentVotes = List.from(venue['votes'] ?? []);
         if (venue['id'] == venueId) {
-          final List currentVotes = List.from(venue['votes'] ?? []);
           if (currentVotes.contains(uid)) {
-            currentVotes.remove(uid); // UNVOTE
+            currentVotes.remove(uid); // Toggle off: UNVOTE
           } else {
-            currentVotes.add(uid); // VOTE
+            currentVotes.add(uid); // Toggle on: VOTE
           }
           venue['votes'] = currentVotes;
-          break;
+        } else {
+          // 🛡️ Ensure user's vote is removed from ALL OTHER venues
+          if (currentVotes.contains(uid)) {
+            currentVotes.remove(uid);
+            venue['votes'] = currentVotes;
+          }
         }
       }
 
       transaction.update(sessionRef, {'finalLocation.topVenues': topVenues});
 
-      // AUTO-FINALIZE: If everyone has voted, finish now
+      // AUTO-FINALIZE: Count unique users who have cast at least one vote
       final List participants = data['participants'] ?? [];
       final int totalJoined = participants.length;
-      int totalVotes = 0;
+      
+      final Set<String> uniqueVoters = {};
       for (var venue in topVenues) {
-        totalVotes += (venue['votes'] as List?)?.length ?? 0;
+        final List vList = venue['votes'] ?? [];
+        for (var vUid in vList) {
+          uniqueVoters.add(vUid.toString());
+        }
       }
 
-      if (totalVotes >= totalJoined && totalJoined > 0) {
-        // We can't call finalizeSession inside a transaction easily without a ref,
-        // so we'll do the sorting logic here or just set a flag to finalize after.
-        // For simplicity, let's just update the status to trigger the winner picker logic if we had one,
-        // or just perform the winner pick here.
-
+      // We finalize if EVERY joined participant has cast exactly one vote
+      if (uniqueVoters.length >= totalJoined && totalJoined > 0) {
         if (topVenues.isNotEmpty) {
+          // Sort to find the winner
           topVenues.sort((a, b) {
             final votesA = (a['votes'] as List?)?.length ?? 0;
             final votesB = (b['votes'] as List?)?.length ?? 0;
@@ -929,7 +1020,6 @@ class OutingService {
                 if (maxA != maxB) return maxA.compareTo(maxB);
             }
 
-            // Tie-breaker 4: Rating
             final ratingA = (a['rating'] as num?)?.toDouble() ?? 0;
             final ratingB = (b['rating'] as num?)?.toDouble() ?? 0;
             return ratingB.compareTo(ratingA);

@@ -35,6 +35,8 @@ import 'package:provider/provider.dart';
 import '../providers/wallpaper_provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as gmaps;
 import 'location_picker_page.dart';
+import 'outing_map_screen.dart';
+import '../widgets/outing_waiting_room_sheet.dart';
 import 'package:laween/l10n/app_localizations.dart';
 
 class ChatPage extends StatefulWidget {
@@ -88,6 +90,11 @@ class _ChatPageState extends State<ChatPage> {
   // Audio Coordination
   final ValueNotifier<String?> _activeAudioId = ValueNotifier(null);
   final List<File> _selectedImages = [];
+
+  // Active Outing Navigation
+  StreamSubscription? _activeOutingSubscription;
+  final Set<String> _navigatedSessions = {};
+  final OutingService _outingService = OutingService();
 
   // Finished Outings (24h window)
   late Stream<QuerySnapshot> _finishedOutingsStream;
@@ -145,6 +152,11 @@ class _ChatPageState extends State<ChatPage> {
         .limit(1)
         .snapshots();
 
+    _setupActiveOutingListener();
+
+    // 🛡️ Proactive session cleanup when entering chat
+    _checkExpiredSessions();
+
     // 🛡️ Periodic rebuild for typing indicator TTL
     _rebuildTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       if (mounted && _hasActiveTypers()) {
@@ -176,13 +188,72 @@ class _ChatPageState extends State<ChatPage> {
   Timer? _rebuildTimer;
 
   bool _hasActiveTypers() {
-    // This method is called by the timer to see if we should rebuild
-    // Returning true ensures we always check for stale indicators every 3 seconds
     return true;
+  }
+
+  void _setupActiveOutingListener() {
+    _activeOutingSubscription?.cancel();
+    _activeOutingSubscription = FirebaseFirestore.instance
+        .collection('groups')
+        .doc(widget.group.id)
+        .collection('outings')
+        .where('status', whereIn: [
+          OutingStatus.thinking.name,
+          OutingStatus.voting.name,
+          OutingStatus.completed.name
+        ])
+        .snapshots()
+        .listen((snapshot) {
+          if (!mounted) return;
+          final myUid = currentUser?.uid;
+          if (myUid == null) return;
+
+          for (var doc in snapshot.docs) {
+            if (_navigatedSessions.contains(doc.id)) continue;
+
+            final data = doc.data();
+            final List participantsRaw = data['participants'] ?? [];
+            
+            // Check if I am a participant
+            bool isParticipant = false;
+            for (var p in participantsRaw) {
+               if (p['uid'] == myUid) {
+                  isParticipant = true;
+                  break;
+               }
+            }
+
+            if (isParticipant) {
+              _navigatedSessions.add(doc.id);
+              final session = OutingSessionModel.fromFirestore(doc as DocumentSnapshot<Map<String, dynamic>>);
+              
+              // AUTO-NAVIGATE to Map Room
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => OutingMapScreen(
+                    groupId: widget.group.id,
+                    sessionId: session.id,
+                  ),
+                ),
+              );
+              break; // Only navigate once per update cycle
+            }
+          }
+        });
+  }
+
+  void _checkExpiredSessions() async {
+     try {
+       await _outingService.hasActiveSession(widget.group.id);
+     } catch (e) {
+       debugPrint("Error in _checkExpiredSessions: $e");
+     }
   }
 
   @override
   void dispose() {
+    _activeOutingSubscription?.cancel();
     _messageController.removeListener(_onTypingChanged);
     // 🛡️ Clear typing status before leaving
     if (_isTyping && currentUser != null) {
@@ -1038,7 +1109,25 @@ class _ChatPageState extends State<ChatPage> {
     _attachmentMenuEntry = null;
   }
 
-  void _showCreateOutingSheet() {
+  void _showCreateOutingSheet() async {
+    // 🛡️ Check for active session first to prevent multiple concurrent outings
+    final hasActive = await OutingService().hasActiveSession(widget.group.id);
+    if (hasActive && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)?.activeSessionExists ?? 
+            "An active outing is already in progress. Finish it first!",
+          ),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1877,6 +1966,7 @@ class _ChatPageState extends State<ChatPage> {
               child: Column(
                 children: [
                   _buildHeader(context),
+                  _buildActiveOutingBanner(),
                   _buildMemoryPrompt(),
 
                   Expanded(
@@ -2767,6 +2857,185 @@ class _ChatPageState extends State<ChatPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildActiveOutingBanner() {
+    return StreamBuilder<List<OutingSessionModel>>(
+      stream: _outingService.streamActiveSessions(widget.group.id),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.isEmpty) return const SizedBox.shrink();
+
+        // Show the most recent active session
+        final session = snapshot.data!.last;
+        final isAr = AppLocalizations.of(context)?.isAr ?? false;
+
+        Color statusColor;
+        String statusTitle;
+        Widget statusAnimation;
+
+        switch (session.status) {
+          case OutingStatus.waiting:
+            statusColor = Colors.white;
+            statusTitle = AppLocalizations.of(context)!.liveLabel;
+            statusAnimation = LiquidFillIcon(icon: Icons.group_rounded, color: Colors.white, size: 20);
+            break;
+          case OutingStatus.thinking:
+            statusColor = Colors.white;
+            statusTitle = isAr ? "جاري التفكير..." : "Thinking...";
+            statusAnimation = LiquidFillIcon(icon: Icons.psychology_rounded, color: Colors.white, size: 20);
+            break;
+          case OutingStatus.voting:
+            statusColor = Colors.white;
+            statusTitle = isAr ? "جاري التصويت" : "Voting Phase";
+            statusAnimation = LiquidFillIcon(icon: Icons.how_to_vote_rounded, color: Colors.white, size: 20);
+            break;
+          case OutingStatus.completed:
+            statusColor = Colors.white;
+            statusTitle = AppLocalizations.of(context)!.destinationLocked;
+            statusAnimation = const Icon(Icons.stars_rounded, size: 20, color: Colors.white)
+                .animate(onPlay: (c) => c.repeat()).shimmer(duration: 2.seconds);
+            break;
+          case OutingStatus.finished:
+            statusColor = Colors.white;
+            statusTitle = AppLocalizations.of(context)!.collectingMemories;
+            statusAnimation = const Icon(Icons.camera_enhance_rounded, size: 20, color: Colors.white)
+                .animate(onPlay: (c) => c.repeat()).scale(begin: const Offset(0.8, 0.8), end: const Offset(1.1, 1.1), duration: 1.seconds);
+            break;
+          default:
+            return const SizedBox.shrink();
+        }
+
+        return GestureDetector(
+          onTap: () {
+             if (session.status == OutingStatus.waiting) {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => OutingWaitingRoomSheet(
+                    groupId: widget.group.id,
+                    sessionId: session.id,
+                  ),
+                );
+             } else if (session.status == OutingStatus.completed || session.status == OutingStatus.thinking || session.status == OutingStatus.voting) {
+               Navigator.push(
+                 context,
+                 MaterialPageRoute(
+                   builder: (_) => OutingMapScreen(groupId: widget.group.id, sessionId: session.id),
+                 ),
+               );
+             } else if (session.status == OutingStatus.finished) {
+               Navigator.push(
+                 context,
+                 MaterialPageRoute(
+                   builder: (_) => OutingMemoryUploadScreen(session: session),
+                 ),
+               );
+             }
+          },
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: AppColors.tealGradient,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.teal.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: statusAnimation,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            margin: const EdgeInsets.only(right: 6),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                          ).animate(onPlay: (c) => c.repeat(reverse: true)).fade(begin: 0.5, end: 1),
+                          Text(
+                            statusTitle,
+                            style: GoogleFonts.outfit(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const Spacer(),
+                          // Participant count
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.people_alt_rounded, size: 12, color: Colors.white),
+                                const SizedBox(width: 4),
+                                Text(
+                                  "${session.participants.length}",
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        isAr ? "انقر للانضمام أو المشاهدة" : "Tap to join or view status",
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios_rounded, 
+                  size: 14, 
+                  color: Colors.white,
+                ),
+              ],
+            ),
+          ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.2, end: 0),
+        );
+      },
+
     );
   }
 }

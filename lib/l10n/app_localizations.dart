@@ -7,6 +7,8 @@ class AppLocalizations {
 
   AppLocalizations(this.languageCode);
 
+  String get activeSessionExists => isAr ? "يوجد خروجة نشطة بالفعل. قم بإنهاءها أولاً!" : "An active outing is already in progress. Finish it first!";
+
   bool get isAr => languageCode == 'ar';
   String get google => isAr ? "جوجل" : "Google";
   String get cancel => isAr ? "إلغاء" : "Cancel";

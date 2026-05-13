@@ -113,9 +113,10 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
 
             final currentUser = FirebaseAuth.instance.currentUser;
 
-            // REDIRECTION: Jump to Discovery Room if session starts
+            // REDIRECTION: Jump to Discovery Room/Map if session starts
             if (session.status == OutingStatus.thinking ||
-                session.status == OutingStatus.voting) {
+                session.status == OutingStatus.voting ||
+                session.status == OutingStatus.completed) {
               final isParticipant = session.participants.any(
                 (p) => p.uid == currentUser?.uid,
               );
@@ -157,16 +158,23 @@ class _OutingWaitingRoomSheetState extends State<OutingWaitingRoomSheet> {
             final remaining = session.expiresAt.difference(now);
             final isCreator = session.creatorId == currentUser?.uid;
 
-            // AUTO-CANCEL: If time's up and only 1 person joined
-            if (remaining.isNegative &&
-                session.participants.length < 2 &&
-                session.status == OutingStatus.waiting &&
-                isCreator) {
-              _outingService.updateStatus(
-                widget.groupId,
-                widget.sessionId,
-                OutingStatus.cancelled,
-              );
+            // AUTO-START/CANCEL: Handle timer expiration from the root
+            if (remaining.isNegative && session.status == OutingStatus.waiting && isCreator) {
+              if (session.participants.length >= 2) {
+                 // Auto-start discovery/locked journey
+                 _outingService.updateStatus(
+                   widget.groupId,
+                   widget.sessionId,
+                   OutingStatus.thinking,
+                 );
+              } else {
+                 // Auto-cancel if not enough people
+                 _outingService.updateStatus(
+                   widget.groupId,
+                   widget.sessionId,
+                   OutingStatus.cancelled,
+                 );
+              }
             }
 
             return Column(

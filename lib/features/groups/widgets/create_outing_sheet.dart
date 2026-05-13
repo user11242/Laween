@@ -114,6 +114,22 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
+    // 🛡️ Guard: Check for active session before proceeding
+    final hasActive = await _outingService.hasActiveSession(widget.groupId);
+    if (hasActive && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)?.activeSessionExists ?? 
+            "An active outing is already in progress. Finish it first!",
+          ),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     // Validation: If in Direct Mode, a venue MUST be selected from the list
     if (_isDirectMode && _selectedVenue == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -132,6 +148,7 @@ class _CreateOutingSheetState extends State<CreateOutingSheet> {
     setState(() => _isCreating = true);
 
     try {
+      if (!mounted) return;
       final LatLng? pickedLocation = await Navigator.push<LatLng>(
         context,
         MaterialPageRoute(builder: (_) => const LocationPickerScreen()),
